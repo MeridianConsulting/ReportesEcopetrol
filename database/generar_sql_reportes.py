@@ -85,12 +85,15 @@ def generate_sql_from_employees(excel_path: str, output_sql: str):
 
     lines = []
     lines.append("-- =========================================================\n")
-    lines.append("-- Script de carga generado desde database.xlsx\n")
-    lines.append("-- Objetivo: poblar reportes_ods (employee_profiles, service_orders, service_order_employees)\n")
-    lines.append("-- Nota: depende de que users ya exista y contenga users.email = Correo_corporativo\n")
+    lines.append("-- Migración generada desde database.xlsx\n")
+    lines.append("-- Compatible con reportes_ods.sql (reports.is_active, task_report_links, tasks, índices)\n")
+    lines.append("-- Pobla: users (email), service_orders, employee_profiles, service_order_employees.\n")
+    lines.append("-- Ejecutar en la BD reportes_ods (estructura creada con reportes_ods.sql).\n")
     lines.append("-- =========================================================\n\n")
 
-    # Recomendación de transacción
+    lines.append("USE reportes_ods;\n\n")
+
+    # Transacción para atomicidad
     lines.append("START TRANSACTION;\n\n")
     lines.append("SET @NOW := CURRENT_TIMESTAMP;\n\n")
 
@@ -230,8 +233,8 @@ ON DUPLICATE KEY UPDATE
     with open(output_sql, "w", encoding="utf-8") as f:
         f.writelines(lines)
 
-    print(f"✅ SQL generado: {output_sql}")
-    print("Siguiente paso: ejecuta este archivo en tu BD reportes_ods (o en el mismo esquema donde creaste las tablas).")
+    print(f"✅ Migración generada: {output_sql}")
+    print("Siguiente paso: ejecuta el archivo en phpMyAdmin (pestaña SQL). Asegúrate de tener la estructura con reportes_ods.sql.")
 
 
 if __name__ == "__main__":

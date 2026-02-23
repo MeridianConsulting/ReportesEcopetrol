@@ -1,8 +1,11 @@
 -- =========================================================
--- Script de carga generado desde database.xlsx
--- Objetivo: poblar reportes_ods (employee_profiles, service_orders, service_order_employees)
--- Nota: depende de que users ya exista y contenga users.email = Correo_corporativo
+-- Migración generada desde database.xlsx
+-- Compatible con reportes_ods.sql (reports.is_active, task_report_links, tasks, índices)
+-- Pobla: users (email), service_orders, employee_profiles, service_order_employees.
+-- Ejecutar en la BD reportes_ods (estructura creada con reportes_ods.sql).
 -- =========================================================
+
+USE reportes_ods;
 
 START TRANSACTION;
 

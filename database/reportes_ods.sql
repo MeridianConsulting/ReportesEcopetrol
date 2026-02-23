@@ -24,6 +24,11 @@ CREATE TABLE IF NOT EXISTS areas (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS tasks (
+  id INT NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- =========================================================
 -- 0) Catálogos
 -- =========================================================
@@ -163,15 +168,17 @@ CREATE TABLE IF NOT EXISTS reports (
   month_contracted_days INT DEFAULT NULL, -- si hay un "días contratados" a nivel reporte (no por línea)
   notes TEXT DEFAULT NULL,
   deleted_at DATETIME DEFAULT NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1, -- 0 = borrado lógico (junto con deleted_at)
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_reports_unique (service_order_id, period_id, reported_by, deleted_at),
+  UNIQUE KEY uq_reports_active (service_order_id, period_id, reported_by, is_active),
   KEY idx_reports_service_order (service_order_id),
   KEY idx_reports_period (period_id),
   KEY idx_reports_reported_by (reported_by),
   KEY idx_reports_status (status),
   KEY idx_reports_deleted (deleted_at),
+  KEY idx_reports_so_period_status (service_order_id, period_id, status),
   CONSTRAINT fk_reports_service_order
     FOREIGN KEY (service_order_id) REFERENCES service_orders(id),
   CONSTRAINT fk_reports_period
@@ -216,7 +223,7 @@ CREATE TABLE IF NOT EXISTS report_lines (
   delivery_medium_id INT DEFAULT NULL,
   contracted_days INT DEFAULT NULL,         -- Días contratados (si aplica por línea)
   days_month DECIMAL(10,2) NOT NULL DEFAULT 0,     -- "Días" del mes
-  progress_percent DECIMAL(6,4) NOT NULL DEFAULT 0, -- 0..1 o 0..100 (define y estandariza)
+  progress_percent DECIMAL(6,4) NOT NULL DEFAULT 0, -- 0..1 (25% = 0.25); mostrar *100 en frontend
   accumulated_days DECIMAL(10,2) NOT NULL DEFAULT 0,
   accumulated_progress DECIMAL(6,4) NOT NULL DEFAULT 0,
   sort_order INT NOT NULL DEFAULT 0,
@@ -224,6 +231,7 @@ CREATE TABLE IF NOT EXISTS report_lines (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_report_lines_report (report_id),
+  KEY idx_report_lines_report_item (report_id, item_activity),
   KEY idx_report_lines_item (item_general, item_activity),
   KEY idx_report_lines_support_type (support_type_id),
   KEY idx_report_lines_delivery (delivery_medium_id),
@@ -235,6 +243,27 @@ CREATE TABLE IF NOT EXISTS report_lines (
     FOREIGN KEY (support_type_id) REFERENCES support_types(id) ON DELETE SET NULL,
   CONSTRAINT fk_report_lines_delivery_medium
     FOREIGN KEY (delivery_medium_id) REFERENCES delivery_media(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- =========================================================
+-- 5.5) Enlace tareas ↔ líneas de reporte
+-- =========================================================
+-- Permite: "esta tarea quedó soportada en el reporte de Enero", % tareas reportadas, etc.
+
+CREATE TABLE IF NOT EXISTS task_report_links (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  task_id INT NOT NULL,
+  report_line_id BIGINT NOT NULL,
+  linked_by INT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_task_report_line (task_id, report_line_id),
+  KEY idx_trl_task (task_id),
+  KEY idx_trl_report_line (report_line_id),
+  CONSTRAINT fk_trl_task FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+  CONSTRAINT fk_trl_report_line FOREIGN KEY (report_line_id) REFERENCES report_lines(id) ON DELETE CASCADE,
+  CONSTRAINT fk_trl_user FOREIGN KEY (linked_by) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
