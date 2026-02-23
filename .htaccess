@@ -1,0 +1,42 @@
+# Configuración para Next.js estático + Backend API
+# - API -> backend/public/index.php
+# - Archivos reales y /_next/ se sirven normal
+# - Fallback SPA -> index.html
+# - HTML sin caché + evitar 206 (Range) en HTML
+# - Assets con caché largo
+
+RewriteEngine On
+
+# --- API -> Backend ---
+RewriteCond %{REQUEST_URI} ^/api/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^api/(.*)$ backend/public/index.php [L,QSA]
+
+# --- Evitar MultiViews (previene resoluciones raras de rutas) ---
+Options -Indexes -MultiViews
+DirectoryIndex index.html index.php
+
+# --- No reescribir archivos/carpetas reales (incluye /_next/ y assets) ---
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# --- Fallback SPA (cualquier otra ruta -> index.html) ---
+RewriteRule ^ index.html [L]
+
+# --- Control de caché y Range ---
+<IfModule mod_headers.c>
+  # HTML: no cache + bloquear Range (evita 206 Partial Content y pantallas sin cargar)
+  <FilesMatch "\.(html)$">
+    Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    Header always set Pragma "no-cache"
+    Header always set Expires "0"
+    Header always set Accept-Ranges "none"
+  </FilesMatch>
+
+  # Assets de Next.js: cache largo (mejor rendimiento)
+  <FilesMatch "\.(js|css|woff|woff2|png|jpg|jpeg|svg|gif|ico|webp|avif)$">
+    Header always set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>

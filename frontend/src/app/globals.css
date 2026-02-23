@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+    font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  }
+}
+
+/* Estilos personalizados para el scrollbar del sidebar */
+.sidebar-scroll {
+  /* Evita cambios de ancho cuando aparece/desaparece el scrollbar */
+  scrollbar-gutter: stable;
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+}
+
+/* WebKit (Chrome, Edge, Safari) */
+.sidebar-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.28);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(148, 163, 184, 0.45);
+}
+
+/* Al imprimir / exportar a PDF: solo mostrar el contenido con clase .print-content */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-content,
+  .print-content * {
+    visibility: visible;
+  }
+  .print-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 1rem 1.5rem !important;
+    overflow: visible !important;
+    background: white;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .print-content main,
+  .print-content header,
+  .print-content footer {
+    display: block !important;
+  }
+  /* Que ningún contenedor recorte las gráficas al imprimir */
+  .print-content div {
+    overflow: visible !important;
+  }
+  /* Contenedores de gráficas: mantener altura para que se vean */
+  .print-content .h-72,
+  .print-content .h-80,
+  .print-content [style*="height: 280px"],
+  .print-content [style*="height: 340px"],
+  .print-content [style*="height: 220px"] {
+    min-height: 200px !important;
+    overflow: visible !important;
+  }
+  /* SVGs de Nivo: no forzar height auto (rompe el tamaño), solo límite de ancho */
+  .print-content svg {
+    max-width: 100%;
+  }
+  /* Evitar cortes feos en medio de bloques */
+  .print-content .rounded-xl,
+  .print-content .rounded-lg,
+  .print-content [class*="shadow"] {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  /* Mantener colores de fondo en impresión */
+  .print-content * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* Gráficas y tablas completos */
+  .print-content table {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  /* No mostrar botones de acción en el PDF */
+  .no-print {
+    display: none !important;
+  }
+}
