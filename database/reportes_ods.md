@@ -1,8 +1,10 @@
 # Base de Datos: **reportes_ods** (MySQL/MariaDB)
 
-Este documento describe el funcionamiento y la estructura de la base de datos **reportes_ods**, diseñada para soportar un sistema web de **gestión de reportes de avance** por **ODS** (Orden de Servicio), con actividades, evidencias, revisiones y auditoría.
+Este documento describe la estructura y el uso de la base de datos **reportes_ods**, pensada para un sistema web de **gestión de reportes de avance** por **ODS** (Orden de Servicio), con RBAC, actividades, evidencias, revisiones y auditoría.
 
-> **Objetivo:** permitir que cada profesional registre su reporte mensual (cabecera + actividades), adjunte evidencias, pase por revisión/aprobación y genere consolidados por ODS, por periodo y por profesional.
+> **Objetivo:** permitir que cada profesional registre su reporte mensual (cabecera + actividades), adjunte evidencias, pase por revisión/aprobación y generar consolidados por ODS, periodo y profesional. El control de acceso se basa en **roles/permisos** y en el **alcance por ODS** (`service_order_employees`).
+
+**Esquema de creación:** `reportes_ods.sql` (o `database/base/reportes_ods.sql`). Carga inicial de datos desde Excel: script `generar_sql_reportes.py` → `migration_reportes_ods.sql`.
 
 ---
 
@@ -10,11 +12,13 @@ Este documento describe el funcionamiento y la estructura de la base de datos **
 
 Con **reportes_ods** puedes:
 
-- Registrar empleados (perfil extendido ligado a usuarios del sistema).
-- Registrar ODS (órdenes de servicio) y asociar profesionales a cada ODS.
-- Crear reportes por **ODS + periodo + profesional**.
-- Registrar actividades detalladas por reporte (ítems, descripción, días, avance, acumulados).
-- Adjuntar evidencias (archivos) al reporte o a una actividad específica.
+- Gestionar **roles y permisos** (RBAC): colaborador, profesional_proyectos, interventoria, gerencia, admin.
+- Registrar empleados (perfil extendido ligado a `users`) y **asignar rol por defecto** (ej. colaborador).
+- Registrar ODS y **asociar profesionales a cada ODS** (scope de reportes).
+- Crear reportes por **ODS + periodo + profesional** con **unicidad de reporte activo** (`is_active` + borrado lógico).
+- Registrar actividades detalladas por reporte (ítems, descripción, días, **avance 0..1**, acumulados).
+- **Vincular tareas con líneas de reporte** (`task_report_links`) para trazabilidad.
+- Adjuntar evidencias (archivos) al reporte o a una actividad.
 - Manejar revisión/aprobación (workflow) con comentarios y estados.
 - Mantener auditoría de eventos (bitácora).
 - Importar datos desde Excel con control de lotes y errores.
@@ -23,173 +27,81 @@ Con **reportes_ods** puedes:
 
 ## 2) Conceptos principales (modelo mental)
 
-### 2.1 Empleado / Usuario
-- **users**: tabla existente del sistema (login/rol). Esta BD **referencia** `users.id`.
-- **employee_profiles**: información laboral (cargo, profesión, teléfono, fechas de contrato).
+### 2.1 Tablas de apoyo (stubs)
+- **users**: en este esquema mínimo tiene `id` y `email` (para enlace con correo corporativo). En un sistema real puede vivir en otra BD o ampliarse (password_hash, is_active, created_at, etc.).
+- **areas**: stub con `id` (para FK de `service_orders`). En sistema real: name, code, type.
+- **tasks**: stub con `id` (para `task_report_links`). En sistema real: title, status, responsible_id, fechas.
 
-> Un usuario puede existir sin perfil, pero un perfil siempre pertenece a un usuario.
+> Si `users`, `areas` o `tasks` viven en otra BD (ej. sistema de tareas), no duplicar: referenciar las reales o unificar en un solo esquema.
 
-### 2.2 ODS (Orden de Servicio)
-- **service_orders**: cabecera del ODS (código ODS, proyecto, objeto, plazo, fechas, estado).
-- **service_order_employees**: asignación de profesionales a un ODS (N:M) con nivel y días contratados.
+### 2.2 RBAC (roles y permisos)
+- **roles**: colaborador, profesional_proyectos, interventoria, gerencia, admin.
+- **permissions**: códigos (REPORT_CREATE, REPORT_VIEW_OWN, REPORT_VIEW_ALL, REPORT_APPROVE, REPORT_EXPORT, ODS_MANAGE, etc.).
+- **role_permissions**: qué permiso tiene cada rol.
+- **user_roles**: qué roles tiene cada usuario (N:M).
 
-> Un ODS puede tener varios profesionales y un profesional puede participar en varios ODS.
+El **alcance por ODS** no va en roles sino en **service_order_employees**: un colaborador solo puede crear/ver reportes de ODS donde esté asignado. Interventoria/gerencia/profesional_proyectos “ven todo” (según permisos).
 
-### 2.3 Periodo y Reporte
+### 2.3 Empleado / Usuario
+- **employee_profiles**: información laboral (cargo, profesión, teléfono, fechas de contrato) ligada a `users.id`.
+
+### 2.4 ODS (Orden de Servicio)
+- **service_orders**: cabecera del ODS (código, proyecto, objeto, plazo, estado).
+- **service_order_employees**: asignación usuario ↔ ODS (N:M). Define **qué ODS puede reportar cada usuario** (scope).
+
+**Regla en backend:** un colaborador solo puede crear reporte si existe fila activa (`is_active = 1`) en `service_order_employees` para ese `user_id` y ese `service_order_id`.
+
+### 2.5 Periodo y Reporte
 - **report_periods**: periodos (ej. 2026-01) con fechas inicio/fin.
-- **reports**: cabecera del reporte (ODS, periodo, profesional, fecha de reporte, estado).
-- **report_lines**: detalle del reporte (actividades).
+- **reports**: cabecera (ODS, periodo, profesional, fecha, estado, **is_active**, deleted_at).
+- Unicidad de reporte activo: **UNIQUE(service_order_id, period_id, reported_by, is_active)**. Al borrar de forma lógica se pone `is_active = 0` y `deleted_at = NOW()`.
 
-> La regla típica de negocio es: **1 reporte por ODS + periodo + profesional** (salvo que el sistema permita duplicados usando borrado lógico).
+### 2.6 Actividades e ítems
+- **report_item_catalog**: catálogo de ítems (item_general, item_activity, title).
+- **report_lines**: actividades del reporte; **progress_percent** en escala **0..1** (ej. 0.25 = 25%); en frontend mostrar ×100.
 
-### 2.4 Actividades e Ítems
-- **report_item_catalog** (recomendado): catálogo oficial de ítems (ej: 1 / 1.1 / 1.15).
-- **report_lines**: guarda actividades; opcionalmente referencia al catálogo.
+### 2.7 Tareas ↔ Reportes
+- **task_report_links**: tabla puente (task_id, report_line_id, linked_by). Permite “esta tarea quedó soportada en el reporte de Enero” e indicadores tipo % tareas reportadas.
 
-> Esto ayuda a estandarizar los reportes y que el consolidado sea consistente.
-
-### 2.5 Evidencias y revisión
-- **report_attachments**: adjuntos del reporte o de una actividad específica.
-- **report_comments**: comentarios por reporte o por actividad.
-- **report_approvals**: decisiones de aprobación por usuario revisor.
-- **report_events**: auditoría de eventos (creación, edición, envío, aprobación, rechazo, importación).
+### 2.8 Evidencias y revisión
+- **report_attachments**, **report_comments**, **report_approvals**, **report_events** (auditoría).
 
 ---
 
-## 3) Tablas y propósito
+## 3) Tablas y propósito (resumen)
 
-### 3.1 Catálogos (parametrización)
-- **employee_levels**
-  - Niveles contratados (Junior/Senior/etc.)
-- **service_classifications**
-  - Clasificación del servicio del reporte (según tu formato).
-- **delivery_media**
-  - Medio de entrega (Digital, Físico, Link, etc.)
-- **support_types**
-  - Tipo de soporte (Informe, Código, Presentación, etc.)
+### 3.1 Tablas de apoyo (stubs)
+| Tabla    | Uso en reportes_ods |
+|----------|----------------------|
+| users    | id, email (enlace con employee_profiles y user_roles) |
+| areas    | id (FK en service_orders) |
+| tasks    | id (FK en task_report_links) |
 
-**Beneficio:** evitan valores inconsistentes en texto libre y facilitan filtros/reportes.
+### 3.2 RBAC
+| Tabla             | Propósito |
+|-------------------|-----------|
+| roles             | colaborador, profesional_proyectos, interventoria, gerencia, admin |
+| permissions       | REPORT_CREATE, REPORT_EDIT_OWN, REPORT_VIEW_OWN, REPORT_VIEW_ALL, REPORT_APPROVE, REPORT_EXPORT, ODS_MANAGE |
+| role_permissions  | Asignación rol → permisos |
+| user_roles        | Asignación usuario → roles |
 
----
+### 3.3 Catálogos
+- **employee_levels**, **service_classifications**, **delivery_media**, **support_types**
 
-### 3.2 Empleados
-- **employee_profiles**
-  - `user_id` (PK, FK a `users.id`)
-  - Datos de empleado: nombre, correo corporativo, teléfono, cargo, profesión, tipo contrato, fechas.
+### 3.4 Empleados y ODS
+- **employee_profiles** (user_id, datos laborales).
+- **service_orders** (ODS maestro; area_id opcional).
+- **service_order_employees** (scope: qué usuario puede reportar qué ODS; is_active).
 
-**Uso típico:**
-- Al crear el usuario en el sistema, se crea/actualiza también el perfil.
-- El módulo de reportes muestra automáticamente los datos del profesional.
+### 3.5 Reportes
+- **report_periods**, **reports** (con is_active, uq_reports_active), **report_item_catalog**, **report_lines** (progress_percent 0..1, idx report_id+item_activity).
+- **task_report_links** (task_id, report_line_id, linked_by).
 
----
+### 3.6 Evidencias y workflow
+- **report_attachments**, **report_comments**, **report_approvals**, **report_events**.
 
-### 3.3 ODS
-- **service_orders**
-  - Registro maestro del ODS.
-  - `ods_code` único.
-  - Opcional: `area_id` (si lo integras con la tabla `areas` del sistema).
-
-- **service_order_employees**
-  - Asigna profesionales a ODS.
-  - Puede almacenar `contracted_days` por profesional y estado activo.
-
-**Uso típico:**
-- Un admin crea el ODS.
-- Asigna uno o varios profesionales al ODS.
-- El sistema usa estas asignaciones para habilitar “crear reporte” y validar permisos.
-
----
-
-### 3.4 Periodos y reportes
-- **report_periods**
-  - Control de periodos. Evita que cada reporte invente “mes/año” como texto.
-  - Garantiza integridad de filtros (por año/mes).
-
-- **reports**
-  - Cabecera del reporte:
-    - `service_order_id` (ODS)
-    - `period_id` (mes)
-    - `reported_by` (usuario/profesional)
-    - `status` (workflow)
-    - `deleted_at` (borrado lógico)
-  - Índices para consulta rápida por ODS/periodo/usuario/estado.
-
-**Estados sugeridos (por flujo):**
-1. **Borrador**: el profesional edita.
-2. **Enviado**: lo envía a revisión.
-3. **En revision**: revisor(es) revisan.
-4. **Aprobado** / **Rechazado**: decisión final.
-5. **Anulado**: cancelado administrativamente.
-
----
-
-### 3.5 Detalle del reporte (actividades)
-- **report_item_catalog**
-  - Catálogo de ítems para estandarizar.
-  - Campos: `item_general`, `item_activity`, `title`, `is_active`.
-
-- **report_lines**
-  - Una fila por actividad reportada.
-  - Campos clave:
-    - `report_id` (FK)
-    - `item_catalog_id` (opcional)
-    - `activity_description`
-    - `support_text` / `support_type_id`
-    - `delivery_medium_id`
-    - `days_month` (días del mes ejecutados)
-    - `progress_percent` (avance: 0..1 o 0..100, según estándar)
-    - `accumulated_days`, `accumulated_progress`
-    - `sort_order` para mantener el orden del formato
-
-**Notas de diseño:**
-- Se guarda `item_general` y `item_activity` como respaldo para imports legacy.
-- Se recomienda definir un estándar:
-  - Avance en escala **0..1** (ej. 0.25 = 25%) **o** 0..100.
-  - El backend valida y normaliza.
-
----
-
-### 3.6 Evidencias (archivos)
-- **report_attachments**
-  - Adjuntos a nivel reporte o por actividad (`report_line_id` opcional).
-  - Guarda metadatos: nombre, ruta, hash, tamaño, mime.
-
-**Buenas prácticas:**
-- Guardar archivos en storage (S3/MinIO/servidor) y en DB solo `storage_path`.
-- Usar `sha256` para deduplicación y verificación.
-
----
-
-### 3.7 Comentarios, aprobaciones y auditoría
-- **report_comments**
-  - Comentarios por reporte o por actividad.
-  - Útil para revisión detallada.
-
-- **report_approvals**
-  - Tabla para decisiones por revisor.
-  - Permite múltiples revisores por reporte.
-
-- **report_events**
-  - Bitácora de cambios:
-    - `event_type` (CREATED/UPDATED/SUBMITTED/etc.)
-    - `payload` JSON con detalles (antes/después, metadatos)
-  - Útil para auditoría y cumplimiento.
-
----
-
-### 3.8 Importación desde Excel
-- **import_batches**
-  - Control de cada importación: archivo origen, quién importó, resumen y estado.
-
-- **import_errors**
-  - Errores por lote: fila, mensaje y payload.
-
-**Flujo recomendado de importación:**
-1. Crear `import_batches` con estado **Procesando**.
-2. Validar y cargar catálogos si aplica.
-3. Insertar/actualizar ODS, asignaciones, reportes y líneas.
-4. Registrar errores en `import_errors`.
-5. Finalizar lote: **Exitoso** o **Con errores**.
+### 3.7 Importación
+- **import_batches**, **import_errors**.
 
 ---
 
@@ -197,86 +109,81 @@ Con **reportes_ods** puedes:
 
 ### 4.1 Alta de ODS y asignación de personal
 1. Admin crea `service_orders`.
-2. Admin asigna profesionales en `service_order_employees`.
-3. El sistema habilita el acceso a reportar sobre ese ODS.
+2. Admin asigna profesionales en `service_order_employees` (is_active = 1).
+3. El backend habilita “crear reporte” solo si el usuario tiene rol con REPORT_CREATE y existe asignación activa a ese ODS.
 
 ### 4.2 Creación y envío de reporte mensual
-1. Profesional crea `reports` en estado **Borrador**.
-2. Ingresa actividades en `report_lines`.
-3. Adjunta evidencias en `report_attachments`.
-4. Envía el reporte: cambia a **Enviado** y se registra evento en `report_events`.
+1. Profesional (colaborador) crea `reports` en estado Borrador (solo para ODS donde está en `service_order_employees`).
+2. Ingresa actividades en `report_lines` (avance en 0..1).
+3. Opcional: vincula tareas en `task_report_links`.
+4. Adjunta evidencias en `report_attachments`.
+5. Envía: status → Enviado, registro en `report_events`.
 
 ### 4.3 Revisión y aprobación
-1. Revisor comenta en `report_comments` (opcional).
+1. Interventor/revisor comenta en `report_comments`.
 2. Registra decisión en `report_approvals`.
-3. El sistema actualiza `reports.status` a **Aprobado** o **Rechazado**.
-4. Registra evento en `report_events`.
+3. Se actualiza `reports.status` a Aprobado/Rechazado y se registra en `report_events`.
 
-### 4.4 Consolidado por ODS
-- El consolidado se obtiene consultando `reports` + `report_lines` por ODS y periodo.
-- Se pueden generar:
-  - Totales de días del mes: `SUM(report_lines.days_month)`
-  - Avance promedio o ponderado (según regla definida)
+### 4.4 Consolidados
+- Por ODS/mes: usar índice `reports(service_order_id, period_id, status)` y `report_lines(report_id, item_activity)`.
+- Totales: `SUM(report_lines.days_month)`, avance ponderado según `progress_percent` (0..1).
 
 ---
 
-## 5) Integridad, rendimiento y robustez
+## 5) Integridad, rendimiento y seguridad
 
-### 5.1 Integridad referencial (FK)
-- Se usan claves foráneas para asegurar:
-  - Reporte pertenece a ODS y periodo.
-  - Actividades pertenecen a un reporte.
-  - Evidencias pertenecen a reporte/actividad.
-  - Asignaciones de personal pertenecen a ODS.
+### 5.1 Integridad referencial
+- FKs entre reportes, ODS, periodos, usuarios, roles, tareas y líneas de reporte.
+- Unicidad: uq_reports_active, uq_task_report_line, uq_service_orders_ods, etc.
 
 ### 5.2 Índices clave
-- Consultas más comunes:
-  - Por `service_order_id`, `period_id`, `reported_by`, `status`.
-  - Por `report_id` en líneas y adjuntos.
-  - Por `event_type` y `created_at` en auditoría.
+- **reports**: idx_reports_so_period_status (service_order_id, period_id, status) para dashboards.
+- **report_lines**: idx_report_lines_report_item (report_id, item_activity) para filtros por ítem.
+- Índices por report_id, period_id, reported_by, status, deleted_at.
 
-### 5.3 Borrado lógico
-- `reports.deleted_at` permite “eliminar” sin perder auditoría.
-- Las líneas se eliminan físicamente cuando se elimina el reporte (por `ON DELETE CASCADE`), pero esto puede ajustarse si quieres retención total.
+### 5.3 Borrado lógico en reportes
+- `reports.is_active = 0` y `reports.deleted_at = NOW()` para “eliminar” sin perder auditoría.
+- Unicidad con `is_active` evita múltiples reportes activos por (ODS, periodo, usuario).
 
-### 5.4 Seguridad y permisos (a nivel app)
-- La base soporta permisos por:
-  - Asignación ODS-profesional (`service_order_employees`).
-  - Roles del sistema (tabla `roles` existente en tu sistema).
-- El backend debe validar:
-  - Que el usuario esté asignado al ODS antes de crear/editar reportes.
-  - Que solo revisores/admin puedan aprobar.
+### 5.4 Control de acceso (en backend)
+- **Colaborador:** solo reportes propios y solo en ODS donde existe `service_order_employees` activo.
+- **Profesional_proyectos / Interventoria / Gerencia:** según permisos (REPORT_VIEW_ALL, REPORT_APPROVE, REPORT_EXPORT).
+- **Admin:** ODS_MANAGE, REPORT_*, etc.
+- La BD almacena roles/permisos; la aplicación aplica las reglas.
+
+### 5.5 Alcance opcional futuro
+Si se necesita “ver solo ciertos ODS por rol/usuario”, se pueden añadir tablas como **role_service_orders** o **user_service_orders_view**. Con el RBAC actual (interventoria/gerencia/profesional_proyectos ven todo) no es necesario.
 
 ---
 
-## 6) Reglas recomendadas (para estandarizar)
+## 6) Reglas recomendadas (estándar)
 
-1. **Un reporte por ODS + periodo + profesional** (salvo borrado lógico).
-2. Definir estándar de **avance**:
-   - Recomendado: **0..1** en DB (`0.25`=25%).
-3. Catalogar y bloquear ítems oficiales:
-   - Usar `report_item_catalog` como fuente.
-4. Evidencias:
-   - Adjuntar a nivel actividad siempre que sea posible (`report_line_id`).
+1. **Un reporte activo por (ODS, periodo, profesional):** garantizado por `uq_reports_active` e `is_active`.
+2. **Avance en BD en escala 0..1** (`report_lines.progress_percent`); en frontend mostrar ×100.
+3. **Colaborador solo crea reporte** si existe fila activa en `service_order_employees` para ese usuario y ese ODS.
+4. **Catalogar ítems** con `report_item_catalog` cuando aplique.
+5. **Evidencias** preferiblemente asociadas a actividad (`report_line_id`) cuando sea posible.
 
 ---
 
 ## 7) Resumen de módulos
 
-- **Catálogos:** employee_levels, service_classifications, delivery_media, support_types
-- **Empleados:** employee_profiles
-- **ODS y asignación:** service_orders, service_order_employees
-- **Reportes:** report_periods, reports, report_lines, report_item_catalog
-- **Evidencias y workflow:** report_attachments, report_comments, report_approvals, report_events
-- **Importación:** import_batches, import_errors
+| Módulo           | Tablas |
+|------------------|--------|
+| Stubs            | users, areas, tasks |
+| RBAC             | roles, permissions, role_permissions, user_roles |
+| Catálogos        | employee_levels, service_classifications, delivery_media, support_types |
+| Empleados        | employee_profiles |
+| ODS y scope      | service_orders, service_order_employees |
+| Reportes         | report_periods, reports, report_lines, report_item_catalog |
+| Tareas ↔ reportes| task_report_links |
+| Evidencias/workflow | report_attachments, report_comments, report_approvals, report_events |
+| Importación      | import_batches, import_errors |
 
 ---
 
-## 8) Dependencias externas
-Esta base de datos se integra con tablas del sistema (existentes):
-- `users` (usuarios del sistema)
-- `areas` (áreas/proyectos)
+## 8) Dependencias externas y scripts
 
-> Si esas tablas viven en otro esquema, debes ajustar los FKs o manejarlo a nivel aplicación.
-
----
+- **Esquema:** crear la BD y tablas con `reportes_ods.sql` (en `database/` o `database/base/`). Ejecutable en phpMyAdmin (pestaña SQL) sin cambios.
+- **Datos iniciales desde Excel:** ejecutar `generar_sql_reportes.py` (requiere `database.xlsx`) para generar `migration_reportes_ods.sql`, que inserta usuarios (email), asigna rol colaborador por defecto, ODS, perfiles y asignaciones. Ejecutar la migración en la BD `reportes_ods` después de crear la estructura.
+- Si las tablas **users**, **areas** o **tasks** reales viven en otro esquema, unificar referencias o usar el mismo esquema para evitar duplicar datos.
