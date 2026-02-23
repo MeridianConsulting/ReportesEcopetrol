@@ -127,7 +127,7 @@ export default function AreasPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-10 w-10 text-indigo-600 animate-spin" strokeWidth={1.75} />
+          <Loader2 className="h-10 w-10 text-green-600 animate-spin" strokeWidth={1.75} />
         </div>
       </Layout>
     );
@@ -153,7 +153,7 @@ export default function AreasPage() {
             className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
               showForm && !editingId
                 ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-400'
-                : 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500'
+                : 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500'
             }`}
           >
             {showForm && !editingId ? (
@@ -188,7 +188,7 @@ export default function AreasPage() {
                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                     required
                     placeholder="Ej: Recursos Humanos"
-                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow placeholder:text-slate-400"
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow placeholder:text-slate-400"
                   />
                 </div>
                 <div>
@@ -201,7 +201,7 @@ export default function AreasPage() {
                     onChange={e => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                     required
                     placeholder="Ej: RRHH"
-                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow placeholder:text-slate-400"
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow placeholder:text-slate-400"
                   />
                 </div>
                 <div>
@@ -209,7 +209,7 @@ export default function AreasPage() {
                   <select
                     value={formData.type}
                     onChange={e => setFormData({ ...formData, type: e.target.value })}
-                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow bg-white"
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow bg-white"
                   >
                     <option value="AREA">Área</option>
                     <option value="PROYECTO">Proyecto</option>
@@ -229,7 +229,7 @@ export default function AreasPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
                 >
                   {saving ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -254,7 +254,7 @@ export default function AreasPage() {
               placeholder="Buscar áreas..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full pl-10 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
             />
           </div>
         </div>
@@ -293,8 +293,8 @@ export default function AreasPage() {
                       <td className="px-5 py-3.5">
                         <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${
                           area.type === 'AREA' 
-                            ? 'bg-blue-50 text-blue-700' 
-                            : 'bg-violet-50 text-violet-700'
+                            ? 'bg-teal-50 text-teal-700' 
+                            : 'bg-teal-50 text-teal-700'
                         }`}>
                           {area.type === 'AREA' ? 'Área' : 'Proyecto'}
                         </span>
@@ -303,7 +303,7 @@ export default function AreasPage() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleEdit(area)}
-                            className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            className="p-1.5 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                             title="Editar"
                           >
                             <Pencil className="w-4 h-4" />

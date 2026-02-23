@@ -37,8 +37,8 @@ export default function TaskList({ tasks, onRefresh }) {
   const getStatusConfig = (status) => {
     const config = {
       'Completada': { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
-      'En progreso': { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-      'En revisión': { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200' },
+      'En progreso': { bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200' },
+      'En revisión': { bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200' },
       'En riesgo': { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
       'No iniciada': { bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-200' },
     };
@@ -48,7 +48,7 @@ export default function TaskList({ tasks, onRefresh }) {
   const getTypeConfig = (type) => {
     const config = {
       'Clave': { icon: Key, color: 'text-amber-600', bg: 'bg-amber-50' },
-      'Operativa': { icon: Settings, color: 'text-blue-600', bg: 'bg-blue-50' },
+      'Operativa': { icon: Settings, color: 'text-teal-600', bg: 'bg-teal-50' },
       'Mejora': { icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
       'Obligatoria': { icon: FileText, color: 'text-rose-600', bg: 'bg-rose-50' },
     };
@@ -144,7 +144,7 @@ export default function TaskList({ tasks, onRefresh }) {
                           <TypeIcon className={`w-4 h-4 ${typeConfig.color}`} strokeWidth={1.75} />
                         </div>
                         <div className="min-w-0 flex-1 text-left">
-                          <p className="font-medium text-slate-900 group-hover:text-indigo-600 transition-colors truncate text-sm">
+                          <p className="font-medium text-slate-900 group-hover:text-green-600 transition-colors truncate text-sm">
                             {t.title}
                           </p>
                           <p className="text-xs text-slate-500 truncate">{t.area_name || 'Sin area'}</p>
@@ -175,7 +175,7 @@ export default function TaskList({ tasks, onRefresh }) {
                           <div
                             className={`h-full rounded-full transition-all duration-300 ${
                               t.progress_percent >= 100 ? 'bg-emerald-500' :
-                              t.progress_percent >= 50 ? 'bg-blue-500' : 'bg-amber-500'
+                              t.progress_percent >= 50 ? 'bg-teal-500' : 'bg-amber-500'
                             }`}
                             style={{ width: `${t.progress_percent || 0}%` }}
                           ></div>
@@ -198,14 +198,14 @@ export default function TaskList({ tasks, onRefresh }) {
                       <div className="flex items-center justify-center gap-1.5 flex-nowrap min-w-0">
                         <button
                           onClick={(e) => handleEditTask(t, e)}
-                          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-slate-600 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
                         >
                           <Pencil className="w-3.5 h-3.5" strokeWidth={1.75} />
                           Editar
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); setTaskToDelete(t); }}
-                          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-slate-600 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
                         >
                           <Trash2 className="w-3.5 h-3.5" strokeWidth={1.75} />
                           Eliminar
@@ -267,7 +267,7 @@ export default function TaskList({ tasks, onRefresh }) {
                       <div
                         className={`h-full rounded-full ${
                           t.progress_percent >= 100 ? 'bg-emerald-500' :
-                          t.progress_percent >= 50 ? 'bg-blue-500' : 'bg-amber-500'
+                          t.progress_percent >= 50 ? 'bg-teal-500' : 'bg-amber-500'
                         }`}
                         style={{ width: `${t.progress_percent || 0}%` }}
                       ></div>

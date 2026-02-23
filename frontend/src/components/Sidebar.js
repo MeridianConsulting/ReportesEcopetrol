@@ -157,13 +157,13 @@ export default function Sidebar({ user, isOpen, onToggle }) {
               prefetch={false}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                       isActive 
-                        ? 'bg-indigo-600/20 text-white' 
+                        ? 'bg-green-600/20 text-white' 
                         : 'text-slate-400 hover:text-white hover:bg-slate-800'
               } ${!isOpen ? 'justify-center' : ''}`}
               title={!isOpen ? item.label : ''}
             >
                     <Icon 
-                      className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-indigo-400' : ''}`} 
+                      className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-green-400' : ''}`} 
                       strokeWidth={isActive ? 2 : 1.75} 
                     />
                     {isOpen && (

@@ -2,12 +2,12 @@
 export default function StatsCard({ title, value, icon: Icon, color = 'slate' }) {
   const colorConfig = {
     slate: { bg: 'bg-slate-100', text: 'text-slate-600' },
-    blue: { bg: 'bg-blue-50', text: 'text-blue-600' },
+    teal: { bg: 'bg-teal-50', text: 'text-teal-600' },
     green: { bg: 'bg-emerald-50', text: 'text-emerald-600' },
     red: { bg: 'bg-rose-50', text: 'text-rose-600' },
-    purple: { bg: 'bg-violet-50', text: 'text-violet-600' },
+    teal: { bg: 'bg-teal-50', text: 'text-teal-600' },
     orange: { bg: 'bg-amber-50', text: 'text-amber-600' },
-    indigo: { bg: 'bg-indigo-50', text: 'text-indigo-600' },
+    green: { bg: 'bg-green-50', text: 'text-green-600' },
   };
 
   const colors = colorConfig[color] || colorConfig.slate;

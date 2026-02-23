@@ -232,7 +232,7 @@ export default function NotificationBell() {
           <div className="px-4 py-3 border-b border-slate-100 bg-slate-50">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <Bell className="w-4 h-4 text-indigo-600" />
+                <Bell className="w-4 h-4 text-green-600" />
                 <span className="font-semibold text-slate-900 text-sm">Notificaciones</span>
               </div>
               <button
@@ -253,7 +253,7 @@ export default function NotificationBell() {
                 <Inbox className="w-3.5 h-3.5" />
                 Recibidas
                 {unreadCount > 0 && (
-                  <span className="px-1.5 py-0.5 bg-indigo-600 text-white text-[10px] rounded-full leading-none">{unreadCount}</span>
+                  <span className="px-1.5 py-0.5 bg-green-600 text-white text-[10px] rounded-full leading-none">{unreadCount}</span>
                 )}
               </button>
               <button
@@ -276,7 +276,7 @@ export default function NotificationBell() {
             <div className="px-4 py-2 border-b border-slate-100 flex justify-end">
               <button
                 onClick={handleMarkAllAsRead}
-                className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                className="flex items-center gap-1 text-xs text-green-600 hover:text-green-800 font-medium"
               >
                 <CheckCheck className="w-3.5 h-3.5" />
                 Marcar todas como leídas
@@ -287,7 +287,7 @@ export default function NotificationBell() {
             <div className="px-4 py-2 border-b border-slate-100 flex justify-end">
               <button
                 onClick={handleMarkAllResponsesAsRead}
-                className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                className="flex items-center gap-1 text-xs text-green-600 hover:text-green-800 font-medium"
               >
                 <CheckCheck className="w-3.5 h-3.5" />
                 Marcar todas como leídas
@@ -299,7 +299,7 @@ export default function NotificationBell() {
           <div className="max-h-[400px] overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 text-indigo-600 animate-spin" />
+                <Loader2 className="w-6 h-6 text-green-600 animate-spin" />
               </div>
             ) : activeTab === 'received' ? (
               /* TAB: Asignaciones recibidas */
@@ -309,7 +309,7 @@ export default function NotificationBell() {
                     <div
                       key={assignment.id}
                       className={`p-3.5 hover:bg-slate-50 transition-colors ${
-                        !assignment.is_read ? 'bg-indigo-50/50' : ''
+                        !assignment.is_read ? 'bg-green-50/50' : ''
                       }`}
                     >
                       <div className="flex items-start gap-3">
@@ -324,7 +324,7 @@ export default function NotificationBell() {
                             </span>
                             <span className="text-xs text-slate-500">te asignó</span>
                             {!assignment.is_read && (
-                              <span className="w-2 h-2 bg-indigo-600 rounded-full flex-shrink-0"></span>
+                              <span className="w-2 h-2 bg-green-600 rounded-full flex-shrink-0"></span>
                             )}
                           </div>
                           
@@ -426,7 +426,7 @@ export default function NotificationBell() {
                           <button
                             onClick={() => handleMarkAsRead(assignment.id)}
                             disabled={markingRead === assignment.id}
-                            className="p-1 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-100 rounded-lg transition-colors flex-shrink-0"
+                            className="p-1 text-green-500 hover:text-green-700 hover:bg-green-100 rounded-lg transition-colors flex-shrink-0"
                             title="Marcar como leída"
                           >
                             {markingRead === assignment.id ? (
@@ -531,7 +531,7 @@ export default function NotificationBell() {
           <div className="px-4 py-3 border-t border-slate-100 bg-slate-50">
             <a
               href="/assignments"
-              className="flex items-center justify-center gap-2 text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+              className="flex items-center justify-center gap-2 text-sm text-green-600 hover:text-green-800 font-medium"
             >
               Ver todas las asignaciones
               <ChevronRight className="w-4 h-4" />

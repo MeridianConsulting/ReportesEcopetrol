@@ -39,7 +39,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex">
       {/* Panel izquierdo - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-green-900 via-green-800 to-slate-900 relative overflow-hidden">
         {/* Patrón de fondo */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full -translate-x-1/2 -translate-y-1/2"></div>
@@ -65,7 +65,7 @@ export default function LoginPage() {
                 Gestiona tus tareas<br />
                 de forma inteligente
               </h1>
-              <p className="mt-4 text-lg text-blue-200 max-w-md">
+              <p className="mt-4 text-lg text-green-200 max-w-md">
                 Plataforma integral para el seguimiento y control de actividades empresariales.
               </p>
             </div>
@@ -74,40 +74,40 @@ export default function LoginPage() {
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
-                  <BarChart3 className="w-5 h-5 text-blue-300" />
+                  <BarChart3 className="w-5 h-5 text-green-300" />
                 </div>
                 <div>
                   <p className="text-white font-medium">Dashboards en tiempo real</p>
-                  <p className="text-blue-300 text-sm">Visualiza métricas y KPIs actualizados</p>
+                  <p className="text-green-300 text-sm">Visualiza métricas y KPIs actualizados</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
-                  <Users className="w-5 h-5 text-blue-300" />
+                  <Users className="w-5 h-5 text-green-300" />
                 </div>
                 <div>
                   <p className="text-white font-medium">Colaboración en equipo</p>
-                  <p className="text-blue-300 text-sm">Asigna y gestiona tareas fácilmente</p>
+                  <p className="text-green-300 text-sm">Asigna y gestiona tareas fácilmente</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
-                  <Shield className="w-5 h-5 text-blue-300" />
+                  <Shield className="w-5 h-5 text-green-300" />
                 </div>
                 <div>
                   <p className="text-white font-medium">Seguridad empresarial</p>
-                  <p className="text-blue-300 text-sm">Datos protegidos y acceso controlado</p>
+                  <p className="text-green-300 text-sm">Datos protegidos y acceso controlado</p>
                 </div>
               </div>
             </div>
           </div>
           
           {/* Footer del panel */}
-          <div className="text-blue-300 text-sm space-y-1">
+          <div className="text-green-300 text-sm space-y-1">
             <div>
               © {new Date().getFullYear()} Meridian Consulting. Todos los derechos reservados.
             </div>
-            <div className="text-xs text-blue-200/70 mt-1">
+            <div className="text-xs text-green-200/70 mt-1">
               Desarrollado por <span className="font-medium">José Mateo López Cifuentes</span>
             </div>
           </div>
@@ -142,14 +142,14 @@ export default function LoginPage() {
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                  <Mail className="h-5 w-5 text-slate-400 group-focus-within:text-green-600 transition-colors" />
                 </div>
                 <input
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   required
-                  className="w-full pl-12 pr-4 py-3.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200 placeholder:text-slate-400 shadow-sm"
+                  className="w-full pl-12 pr-4 py-3.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all duration-200 placeholder:text-slate-400 shadow-sm"
                   placeholder="correo@empresa.com"
                 />
               </div>
@@ -161,14 +161,14 @@ export default function LoginPage() {
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                  <Lock className="h-5 w-5 text-slate-400 group-focus-within:text-green-600 transition-colors" />
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   required
-                  className="w-full pl-12 pr-12 py-3.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200 placeholder:text-slate-400 shadow-sm"
+                  className="w-full pl-12 pr-12 py-3.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all duration-200 placeholder:text-slate-400 shadow-sm"
                   placeholder="Ingresa tu contraseña"
                 />
                 <button
@@ -188,7 +188,7 @@ export default function LoginPage() {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4.5 w-4.5 rounded border-slate-300 text-blue-600 focus:ring-blue-600 focus:ring-offset-0 cursor-pointer"
+                  className="h-4.5 w-4.5 rounded border-slate-300 text-green-600 focus:ring-green-600 focus:ring-offset-0 cursor-pointer"
                 />
                 <span className="text-sm text-slate-600">Recordarme</span>
               </label>
@@ -203,7 +203,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 shadow-lg shadow-blue-600/25"
+              className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 text-sm font-semibold text-white bg-green-600 rounded-xl hover:bg-green-700 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2 shadow-lg shadow-green-600/25"
             >
               {loading ? (
                 <>
@@ -226,7 +226,7 @@ export default function LoginPage() {
                 <span>Conexión segura</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <Shield className="w-4 h-4 text-blue-500" />
+                <Shield className="w-4 h-4 text-green-500" />
                 <span>Datos encriptados</span>
               </div>
             </div>

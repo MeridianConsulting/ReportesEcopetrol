@@ -267,7 +267,7 @@ export default function AssignmentsPage() {
   const getStatusColor = (status) => {
     switch (status) {
       case 'Completada': return 'bg-emerald-50 text-emerald-700';
-      case 'En progreso': return 'bg-blue-50 text-blue-700';
+      case 'En progreso': return 'bg-teal-50 text-teal-700';
       case 'En riesgo': return 'bg-rose-50 text-rose-700';
       default: return 'bg-slate-50 text-slate-700';
     }
@@ -277,7 +277,7 @@ export default function AssignmentsPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-10 w-10 text-indigo-600 animate-spin" strokeWidth={1.75} />
+          <Loader2 className="h-10 w-10 text-green-600 animate-spin" strokeWidth={1.75} />
         </div>
       </Layout>
     );
@@ -290,7 +290,7 @@ export default function AssignmentsPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-semibold text-slate-900 flex items-center gap-3">
-              <Bell className="w-7 h-7 text-indigo-600" strokeWidth={1.75} />
+              <Bell className="w-7 h-7 text-green-600" strokeWidth={1.75} />
               Asignaciones de Tareas
             </h1>
             <p className="text-slate-500 mt-0.5 text-sm">
@@ -308,7 +308,7 @@ export default function AssignmentsPage() {
             </button>
             <button
               onClick={() => setShowAssignModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
             >
               <Plus className="w-5 h-5" />
               Asignar Tarea
@@ -329,7 +329,7 @@ export default function AssignmentsPage() {
             <Inbox className="w-4 h-4" />
             Recibidas
             {unreadCount > 0 && tab === 'received' && (
-              <span className="px-1.5 py-0.5 bg-indigo-600 text-white text-xs rounded-full">
+              <span className="px-1.5 py-0.5 bg-green-600 text-white text-xs rounded-full">
                 {unreadCount}
               </span>
             )}
@@ -356,7 +356,7 @@ export default function AssignmentsPage() {
               placeholder="Buscar por tarea o usuario..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full pl-10 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
             />
           </div>
           {tab === 'received' && (
@@ -365,7 +365,7 @@ export default function AssignmentsPage() {
               <select
                 value={filterRead}
                 onChange={e => setFilterRead(e.target.value)}
-                className="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                className="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
               >
                 <option value="all">Todas</option>
                 <option value="unread">No leídas</option>
@@ -374,7 +374,7 @@ export default function AssignmentsPage() {
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllAsRead}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                 >
                   <CheckCheck className="w-4 h-4" />
                   Marcar todas como leídas
@@ -388,7 +388,7 @@ export default function AssignmentsPage() {
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
           {loading ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
+              <Loader2 className="h-8 w-8 text-green-600 animate-spin" />
             </div>
           ) : filteredAssignments.length > 0 ? (
             <div className="divide-y divide-slate-100">
@@ -396,7 +396,7 @@ export default function AssignmentsPage() {
                 <div
                   key={assignment.id}
                   className={`p-5 hover:bg-slate-50 transition-colors ${
-                    !assignment.is_read && tab === 'received' ? 'bg-indigo-50/40' : ''
+                    !assignment.is_read && tab === 'received' ? 'bg-green-50/40' : ''
                   }`}
                 >
                   <div className="flex items-start gap-4 min-w-0">
@@ -415,7 +415,7 @@ export default function AssignmentsPage() {
                           {tab === 'received' ? 'te asignó' : 'recibió'}
                         </span>
                         {!assignment.is_read && tab === 'received' && (
-                          <span className="px-1.5 py-0.5 bg-indigo-600 text-white text-xs rounded-full">
+                          <span className="px-1.5 py-0.5 bg-green-600 text-white text-xs rounded-full">
                             Nueva
                           </span>
                         )}
@@ -455,7 +455,7 @@ export default function AssignmentsPage() {
                           </span>
                         )}
                         {assignment.kpi_category_name && (
-                          <span className="flex items-center gap-1 px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded border border-indigo-200">
+                          <span className="flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 rounded border border-green-200">
                             <Target className="w-3 h-3" />
                             {assignment.kpi_category_name}
                           </span>
@@ -506,7 +506,7 @@ export default function AssignmentsPage() {
                           {(user?.role === 'lider_area' || user?.role === 'admin') && (
                             <button
                               onClick={() => openReassignModal(assignment)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-indigo-600 text-xs font-medium rounded-lg border border-indigo-300 hover:bg-indigo-50 transition-colors"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-green-600 text-xs font-medium rounded-lg border border-green-300 hover:bg-green-50 transition-colors"
                             >
                               <UserPlus className="w-3.5 h-3.5" />
                               Reasignar
@@ -522,7 +522,7 @@ export default function AssignmentsPage() {
                           {(user?.role === 'lider_area' || user?.role === 'admin') && assignment.status === 'accepted' && (
                             <button
                               onClick={() => openReassignModal(assignment)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-indigo-600 text-xs font-medium rounded-lg border border-indigo-300 hover:bg-indigo-50 transition-colors"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-green-600 text-xs font-medium rounded-lg border border-green-300 hover:bg-green-50 transition-colors"
                             >
                               <UserPlus className="w-3.5 h-3.5" />
                               Reasignar
@@ -549,7 +549,7 @@ export default function AssignmentsPage() {
                         {!assignment.is_read && tab === 'received' && (
                           <button
                             onClick={() => handleMarkAsRead(assignment.id)}
-                            className="p-2 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-colors"
+                            className="p-2 text-green-500 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
                             title="Marcar como leída"
                           >
                             <Check className="w-4 h-4" />
@@ -716,8 +716,8 @@ export default function AssignmentsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                <UserPlus className="w-5 h-5 text-indigo-600" />
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <UserPlus className="w-5 h-5 text-green-600" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-slate-900">Reasignar tarea</h3>
@@ -739,7 +739,7 @@ export default function AssignmentsPage() {
                       type="button"
                       onClick={() => setReassignSelectedId(reassignSelectedId === u.id ? null : u.id)}
                       className={`w-full px-4 py-3 flex items-center gap-3 text-left transition-colors ${
-                        reassignSelectedId === u.id ? 'bg-indigo-50 border-l-4 border-indigo-600' : 'hover:bg-slate-50'
+                        reassignSelectedId === u.id ? 'bg-green-50 border-l-4 border-green-600' : 'hover:bg-slate-50'
                       }`}
                     >
                       <div className="w-8 h-8 bg-slate-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
@@ -749,7 +749,7 @@ export default function AssignmentsPage() {
                         <p className="text-sm font-medium text-slate-900">{u.name}</p>
                         <p className="text-xs text-slate-500 truncate">{u.email}</p>
                       </div>
-                      {reassignSelectedId === u.id && <CheckCircle2 className="w-5 h-5 text-indigo-600 flex-shrink-0" />}
+                      {reassignSelectedId === u.id && <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />}
                     </button>
                   ))}
                 </div>
@@ -766,7 +766,7 @@ export default function AssignmentsPage() {
               <button
                 onClick={handleReassign}
                 disabled={!reassignSelectedId || reassignSubmitting}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
               >
                 {reassignSubmitting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

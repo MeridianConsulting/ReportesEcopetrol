@@ -101,7 +101,7 @@ export default function TaskForm({ task, onSave, onCancel }) {
           value={formData.title}
           onChange={e => setFormData({ ...formData, title: e.target.value })}
           required
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
         />
       </div>
 
@@ -111,7 +111,7 @@ export default function TaskForm({ task, onSave, onCancel }) {
           value={formData.description}
           onChange={e => setFormData({ ...formData, description: e.target.value })}
           rows={4}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
         />
       </div>
 
@@ -136,7 +136,7 @@ export default function TaskForm({ task, onSave, onCancel }) {
             value={formData.status}
             onChange={e => setFormData({ ...formData, status: e.target.value })}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
           >
             <option value="No iniciada">No iniciada</option>
             <option value="En progreso">En progreso</option>
@@ -154,7 +154,7 @@ export default function TaskForm({ task, onSave, onCancel }) {
             max="100"
             value={formData.progress_percent}
             onChange={e => setFormData({ ...formData, progress_percent: parseInt(e.target.value) || 0 })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
           />
         </div>
       </div>
@@ -166,7 +166,7 @@ export default function TaskForm({ task, onSave, onCancel }) {
             value={formData.area_id}
             onChange={e => setFormData({ ...formData, area_id: e.target.value })}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
           >
             <option value="">Seleccionar área</option>
             {areas.map(area => (
@@ -181,7 +181,7 @@ export default function TaskForm({ task, onSave, onCancel }) {
             value={formData.responsible_id}
             onChange={e => setFormData({ ...formData, responsible_id: e.target.value })}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
           >
             <option value="">Seleccionar responsable</option>
             {users.map(user => (
@@ -198,7 +198,7 @@ export default function TaskForm({ task, onSave, onCancel }) {
             type="date"
             value={formData.start_date}
             onChange={e => setFormData({ ...formData, start_date: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
           />
         </div>
 
@@ -208,7 +208,7 @@ export default function TaskForm({ task, onSave, onCancel }) {
             type="date"
             value={formData.due_date}
             onChange={e => setFormData({ ...formData, due_date: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
           />
         </div>
       </div>
@@ -226,7 +226,7 @@ export default function TaskForm({ task, onSave, onCancel }) {
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition"
+          className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-lg transition"
         >
           {loading ? 'Guardando...' : task ? 'Actualizar' : 'Crear'}
         </button>

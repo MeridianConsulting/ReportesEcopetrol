@@ -62,7 +62,7 @@ export default function Layout({ children }) {
     return (
       <div className="flex items-center justify-center h-screen bg-slate-50">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-10 w-10 text-indigo-600 animate-spin" strokeWidth={1.75} />
+          <Loader2 className="h-10 w-10 text-green-600 animate-spin" strokeWidth={1.75} />
           <p className="text-sm text-slate-500">Cargando...</p>
         </div>
       </div>

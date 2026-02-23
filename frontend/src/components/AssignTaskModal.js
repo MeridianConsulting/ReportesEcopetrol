@@ -231,7 +231,7 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl w-full max-w-lg shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4 flex-shrink-0">
+        <div className="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {step === 2 && (
@@ -246,7 +246,7 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
                 <h2 className="text-lg font-semibold text-white">
                   {step === 1 ? 'Asignar Nueva Tarea' : 'Crear Tarea'}
                 </h2>
-                <p className="text-indigo-200 text-sm">
+                <p className="text-green-200 text-sm">
                   {step === 1 
                     ? 'Paso 1: Selecciona a quién asignar' 
                     : `Paso 2: Crear tarea para ${selectedUser?.name}`}
@@ -296,7 +296,7 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                   placeholder="Buscar por nombre, email o área..."
-                  className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 />
               </div>
             </div>
@@ -305,7 +305,7 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
             <div className="border border-slate-200 rounded-lg overflow-hidden">
               {loading ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-6 h-6 text-indigo-600 animate-spin" />
+                  <Loader2 className="w-6 h-6 text-green-600 animate-spin" />
                 </div>
               ) : filteredUsers.length > 0 ? (
                 <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
@@ -314,7 +314,7 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
                       key={user.id}
                       type="button"
                       onClick={() => handleSelectUser(user)}
-                      className="w-full px-4 py-3 flex items-center gap-3 hover:bg-indigo-50 transition-colors text-left"
+                      className="w-full px-4 py-3 flex items-center gap-3 hover:bg-green-50 transition-colors text-left"
                     >
                       <div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center text-white font-medium flex-shrink-0">
                         {user.name?.charAt(0).toUpperCase()}
@@ -365,9 +365,9 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
             )}
 
             {/* Usuario seleccionado con información del área */}
-            <div className="bg-indigo-50 rounded-lg p-3 mb-5">
+            <div className="bg-green-50 rounded-lg p-3 mb-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-medium">
+                <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-medium">
                   {selectedUser?.name?.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1">
@@ -375,7 +375,7 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
                   <p className="text-xs text-slate-600">{selectedUser?.email}</p>
                 </div>
                 <div className="text-right">
-                  <div className="flex items-center gap-1 text-xs text-indigo-700 bg-indigo-100 px-2 py-1 rounded-lg">
+                  <div className="flex items-center gap-1 text-xs text-green-700 bg-green-100 px-2 py-1 rounded-lg">
                     <Building2 className="w-3 h-3" />
                     {selectedUserAreaName}
                   </div>
@@ -403,7 +403,7 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
                 onChange={e => setTaskData({ ...taskData, title: e.target.value })}
                 required
                 placeholder="¿Qué debe hacer?"
-                className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
               />
             </div>
 
@@ -417,7 +417,7 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
                 onChange={e => setTaskData({ ...taskData, description: e.target.value })}
                 placeholder="Detalles adicionales de la tarea..."
                 rows={2}
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
               />
             </div>
 
@@ -429,7 +429,7 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
               <select
                 value={taskData.priority}
                 onChange={e => setTaskData({ ...taskData, priority: e.target.value })}
-                className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
               >
                 <option value="Alta">Alta</option>
                 <option value="Media">Media</option>
@@ -447,7 +447,7 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
                   value={taskData.area_id}
                   onChange={e => setTaskData({ ...taskData, area_id: e.target.value })}
                   disabled={!!selectedUser?.area_id}
-                  className={`w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                  className={`w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
                     selectedUser?.area_id ? 'bg-slate-100 cursor-not-allowed text-slate-500' : 'bg-white'
                   }`}
                 >
@@ -474,7 +474,7 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
                   type="date"
                   value={taskData.start_date}
                   onChange={e => setTaskData({ ...taskData, start_date: e.target.value })}
-                  className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
               <div>
@@ -485,7 +485,7 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
                   type="date"
                   value={taskData.due_date}
                   onChange={e => setTaskData({ ...taskData, due_date: e.target.value })}
-                  className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
             </div>
@@ -500,7 +500,7 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
                 onChange={e => setTaskData({ ...taskData, message: e.target.value })}
                 placeholder="Añade instrucciones o comentarios personales..."
                 rows={2}
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
               />
             </div>
 
@@ -516,7 +516,7 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
               <button
                 type="submit"
                 disabled={!taskData.title || submitting}
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

@@ -232,7 +232,7 @@ export default function MyTasksPage() {
         {/* Header compacto con stats inline */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
+            <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center shadow-sm">
               <Table2 className="w-5 h-5 text-white" strokeWidth={2} />
             </div>
             <div>
@@ -251,9 +251,9 @@ export default function MyTasksPage() {
               <CheckCircle2 className="w-4 h-4 text-emerald-600" strokeWidth={2} />
               <span className="text-lg font-semibold text-emerald-700 tabular-nums">{stats.completed}</span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 rounded-lg">
-              <Clock className="w-4 h-4 text-blue-600" strokeWidth={2} />
-              <span className="text-lg font-semibold text-blue-700 tabular-nums">{stats.pending}</span>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-50 rounded-lg">
+              <Clock className="w-4 h-4 text-teal-600" strokeWidth={2} />
+              <span className="text-lg font-semibold text-teal-700 tabular-nums">{stats.pending}</span>
             </div>
             {stats.atRisk > 0 && (
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 rounded-lg">

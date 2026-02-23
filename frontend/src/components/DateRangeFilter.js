@@ -173,13 +173,13 @@ export default function DateRangeFilter({ onChange, defaultPeriod = 'today', val
                 onClick={() => handlePeriodSelect(option)}
                 className={`w-full px-4 py-2.5 text-left text-sm transition-colors flex items-center justify-between ${
                   selectedPeriod === option.id 
-                    ? 'bg-indigo-50 text-indigo-700 font-medium' 
+                    ? 'bg-green-50 text-green-700 font-medium' 
                     : 'text-slate-700 hover:bg-slate-50'
                 }`}
               >
                 {option.label}
                 {selectedPeriod === option.id && (
-                  <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                  <div className="w-1.5 h-1.5 bg-green-600 rounded-full"></div>
                 )}
               </button>
             ))}
@@ -198,7 +198,7 @@ export default function DateRangeFilter({ onChange, defaultPeriod = 'today', val
                 type="date"
                 value={dateFrom}
                 onChange={(e) => handleCustomDateChange(e.target.value, dateTo)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
             <div>
@@ -207,7 +207,7 @@ export default function DateRangeFilter({ onChange, defaultPeriod = 'today', val
                 type="date"
                 value={dateTo}
                 onChange={(e) => handleCustomDateChange(dateFrom, e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -226,7 +226,7 @@ export default function DateRangeFilter({ onChange, defaultPeriod = 'today', val
                 }
               }}
               disabled={!dateFrom || !dateTo}
-              className="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Aplicar
             </button>

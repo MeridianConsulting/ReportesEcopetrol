@@ -333,19 +333,19 @@ export default function TaskModal({ isOpen, onClose, task, onSave }) {
                         onPaste={handleTitlePaste}
                         required
                         placeholder="Ej: Revisar documentacion del proyecto"
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow placeholder:text-slate-400"
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow placeholder:text-slate-400"
                       />
                       {showMultiTaskPrompt && (
-                        <div className="mt-3 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
-                          <p className="text-sm font-medium text-indigo-900 mb-2">
+                        <div className="mt-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+                          <p className="text-sm font-medium text-green-900 mb-2">
                             Se detectaron {pastedTasks.length} tareas para crear
                           </p>
                           <div className="max-h-32 overflow-y-auto mb-3 space-y-1">
                             {pastedTasks.slice(0, 5).map((taskTitle, idx) => (
-                              <p key={idx} className="text-xs text-indigo-700">• {taskTitle.trim()}</p>
+                              <p key={idx} className="text-xs text-green-700">• {taskTitle.trim()}</p>
                             ))}
                             {pastedTasks.length > 5 && (
-                              <p className="text-xs text-indigo-600">... y {pastedTasks.length - 5} más</p>
+                              <p className="text-xs text-green-600">... y {pastedTasks.length - 5} más</p>
                             )}
                           </div>
                           <div className="flex gap-2">
@@ -353,7 +353,7 @@ export default function TaskModal({ isOpen, onClose, task, onSave }) {
                               type="button"
                               onClick={createMultipleTasks}
                               disabled={loading}
-                              className="px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                              className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
                             >
                               {loading ? 'Creando...' : `Crear ${pastedTasks.length} tareas`}
                             </button>
@@ -394,7 +394,7 @@ export default function TaskModal({ isOpen, onClose, task, onSave }) {
                         }}
                         rows={3}
                         placeholder="Describe los detalles de la tarea..."
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow resize-none placeholder:text-slate-400"
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow resize-none placeholder:text-slate-400"
                       />
                     </div>
 
@@ -435,7 +435,7 @@ export default function TaskModal({ isOpen, onClose, task, onSave }) {
                           value={formData.area_id}
                           onChange={e => setFormData({ ...formData, area_id: e.target.value })}
                           required
-                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow bg-white"
+                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow bg-white"
                         >
                           <option value="">Seleccionar área</option>
                           {areas.map(area => (
@@ -452,7 +452,7 @@ export default function TaskModal({ isOpen, onClose, task, onSave }) {
                           value={formData.responsible_id}
                           onChange={e => setFormData({ ...formData, responsible_id: e.target.value })}
                           required
-                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow bg-white"
+                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow bg-white"
                         >
                           <option value="">Seleccionar responsable</option>
                           {users.map(user => (
@@ -471,7 +471,7 @@ export default function TaskModal({ isOpen, onClose, task, onSave }) {
                         <select
                           value={formData.status}
                           onChange={e => setFormData({ ...formData, status: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow bg-white"
+                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow bg-white"
                         >
                           <option value="No iniciada">No iniciada</option>
                           <option value="En progreso">En progreso</option>
@@ -483,7 +483,7 @@ export default function TaskModal({ isOpen, onClose, task, onSave }) {
 
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">
-                          Progreso: <span className="font-semibold text-indigo-600">{formData.progress_percent}%</span>
+                          Progreso: <span className="font-semibold text-green-600">{formData.progress_percent}%</span>
                         </label>
                         <input
                           type="range"
@@ -492,7 +492,7 @@ export default function TaskModal({ isOpen, onClose, task, onSave }) {
                           step="5"
                           value={formData.progress_percent}
                           onChange={e => setFormData({ ...formData, progress_percent: parseInt(e.target.value) })}
-                          className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                          className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-green-600"
                         />
                         <div className="flex justify-between text-xs text-slate-400 mt-1">
                           <span>0%</span>
@@ -512,7 +512,7 @@ export default function TaskModal({ isOpen, onClose, task, onSave }) {
                           type="date"
                           value={formData.start_date}
                           onChange={e => setFormData({ ...formData, start_date: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
                         />
                       </div>
 
@@ -524,7 +524,7 @@ export default function TaskModal({ isOpen, onClose, task, onSave }) {
                           type="date"
                           value={formData.due_date}
                           onChange={e => setFormData({ ...formData, due_date: e.target.value })}
-                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
                         />
                       </div>
                     </div>
@@ -565,7 +565,7 @@ export default function TaskModal({ isOpen, onClose, task, onSave }) {
                     <button
                       type="button"
                       onClick={() => setActiveTab('details')}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
                     >
                       Siguiente
                       <ChevronRight className="w-4 h-4" strokeWidth={2} />
@@ -576,7 +576,7 @@ export default function TaskModal({ isOpen, onClose, task, onSave }) {
                       <button
                         type="button"
                         onClick={() => setActiveTab('basic')}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
                       >
                         <ChevronLeft className="w-4 h-4" strokeWidth={2} />
                         Atras
@@ -584,7 +584,7 @@ export default function TaskModal({ isOpen, onClose, task, onSave }) {
                       <button
                         type="submit"
                         disabled={loading}
-                        className="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 shadow-sm"
+                        className="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 shadow-sm"
                       >
                         {loading ? (
                           <>

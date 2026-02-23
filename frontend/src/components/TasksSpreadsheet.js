@@ -890,7 +890,7 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
 
     const cellClass = `px-2 py-2 border-r border-slate-200 text-sm overflow-hidden whitespace-nowrap ${
       hasChanges ? 'bg-amber-50' : isNew ? 'bg-emerald-50/30' : 'bg-white'
-    } ${isEditing ? 'ring-2 ring-inset ring-indigo-500' : ''} hover:bg-slate-50`;
+    } ${isEditing ? 'ring-2 ring-inset ring-green-500' : ''} hover:bg-slate-50`;
 
     // Campos de seleccion
     if (['priority', 'status', 'area_id', 'area_destinataria_id'].includes(field)) {
@@ -946,7 +946,7 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
               step="5"
               value={pct}
               onChange={(e) => handleProgressChange(taskId, e.target.value, isNew)}
-              className="flex-1 min-w-0 h-1.5 accent-indigo-600 cursor-pointer"
+              className="flex-1 min-w-0 h-1.5 accent-green-600 cursor-pointer"
             />
             <span className="text-xs font-semibold text-slate-700 shrink-0 tabular-nums">{pct}%</span>
           </div>
@@ -1013,7 +1013,7 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
     const isSelected = !isNew && selectedTasks.has(taskId.toString());
 
     return (
-      <tr key={taskId} className={`group border-b border-slate-100 last:border-b-0 ${isSelected ? 'bg-indigo-50/50' : ''}`}>
+      <tr key={taskId} className={`group border-b border-slate-100 last:border-b-0 ${isSelected ? 'bg-green-50/50' : ''}`}>
         {/* Casilla de selección */}
         {!isNew && (
           <td className="px-1 py-2 text-center bg-slate-50/50 border-r border-slate-200">
@@ -1027,8 +1027,8 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
                 />
                 <div className={`relative w-4 h-4 rounded border-2 transition-all duration-200 ${
                   isSelected 
-                    ? 'bg-indigo-600 border-indigo-600 shadow-sm shadow-indigo-200' 
-                    : 'bg-white border-slate-300 group-hover:border-indigo-400 group-hover:bg-indigo-50'
+                    ? 'bg-green-600 border-green-600 shadow-sm shadow-green-200' 
+                    : 'bg-white border-slate-300 group-hover:border-green-400 group-hover:bg-green-50'
                 }`}>
                   {isSelected && (
                     <svg 
@@ -1110,7 +1110,7 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-48 bg-white rounded-xl border border-slate-200">
-        <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" strokeWidth={1.75} />
+        <Loader2 className="h-8 w-8 text-green-600 animate-spin" strokeWidth={1.75} />
       </div>
     );
   }
@@ -1137,10 +1137,10 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
             {totalCount > filteredTasksCount && (
               <span className="text-slate-400 ml-1">de {totalCount}</span>
             )}
-            {fetchingTasks && <span className="text-indigo-500 ml-2 animate-pulse">cargando…</span>}
+            {fetchingTasks && <span className="text-green-500 ml-2 animate-pulse">cargando…</span>}
           </span>
           {selectedTasks.size > 0 && (
-            <span className="text-sm font-medium text-indigo-600">
+            <span className="text-sm font-medium text-green-600">
               {selectedTasks.size} seleccionada(s)
             </span>
           )}
@@ -1181,14 +1181,14 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
             </div>
           )}
           {showPastePrompt && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-indigo-50 border border-indigo-200 rounded-lg">
-              <span className="text-xs font-medium text-indigo-700">
+            <div className="flex items-center gap-2 px-3 py-1 bg-green-50 border border-green-200 rounded-lg">
+              <span className="text-xs font-medium text-green-700">
                 {pastedLines.length} tareas detectadas
               </span>
               <button
                 onClick={createMultipleTasksFromPaste}
                 disabled={saving}
-                className="px-2 py-0.5 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                className="px-2 py-0.5 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700 disabled:opacity-50 transition-colors"
               >
                 {saving ? 'Creando...' : 'Crear todas'}
               </button>
@@ -1206,7 +1206,7 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
         </div>
         <button
           onClick={addNewRow}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors shadow-sm"
         >
           <Plus className="w-4 h-4" strokeWidth={2.5} />
           Nueva tarea
@@ -1237,8 +1237,8 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
                     />
                     <div className={`relative w-4 h-4 rounded border-2 transition-all duration-200 ${
                       tasks.length > 0 && selectedTasks.size === tasks.length
-                        ? 'bg-indigo-600 border-indigo-600 shadow-sm shadow-indigo-200' 
-                        : 'bg-white/20 border-slate-400 group-hover:border-indigo-300 group-hover:bg-white/30'
+                        ? 'bg-green-600 border-green-600 shadow-sm shadow-green-200' 
+                        : 'bg-white/20 border-slate-400 group-hover:border-green-300 group-hover:bg-white/30'
                     }`}>
                       {tasks.length > 0 && selectedTasks.size === tasks.length && (
                         <svg 
@@ -1316,14 +1316,14 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
                       <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={handleClearFilters}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-colors"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
                         >
                           <RotateCcw className="w-4 h-4" />
                           Volver a Hoy
                         </button>
                         <button
                           onClick={addNewRow}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
                         >
                           <Plus className="w-4 h-4" />
                           Nueva tarea
@@ -1342,7 +1342,7 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
                   <button
                     onClick={loadMore}
                     disabled={isLoadingMore}
-                    className="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors disabled:opacity-60"
+                    className="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors disabled:opacity-60"
                   >
                     {isLoadingMore ? (
                       <>
@@ -1352,7 +1352,7 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
                     ) : (
                       <>
                         Cargar más tareas
-                        <span className="text-xs text-indigo-500">({tasks.length} de {totalCount})</span>
+                        <span className="text-xs text-green-500">({tasks.length} de {totalCount})</span>
                       </>
                     )}
                   </button>

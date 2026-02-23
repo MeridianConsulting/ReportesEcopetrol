@@ -252,7 +252,7 @@ export default function ManagementDashboard() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-10 w-10 text-indigo-600 animate-spin" strokeWidth={1.75} />
+          <Loader2 className="h-10 w-10 text-green-600 animate-spin" strokeWidth={1.75} />
         </div>
       </Layout>
     );
@@ -292,7 +292,7 @@ export default function ManagementDashboard() {
             />
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200 border border-indigo-700 hover:border-indigo-800 no-print"
+              className="flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200 border border-green-700 hover:border-green-800 no-print"
               title="Exportar página a PDF (abre el cuadro de impresión)"
             >
               <FileDown className="w-4 h-4 shrink-0" strokeWidth={2.25} />
@@ -320,22 +320,22 @@ export default function ManagementDashboard() {
             <p className="text-emerald-200 text-xs mt-1">{dashboard?.general?.completed || 0} de {dashboard?.general?.total_tasks || 0} tareas</p>
           </div>
 
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 text-white shadow-lg shadow-blue-200">
+          <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl p-5 text-white shadow-lg shadow-teal-200">
             <div className="flex items-center justify-between mb-3">
               <Activity className="w-8 h-8 opacity-80" strokeWidth={1.5} />
               <span className="text-3xl font-bold tabular-nums">{kpis.avgProgress}%</span>
             </div>
-            <p className="text-blue-100 text-sm font-medium">Progreso Promedio</p>
-            <p className="text-blue-200 text-xs mt-1">Avance general de tareas</p>
+            <p className="text-teal-100 text-sm font-medium">Progreso Promedio</p>
+            <p className="text-teal-200 text-xs mt-1">Avance general de tareas</p>
           </div>
 
-          <div className="bg-gradient-to-br from-violet-500 to-violet-600 rounded-xl p-5 text-white shadow-lg shadow-violet-200">
+          <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl p-5 text-white shadow-lg shadow-teal-200">
             <div className="flex items-center justify-between mb-3">
               <TrendingUp className="w-8 h-8 opacity-80" strokeWidth={1.5} />
               <span className="text-3xl font-bold tabular-nums">{kpis.inProgressRate}%</span>
             </div>
-            <p className="text-violet-100 text-sm font-medium">En Ejecucion</p>
-            <p className="text-violet-200 text-xs mt-1">Tareas activas actualmente</p>
+            <p className="text-teal-100 text-sm font-medium">En Ejecucion</p>
+            <p className="text-teal-200 text-xs mt-1">Tareas activas actualmente</p>
           </div>
 
           <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-5 text-white shadow-lg shadow-amber-200">
@@ -402,7 +402,7 @@ export default function ManagementDashboard() {
         <div className="bg-white rounded-xl border border-slate-200 overflow-visible mb-6">
           <div className="px-5 py-4 border-b border-slate-200">
             <div className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-indigo-600" />
+              <BarChart3 className="w-5 h-5 text-green-600" />
               <div>
                 <h2 className="text-base font-semibold text-slate-900">Analisis Grafico</h2>
                 <p className="text-xs text-slate-500 mt-0.5">Visualizacion de metricas y tendencias</p>
@@ -414,7 +414,7 @@ export default function ManagementDashboard() {
             {/* Gráfico de Evolución Semanal - Ancho completo */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <LineChart className="w-4 h-4 text-blue-600" />
+                <LineChart className="w-4 h-4 text-teal-600" />
                 <h3 className="text-sm font-semibold text-slate-800">Evolucion Semanal</h3>
                 <span className="text-xs text-slate-500">Ultimas 12 semanas</span>
               </div>
@@ -603,7 +603,7 @@ export default function ManagementDashboard() {
                   <p className="text-xs text-slate-500 mb-1">{q.label}</p>
                   <p className={`text-xl font-bold ${
                     q.compliance_rate >= 80 ? 'text-emerald-600' :
-                    q.compliance_rate >= 50 ? 'text-blue-600' :
+                    q.compliance_rate >= 50 ? 'text-teal-600' :
                     q.compliance_rate >= 25 ? 'text-amber-600' : 'text-rose-600'
                   }`}>
                     {q.compliance_rate}%
@@ -637,7 +637,7 @@ export default function ManagementDashboard() {
                   ? Math.round((area.completed / area.total_tasks) * 100) 
                   : 0;
                 const progressColor = completionRate >= 80 ? 'bg-emerald-500' : 
-                                     completionRate >= 50 ? 'bg-blue-500' : 
+                                     completionRate >= 50 ? 'bg-teal-500' : 
                                      completionRate >= 25 ? 'bg-amber-500' : 'bg-rose-500';
                 return (
                   <div key={area.id} className="bg-slate-50 rounded-lg p-4">
@@ -648,7 +648,7 @@ export default function ManagementDashboard() {
                       </div>
                       <span className={`text-lg font-bold tabular-nums ${
                         completionRate >= 80 ? 'text-emerald-600' : 
-                        completionRate >= 50 ? 'text-blue-600' : 
+                        completionRate >= 50 ? 'text-teal-600' : 
                         completionRate >= 25 ? 'text-amber-600' : 'text-rose-600'
                       }`}>
                         {completionRate}%
@@ -714,7 +714,7 @@ export default function ManagementDashboard() {
                       <td className="px-5 py-3 text-center">
                         <span className={`inline-flex px-2 py-0.5 rounded text-xs font-semibold ${
                           completionRate >= 80 ? 'bg-emerald-100 text-emerald-700' : 
-                          completionRate >= 50 ? 'bg-blue-100 text-blue-700' : 
+                          completionRate >= 50 ? 'bg-teal-100 text-teal-700' : 
                           completionRate >= 25 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'
                         }`}>
                           {completionRate}%
@@ -724,7 +724,7 @@ export default function ManagementDashboard() {
                         <div className="flex items-center justify-center gap-2">
                           <div className="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-indigo-500 rounded-full"
+                              className="h-full bg-green-500 rounded-full"
                               style={{ width: `${area.avg_progress || 0}%` }}
                             ></div>
                           </div>
@@ -771,7 +771,7 @@ export default function ManagementDashboard() {
                         <p className="text-xs text-slate-500">Cumplimiento</p>
                         <p className={`text-lg font-bold ${
                           user.completion_rate >= 80 ? 'text-emerald-600' :
-                          user.completion_rate >= 50 ? 'text-blue-600' : 'text-amber-600'
+                          user.completion_rate >= 50 ? 'text-teal-600' : 'text-amber-600'
                         }`}>
                           {user.completion_rate}%
                         </p>
@@ -781,7 +781,7 @@ export default function ManagementDashboard() {
                           <div 
                             className={`h-full rounded-full ${
                               user.completion_rate >= 80 ? 'bg-emerald-500' :
-                              user.completion_rate >= 50 ? 'bg-blue-500' : 'bg-amber-500'
+                              user.completion_rate >= 50 ? 'bg-teal-500' : 'bg-amber-500'
                             }`}
                             style={{ width: `${user.completion_rate}%` }}
                           ></div>

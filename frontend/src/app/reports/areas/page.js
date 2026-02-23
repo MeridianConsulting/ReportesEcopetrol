@@ -614,7 +614,7 @@ export default function AreasDashboard() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-10 w-10 text-indigo-600 animate-spin" strokeWidth={1.75} />
+          <Loader2 className="h-10 w-10 text-green-600 animate-spin" strokeWidth={1.75} />
         </div>
       </Layout>
     );
@@ -656,12 +656,12 @@ export default function AreasDashboard() {
             {lastUpdated && (
               <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400">
                 {autoRefreshing && (
-                  <span className="flex items-center gap-1 text-indigo-500">
+                  <span className="flex items-center gap-1 text-green-500">
                     <Loader2 className="w-3 h-3 animate-spin" />
                   </span>
                 )}
                 <span className="flex items-center gap-1">
-                  <span className={`w-1.5 h-1.5 rounded-full ${autoRefreshing ? 'bg-indigo-500 animate-pulse' : 'bg-emerald-500'}`}></span>
+                  <span className={`w-1.5 h-1.5 rounded-full ${autoRefreshing ? 'bg-green-500 animate-pulse' : 'bg-emerald-500'}`}></span>
                   {lastUpdated.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                 </span>
               </div>
@@ -693,7 +693,7 @@ export default function AreasDashboard() {
                 onClick={() => setSelectedAreaFilter(null)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   selectedAreaFilter === null
-                    ? 'bg-indigo-600 text-white shadow-sm'
+                    ? 'bg-green-600 text-white shadow-sm'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
@@ -714,7 +714,7 @@ export default function AreasDashboard() {
                       onClick={() => setSelectedAreaFilter(selectedAreaFilter === area.id ? null : area.id)}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
                         selectedAreaFilter === area.id
-                          ? 'bg-indigo-600 text-white shadow-sm'
+                          ? 'bg-green-600 text-white shadow-sm'
                           : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                       }`}
                     >
@@ -760,8 +760,8 @@ export default function AreasDashboard() {
                   className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
-                      <Building2 className="w-6 h-6 text-indigo-600" strokeWidth={1.75} />
+                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                      <Building2 className="w-6 h-6 text-green-600" strokeWidth={1.75} />
                     </div>
                     <div className="text-left">
                       <h2 className="text-lg font-semibold text-slate-900">{area.name}</h2>
@@ -791,7 +791,7 @@ export default function AreasDashboard() {
                         <p className="text-xs text-slate-500">Sin iniciar</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-xl font-bold tabular-nums text-blue-600">{data.total}</p>
+                        <p className="text-xl font-bold tabular-nums text-teal-600">{data.total}</p>
                         <p className="text-xs text-slate-500">Total tareas</p>
                       </div>
                     </div>
@@ -812,7 +812,7 @@ export default function AreasDashboard() {
                           <button
                             type="button"
                             onClick={() => handleAreaCounterClick(area.id, 'Completada')}
-                            className={`bg-white rounded-lg p-4 border text-left transition-colors hover:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 ${areaDrillDown[area.id] === 'Completada' ? 'border-indigo-400 ring-2 ring-indigo-200' : 'border-slate-200'}`}
+                            className={`bg-white rounded-lg p-4 border text-left transition-colors hover:border-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 ${areaDrillDown[area.id] === 'Completada' ? 'border-green-400 ring-2 ring-green-200' : 'border-slate-200'}`}
                           >
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
@@ -827,7 +827,7 @@ export default function AreasDashboard() {
                           <button
                             type="button"
                             onClick={() => handleAreaCounterClick(area.id, 'En progreso')}
-                            className={`bg-white rounded-lg p-4 border text-left transition-colors hover:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 ${areaDrillDown[area.id] === 'En progreso' ? 'border-indigo-400 ring-2 ring-indigo-200' : 'border-slate-200'}`}
+                            className={`bg-white rounded-lg p-4 border text-left transition-colors hover:border-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 ${areaDrillDown[area.id] === 'En progreso' ? 'border-green-400 ring-2 ring-green-200' : 'border-slate-200'}`}
                           >
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
@@ -842,7 +842,7 @@ export default function AreasDashboard() {
                           <button
                             type="button"
                             onClick={() => handleAreaCounterClick(area.id, 'No iniciada')}
-                            className={`bg-white rounded-lg p-4 border text-left transition-colors hover:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 ${areaDrillDown[area.id] === 'No iniciada' ? 'border-indigo-400 ring-2 ring-indigo-200' : 'border-slate-200'}`}
+                            className={`bg-white rounded-lg p-4 border text-left transition-colors hover:border-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 ${areaDrillDown[area.id] === 'No iniciada' ? 'border-green-400 ring-2 ring-green-200' : 'border-slate-200'}`}
                           >
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
@@ -857,11 +857,11 @@ export default function AreasDashboard() {
                           <button
                             type="button"
                             onClick={() => handleAreaCounterClick(area.id, '')}
-                            className={`bg-white rounded-lg p-4 border text-left transition-colors hover:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 ${areaDrillDown[area.id] === '' ? 'border-indigo-400 ring-2 ring-indigo-200' : 'border-slate-200'}`}
+                            className={`bg-white rounded-lg p-4 border text-left transition-colors hover:border-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 ${areaDrillDown[area.id] === '' ? 'border-green-400 ring-2 ring-green-200' : 'border-slate-200'}`}
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <ClipboardList className="w-5 h-5 text-blue-600" strokeWidth={1.75} />
+                              <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                                <ClipboardList className="w-5 h-5 text-teal-600" strokeWidth={1.75} />
                               </div>
                               <div>
                                 <p className="text-2xl font-bold text-slate-900 tabular-nums">{data.total}</p>
@@ -1388,7 +1388,7 @@ export default function AreasDashboard() {
                                   <button
                                     type="button"
                                     onClick={() => setAreaDrillDown(prev => ({ ...prev, [area.id]: '' }))}
-                                    className="text-xs font-medium text-indigo-600 hover:text-indigo-800"
+                                    className="text-xs font-medium text-green-600 hover:text-green-800"
                                   >
                                     Ver todas
                                   </button>
@@ -1424,9 +1424,9 @@ export default function AreasDashboard() {
                                       <td className="px-5 py-3.5">
                                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                                           task.status === 'Completada' ? 'bg-emerald-50 text-emerald-700' :
-                                          task.status === 'En progreso' ? 'bg-blue-50 text-blue-700' :
+                                          task.status === 'En progreso' ? 'bg-teal-50 text-teal-700' :
                                           task.status === 'En riesgo' ? 'bg-rose-50 text-rose-700' :
-                                          task.status === 'En revisión' ? 'bg-violet-50 text-violet-700' :
+                                          task.status === 'En revisión' ? 'bg-teal-50 text-teal-700' :
                                           'bg-slate-100 text-slate-600'
                                         }`}>
                                           {task.status}
@@ -1438,7 +1438,7 @@ export default function AreasDashboard() {
                                             <div
                                               className={`h-full rounded-full ${
                                                 task.progress_percent >= 100 ? 'bg-emerald-500' :
-                                                task.progress_percent >= 50 ? 'bg-indigo-500' : 'bg-amber-500'
+                                                task.progress_percent >= 50 ? 'bg-green-500' : 'bg-amber-500'
                                               }`}
                                               style={{ width: `${task.progress_percent || 0}%` }}
                                             ></div>
@@ -1476,7 +1476,7 @@ export default function AreasDashboard() {
                                   {hasMoreTasks ? (
                                     <button
                                       onClick={() => setVisibleTasksCount(prev => ({ ...prev, [area.id]: limit + TASKS_PER_PAGE }))}
-                                      className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                                      className="text-sm font-medium text-green-600 hover:text-green-800 transition-colors"
                                     >
                                       Mostrar más ({displayTasks.length - limit} restantes)
                                     </button>
@@ -1510,7 +1510,7 @@ export default function AreasDashboard() {
                         {[
                           { key: '', label: 'Total tareas', value: data.total, className: 'text-slate-900' },
                           { key: 'No iniciada', label: 'Sin iniciar', value: data.notStarted, className: 'text-slate-500' },
-                          { key: 'En progreso', label: 'En progreso', value: data.inProgress, className: 'text-blue-600' },
+                          { key: 'En progreso', label: 'En progreso', value: data.inProgress, className: 'text-teal-600' },
                           { key: 'Completada', label: 'Completadas', value: data.completed, className: 'text-emerald-600' },
                           { key: 'overdue', label: 'Vencidas', value: data.overdue, className: 'text-red-600' }
                         ].map(({ key, label, value, className }) => (
@@ -1518,7 +1518,7 @@ export default function AreasDashboard() {
                             key={key}
                             type="button"
                             onClick={() => handleAreaCounterClick(area.id, key)}
-                            className={`rounded-lg p-3 border transition-colors hover:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 ${areaDrillDown[area.id] === key ? 'bg-indigo-50 border-indigo-400 ring-2 ring-indigo-200' : 'bg-white border-slate-200'}`}
+                            className={`rounded-lg p-3 border transition-colors hover:border-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 ${areaDrillDown[area.id] === key ? 'bg-green-50 border-green-400 ring-2 ring-green-200' : 'bg-white border-slate-200'}`}
                           >
                             <p className={`text-2xl font-bold tabular-nums ${className}`}>{value}</p>
                             <p className="text-xs text-slate-500">{label}</p>

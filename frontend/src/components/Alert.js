@@ -75,14 +75,14 @@ export default function Alert({
       defaultIcon: AlertTriangle
     },
     info: {
-      bg: 'bg-blue-50',
-      border: 'border-blue-200',
-      text: 'text-blue-800',
-      titleText: 'text-blue-900',
-      iconBg: 'bg-blue-100',
-      iconColor: 'text-blue-600',
-      hoverBg: 'hover:bg-blue-100',
-      focusRing: 'focus:ring-blue-500',
+      bg: 'bg-teal-50',
+      border: 'border-teal-200',
+      text: 'text-teal-800',
+      titleText: 'text-teal-900',
+      iconBg: 'bg-teal-100',
+      iconColor: 'text-teal-600',
+      hoverBg: 'hover:bg-teal-100',
+      focusRing: 'focus:ring-teal-500',
       defaultIcon: Info
     }
   };

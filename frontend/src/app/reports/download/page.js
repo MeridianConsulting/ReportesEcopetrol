@@ -261,7 +261,7 @@ export default function ReportsDownload() {
       // Colores
       const primaryColor = [79, 70, 229]; // Indigo
       const greenColor = [5, 150, 105];
-      const blueColor = [37, 99, 235];
+      const tealColor = [37, 99, 235];
       const roseColor = [225, 29, 72];
       const amberColor = [217, 119, 6];
       const slateColor = [100, 116, 139];
@@ -295,7 +295,7 @@ export default function ReportsDownload() {
       const kpiWidth = (pageWidth - margin * 2 - 15) / 4;
       const kpis = [
         { label: 'Completitud', value: `${data.completionRate}%`, color: greenColor },
-        { label: 'Progreso Prom.', value: `${data.avgProgress}%`, color: blueColor },
+        { label: 'Progreso Prom.', value: `${data.avgProgress}%`, color: tealColor },
         { label: 'En Ejecucion', value: `${data.inProgress}`, color: [124, 58, 237] },
         { label: 'Riesgo/Vencidas', value: `${data.atRisk + data.overdue}`, color: roseColor },
       ];
@@ -322,7 +322,7 @@ export default function ReportsDownload() {
       const stats = [
         { label: 'Total', value: data.total, color: slateColor },
         { label: 'Completadas', value: data.completed, color: greenColor },
-        { label: 'En Progreso', value: data.inProgress, color: blueColor },
+        { label: 'En Progreso', value: data.inProgress, color: tealColor },
         { label: 'En Riesgo', value: data.atRisk, color: roseColor },
         { label: 'Vencidas', value: data.overdue, color: amberColor },
       ];
@@ -349,13 +349,13 @@ export default function ReportsDownload() {
       // === GRÁFICAS DE PIE ===
       const typeColors = {
         'Clave': amberColor,
-        'Operativa': blueColor,
+        'Operativa': tealColor,
         'Mejora': greenColor,
         'Obligatoria': roseColor
       };
       const statusColors = {
         'Completada': greenColor,
-        'En progreso': blueColor,
+        'En progreso': tealColor,
         'En riesgo': roseColor,
         'No iniciada': slateColor,
         'En revisión': [139, 92, 246]
@@ -544,7 +544,7 @@ export default function ReportsDownload() {
           doc.setTextColor(...roseColor);
           doc.text(`${area.at_risk}`, margin + 115, y + 3);
           
-          doc.setTextColor(...(pct >= 80 ? greenColor : pct >= 50 ? blueColor : amberColor));
+          doc.setTextColor(...(pct >= 80 ? greenColor : pct >= 50 ? tealColor : amberColor));
           doc.setFont('helvetica', 'bold');
           doc.text(`${pct}%`, margin + 140, y + 3);
           
@@ -774,7 +774,7 @@ export default function ReportsDownload() {
       // Colores
       const primaryColor = '4F46E5';
       const greenColor = '059669';
-      const blueColor = '2563EB';
+      const tealColor = '2563EB';
       const roseColor = 'E11D48';
       const amberColor = 'D97706';
       const slateColor = '64748B';
@@ -824,7 +824,7 @@ export default function ReportsDownload() {
       // Fila de KPIs
       const kpiLabels = ['Tasa Completitud', 'Progreso Promedio', 'En Ejecución', 'En Riesgo', 'Vencidas'];
       const kpiValues = [`${data.completionRate}%`, `${data.avgProgress}%`, data.inProgress, data.atRisk, data.overdue];
-      const kpiColors = [greenColor, blueColor, '7C3AED', roseColor, amberColor];
+      const kpiColors = [greenColor, tealColor, '7C3AED', roseColor, amberColor];
 
       summarySheet.getRow(5).values = ['', ...kpiLabels];
       summarySheet.getRow(5).font = { bold: true, size: 10, color: { argb: 'FFFFFF' } };
@@ -913,7 +913,7 @@ export default function ReportsDownload() {
         cell.alignment = { horizontal: 'center' };
       }
 
-      const typeColorMap = { 'Clave': amberColor, 'Operativa': blueColor, 'Mejora': greenColor, 'Obligatoria': roseColor };
+      const typeColorMap = { 'Clave': amberColor, 'Operativa': tealColor, 'Mejora': greenColor, 'Obligatoria': roseColor };
       data.typeData.forEach((item, i) => {
         const rowNum = 15 + i;
         const pct = data.total > 0 ? Math.round((item.count / data.total) * 100) : 0;
@@ -946,7 +946,7 @@ export default function ReportsDownload() {
       summarySheet.getCell(14, 6).value = 'Cantidad';
       summarySheet.getCell(14, 7).value = '%';
 
-      const statusColorMap = { 'Completada': greenColor, 'En progreso': blueColor, 'En riesgo': roseColor, 'No iniciada': slateColor };
+      const statusColorMap = { 'Completada': greenColor, 'En progreso': tealColor, 'En riesgo': roseColor, 'No iniciada': slateColor };
       data.statusData.forEach((item, i) => {
         const rowNum = 15 + i;
         const pct = data.total > 0 ? Math.round((item.count / data.total) * 100) : 0;
@@ -1041,7 +1041,7 @@ export default function ReportsDownload() {
           const pctCell = areasSheet.getCell(rowNum, 7);
           pctCell.font = { 
             bold: true, 
-            color: { argb: pct >= 80 ? greenColor : pct >= 50 ? blueColor : amberColor } 
+            color: { argb: pct >= 80 ? greenColor : pct >= 50 ? tealColor : amberColor } 
           };
         });
       }
@@ -1146,7 +1146,7 @@ export default function ReportsDownload() {
       // ==========================================
       if (reportType !== 'kpis') {
         const tasksSheet = workbook.addWorksheet('Detalle Tareas', {
-          properties: { tabColor: { argb: blueColor } }
+          properties: { tabColor: { argb: tealColor } }
         });
       
       tasksSheet.columns = [
@@ -1166,7 +1166,7 @@ export default function ReportsDownload() {
       const tasksTitleCell = tasksSheet.getCell('A1');
       tasksTitleCell.value = '📋 DETALLE DE TAREAS';
       tasksTitleCell.font = { size: 18, bold: true, color: { argb: 'FFFFFF' } };
-      tasksTitleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: blueColor } };
+      tasksTitleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: tealColor } };
       tasksTitleCell.alignment = { horizontal: 'center', vertical: 'middle' };
       tasksSheet.getRow(1).height = 35;
 
@@ -1238,7 +1238,7 @@ export default function ReportsDownload() {
         const prog = task.progress_percent;
           progressCell.font = { 
             bold: true, 
-            color: { argb: prog >= 80 ? greenColor : prog >= 50 ? blueColor : prog > 0 ? amberColor : slateColor } 
+            color: { argb: prog >= 80 ? greenColor : prog >= 50 ? tealColor : prog > 0 ? amberColor : slateColor } 
           };
         });
       } // Fin del bloque de hoja de tareas
@@ -1277,7 +1277,7 @@ export default function ReportsDownload() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-10 w-10 text-indigo-600 animate-spin" strokeWidth={1.75} />
+          <Loader2 className="h-10 w-10 text-green-600 animate-spin" strokeWidth={1.75} />
         </div>
       </Layout>
     );
@@ -1289,7 +1289,7 @@ export default function ReportsDownload() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-semibold text-slate-900 flex items-center gap-3">
-            <FileDown className="w-7 h-7 text-indigo-600" strokeWidth={1.75} />
+            <FileDown className="w-7 h-7 text-green-600" strokeWidth={1.75} />
             Generador de Reportes
           </h1>
           <p className="text-slate-500 mt-0.5 text-sm">Genera y descarga reportes en PDF con estadisticas detalladas</p>
@@ -1315,7 +1315,7 @@ export default function ReportsDownload() {
                   setSelectedAreaId('');
                   setShowPreview(false);
                 }}
-                className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white"
               >
                 <option value="general">Reporte General</option>
                 <option value="area">Reporte por Area</option>
@@ -1335,7 +1335,7 @@ export default function ReportsDownload() {
                     setSelectedAreaId(e.target.value);
                     setShowPreview(false);
                   }}
-                  className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                  className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white"
                 >
                   <option value="">Seleccione un area...</option>
                   {areas.map(area => (
@@ -1371,7 +1371,7 @@ export default function ReportsDownload() {
               <button
                 onClick={generatePDF}
                 disabled={generating || loading || (reportType === 'area' && !selectedAreaId) || (reportType === 'kpis' && (!kpiData || !kpiData.data))}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {generating ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -1408,7 +1408,7 @@ export default function ReportsDownload() {
             
             <div className="p-6">
               {/* Encabezado */}
-              <div className="border-b-2 border-indigo-600 pb-4 mb-6">
+              <div className="border-b-2 border-green-600 pb-4 mb-6">
                 <h1 className="text-2xl font-bold text-slate-900">
                   {reportType === 'kpis' ? 'Reporte de Indicadores KPI' : 
                    reportType === 'general' ? 'Reporte General de Tareas' : 
@@ -1417,7 +1417,7 @@ export default function ReportsDownload() {
                 <div className="flex items-center justify-between mt-2">
                   <p className="text-slate-600">Meridian Control</p>
                   <div className="text-right">
-                    <p className="text-sm text-slate-500">Periodo: <span className="font-semibold text-indigo-600">{getPeriodLabel()}</span></p>
+                    <p className="text-sm text-slate-500">Periodo: <span className="font-semibold text-green-600">{getPeriodLabel()}</span></p>
                   </div>
                 </div>
               </div>
@@ -1427,12 +1427,12 @@ export default function ReportsDownload() {
                 <>
                   {/* Resumen global de KPIs */}
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                    <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
+                    <div className="bg-green-50 rounded-lg p-4 border border-green-200">
                       <div className="flex items-center gap-3">
-                        <Gauge className="w-8 h-8 text-indigo-600" />
+                        <Gauge className="w-8 h-8 text-green-600" />
                         <div>
-                          <p className="text-2xl font-bold text-indigo-700">{kpiData.global_stats?.avg_performance || 0}%</p>
-                          <p className="text-xs text-indigo-600">Promedio Global</p>
+                          <p className="text-2xl font-bold text-green-700">{kpiData.global_stats?.avg_performance || 0}%</p>
+                          <p className="text-xs text-green-600">Promedio Global</p>
                         </div>
                       </div>
                     </div>
@@ -1477,7 +1477,7 @@ export default function ReportsDownload() {
                   {/* Tabla de KPIs por área */}
                   <div className="mb-6">
                     <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                      <Building2 className="w-5 h-5 text-indigo-600" />
+                      <Building2 className="w-5 h-5 text-green-600" />
                       KPIs por Area
                     </h3>
                     <div className="border border-slate-200 rounded-lg overflow-hidden">
@@ -1538,21 +1538,21 @@ export default function ReportsDownload() {
                     </div>
                   </div>
                 </div>
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <div className="bg-teal-50 rounded-lg p-4 border border-teal-200">
                   <div className="flex items-center gap-3">
-                    <Activity className="w-8 h-8 text-blue-600" />
+                    <Activity className="w-8 h-8 text-teal-600" />
                     <div>
-                      <p className="text-2xl font-bold text-blue-700">{data.avgProgress}%</p>
-                      <p className="text-xs text-blue-600">Progreso Prom.</p>
+                      <p className="text-2xl font-bold text-teal-700">{data.avgProgress}%</p>
+                      <p className="text-xs text-teal-600">Progreso Prom.</p>
                     </div>
                   </div>
                 </div>
-                <div className="bg-violet-50 rounded-lg p-4 border border-violet-200">
+                <div className="bg-teal-50 rounded-lg p-4 border border-teal-200">
                   <div className="flex items-center gap-3">
-                    <TrendingUp className="w-8 h-8 text-violet-600" />
+                    <TrendingUp className="w-8 h-8 text-teal-600" />
                     <div>
-                      <p className="text-2xl font-bold text-violet-700">{data.inProgress}</p>
-                      <p className="text-xs text-violet-600">En Ejecucion</p>
+                      <p className="text-2xl font-bold text-teal-700">{data.inProgress}</p>
+                      <p className="text-xs text-teal-600">En Ejecucion</p>
                     </div>
                   </div>
                 </div>
@@ -1579,9 +1579,9 @@ export default function ReportsDownload() {
                   <p className="text-xl font-bold text-emerald-600">{data.completed}</p>
                   <p className="text-xs text-slate-500">Completadas</p>
                 </div>
-                <div className="bg-blue-50 rounded-lg p-3 text-center border border-blue-200">
-                  <Activity className="w-5 h-5 text-blue-600 mx-auto mb-1" />
-                  <p className="text-xl font-bold text-blue-600">{data.inProgress}</p>
+                <div className="bg-teal-50 rounded-lg p-3 text-center border border-teal-200">
+                  <Activity className="w-5 h-5 text-teal-600 mx-auto mb-1" />
+                  <p className="text-xl font-bold text-teal-600">{data.inProgress}</p>
                   <p className="text-xs text-slate-500">En Progreso</p>
                 </div>
                 <div className="bg-rose-50 rounded-lg p-3 text-center border border-rose-200">
@@ -1609,7 +1609,7 @@ export default function ReportsDownload() {
                             <div 
                               className={`h-full rounded-full ${
                                 item.type === 'Clave' ? 'bg-amber-500' :
-                                item.type === 'Operativa' ? 'bg-blue-500' :
+                                item.type === 'Operativa' ? 'bg-teal-500' :
                                 item.type === 'Mejora' ? 'bg-emerald-500' : 'bg-rose-500'
                               }`}
                               style={{ width: `${data.total > 0 ? (item.count / data.total) * 100 : 0}%` }}
@@ -1632,7 +1632,7 @@ export default function ReportsDownload() {
                             <div 
                               className={`h-full rounded-full ${
                                 item.status === 'Completada' ? 'bg-emerald-500' :
-                                item.status === 'En progreso' ? 'bg-blue-500' :
+                                item.status === 'En progreso' ? 'bg-teal-500' :
                                 item.status === 'En riesgo' ? 'bg-rose-500' : 'bg-slate-400'
                               }`}
                               style={{ width: `${data.total > 0 ? (item.count / data.total) * 100 : 0}%` }}
@@ -1650,7 +1650,7 @@ export default function ReportsDownload() {
               {reportType === 'general' && dashboard?.by_area && (
                 <div className="mb-6">
                   <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                    <Building2 className="w-5 h-5 text-indigo-600" />
+                    <Building2 className="w-5 h-5 text-green-600" />
                     Resumen por Area
                   </h3>
                   <div className="border border-slate-200 rounded-lg overflow-hidden">
@@ -1674,7 +1674,7 @@ export default function ReportsDownload() {
                             <td className="px-3 py-2 text-center">
                               <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                                 area.total_tasks > 0 && (area.completed / area.total_tasks) >= 0.8 ? 'bg-emerald-100 text-emerald-700' :
-                                area.total_tasks > 0 && (area.completed / area.total_tasks) >= 0.5 ? 'bg-blue-100 text-blue-700' :
+                                area.total_tasks > 0 && (area.completed / area.total_tasks) >= 0.5 ? 'bg-teal-100 text-teal-700' :
                                 'bg-amber-100 text-amber-700'
                               }`}>
                                 {area.total_tasks > 0 ? Math.round((area.completed / area.total_tasks) * 100) : 0}%
@@ -1692,7 +1692,7 @@ export default function ReportsDownload() {
               {reportType !== 'kpis' && (
                 <div>
                   <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                    <ClipboardList className="w-5 h-5 text-indigo-600" />
+                    <ClipboardList className="w-5 h-5 text-green-600" />
                     Detalle de Tareas (primeras 15)
                   </h3>
                   <div className="border border-slate-200 rounded-lg overflow-hidden">
@@ -1712,7 +1712,7 @@ export default function ReportsDownload() {
                             <td className="px-3 py-2 text-center">
                               <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                                 task.type === 'Clave' ? 'bg-amber-100 text-amber-700' :
-                                task.type === 'Operativa' ? 'bg-blue-100 text-blue-700' :
+                                task.type === 'Operativa' ? 'bg-teal-100 text-teal-700' :
                                 task.type === 'Mejora' ? 'bg-emerald-100 text-emerald-700' :
                                 'bg-rose-100 text-rose-700'
                               }`}>{task.type}</span>
@@ -1720,7 +1720,7 @@ export default function ReportsDownload() {
                             <td className="px-3 py-2 text-center">
                               <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                                 task.status === 'Completada' ? 'bg-emerald-100 text-emerald-700' :
-                                task.status === 'En progreso' ? 'bg-blue-100 text-blue-700' :
+                                task.status === 'En progreso' ? 'bg-teal-100 text-teal-700' :
                                 task.status === 'En riesgo' ? 'bg-rose-100 text-rose-700' :
                                 'bg-slate-100 text-slate-700'
                               }`}>{task.status}</span>

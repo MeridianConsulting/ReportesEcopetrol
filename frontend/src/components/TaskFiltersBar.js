@@ -135,10 +135,10 @@ function MultiSelectFilter({
           <div className="max-h-[300px] overflow-y-auto">
             {/* Opción "Todos" */}
             <label className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer hover:bg-slate-50 border-b border-slate-100">
-              <span className="flex items-center justify-center w-4 h-4 flex-shrink-0 border border-slate-300 rounded text-indigo-600">
+              <span className="flex items-center justify-center w-4 h-4 flex-shrink-0 border border-slate-300 rounded text-green-600">
                 {isAll ? <Check className="w-2.5 h-2.5" /> : isIndeterminate ? <Minus className="w-2.5 h-2.5" /> : null}
               </span>
-              <span className={isAll ? 'font-medium text-indigo-700' : 'text-slate-700'}>{allLabel}</span>
+              <span className={isAll ? 'font-medium text-green-700' : 'text-slate-700'}>{allLabel}</span>
               <input
                 type="checkbox"
                 className="sr-only"
@@ -152,7 +152,7 @@ function MultiSelectFilter({
                 key={opt}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer hover:bg-slate-50 text-slate-700"
               >
-                <span className="flex items-center justify-center w-4 h-4 flex-shrink-0 border border-slate-300 rounded text-indigo-600">
+                <span className="flex items-center justify-center w-4 h-4 flex-shrink-0 border border-slate-300 rounded text-green-600">
                   {optionChecked(opt) ? <Check className="w-2.5 h-2.5" /> : null}
                 </span>
                 <span>{getOptionLabel(opt)}</span>
@@ -166,7 +166,7 @@ function MultiSelectFilter({
             ))}
           </div>
           <div className="flex justify-between gap-2 px-3 py-2 border-t border-slate-100 bg-slate-50">
-            <button type="button" onClick={handleSelectAll} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+            <button type="button" onClick={handleSelectAll} className="text-xs text-green-600 hover:text-green-800 font-medium">
               Seleccionar todo
             </button>
             <button type="button" onClick={handleClear} className="text-xs text-slate-600 hover:text-slate-800">
@@ -267,7 +267,7 @@ export default function TaskFiltersBar({
               onClick={() => handlePresetChange(p.value)}
               className={`px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${
                 activePreset === p.value
-                  ? 'bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200'
+                  ? 'bg-white text-green-700 shadow-sm ring-1 ring-slate-200'
                   : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
               }`}
             >
@@ -282,7 +282,7 @@ export default function TaskFiltersBar({
             onClick={() => setIsCustomDateOpen(!isCustomDateOpen)}
             className={`flex items-center gap-1.5 px-2.5 py-2 border rounded-lg hover:bg-slate-50 transition-colors text-xs sm:text-sm ${
               activePreset === 'custom'
-                ? 'border-indigo-300 bg-indigo-50 text-indigo-700'
+                ? 'border-green-300 bg-green-50 text-green-700'
                 : 'border-slate-200 bg-white text-slate-700'
             }`}
           >
@@ -304,7 +304,7 @@ export default function TaskFiltersBar({
                 type="date"
                 value={filters.date_from || ''}
                 onChange={(e) => handleCustomDateChange('date_from', e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
               />
               <label className="block text-xs font-medium text-slate-600 mb-2 mt-3">Fecha hasta</label>
               <input
@@ -312,7 +312,7 @@ export default function TaskFiltersBar({
                 value={filters.date_to || ''}
                 onChange={(e) => handleCustomDateChange('date_to', e.target.value)}
                 min={filters.date_from || ''}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
               />
               <div className="mt-3 flex justify-end">
                 <button
@@ -367,13 +367,13 @@ export default function TaskFiltersBar({
                   onClick={() => handlePersonChange('Todos')}
                   className={`w-full px-4 py-2.5 text-left text-sm transition-colors flex items-center justify-between ${
                     !filters.responsible_id
-                      ? 'bg-indigo-50 text-indigo-700 font-medium' 
+                      ? 'bg-green-50 text-green-700 font-medium' 
                       : 'text-slate-700 hover:bg-slate-50'
                   }`}
                 >
                   Todos
                   {!filters.responsible_id && (
-                    <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                    <div className="w-1.5 h-1.5 bg-green-600 rounded-full"></div>
                   )}
                 </button>
                 {users.map(user => (
@@ -382,13 +382,13 @@ export default function TaskFiltersBar({
                     onClick={() => handlePersonChange(user.id)}
                     className={`w-full px-4 py-2.5 text-left text-sm transition-colors flex items-center justify-between ${
                       filters.responsible_id === user.id
-                        ? 'bg-indigo-50 text-indigo-700 font-medium' 
+                        ? 'bg-green-50 text-green-700 font-medium' 
                         : 'text-slate-700 hover:bg-slate-50'
                     }`}
                   >
                     <span className="truncate">{user.name}</span>
                     {filters.responsible_id === user.id && (
-                      <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full flex-shrink-0 ml-2"></div>
+                      <div className="w-1.5 h-1.5 bg-green-600 rounded-full flex-shrink-0 ml-2"></div>
                     )}
                   </button>
                 ))}
@@ -417,13 +417,13 @@ export default function TaskFiltersBar({
                   onClick={() => handleSortChange(option.value)}
                   className={`w-full px-4 py-2.5 text-left text-sm transition-colors flex items-center justify-between ${
                     (filters.sortOrder || 'desc') === option.value
-                      ? 'bg-indigo-50 text-indigo-700 font-medium' 
+                      ? 'bg-green-50 text-green-700 font-medium' 
                       : 'text-slate-700 hover:bg-slate-50'
                   }`}
                 >
                   {option.label}
                   {(filters.sortOrder || 'desc') === option.value && (
-                    <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                    <div className="w-1.5 h-1.5 bg-green-600 rounded-full"></div>
                   )}
                 </button>
               ))}

@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/*
+ * Paleta petrolera / sector energía – coherente con trabajo con Ecopetrol.
+ * - Verde (green): color principal (botones, enlaces, navegación, marca).
+ * - Teal: acentos secundarios (estado "En progreso", cards, informativos).
+ * - Emerald/amber/rose: se mantienen para éxito, advertencia y error.
+ */
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -14,7 +20,7 @@
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-slate-50 text-slate-900;
     font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   }
 }

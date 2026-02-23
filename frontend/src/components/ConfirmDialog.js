@@ -57,7 +57,7 @@ export default function ConfirmDialog({
               transition-colors disabled:opacity-50 disabled:cursor-not-allowed
               ${type === 'error' ? 'bg-rose-600 hover:bg-rose-700' : ''}
               ${type === 'warning' ? 'bg-amber-600 hover:bg-amber-700' : ''}
-              ${type === 'info' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+              ${type === 'info' ? 'bg-green-600 hover:bg-green-700' : ''}
             `}
           >
             {loading ? (
