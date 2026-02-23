@@ -111,8 +111,6 @@ CREATE TABLE `tasks` (
   `created_by` int(11) NOT NULL,
   `start_date` date DEFAULT NULL,
   `due_date` date DEFAULT NULL,
-  `kpi_category_id` int(11) DEFAULT NULL COMMENT 'Categoría KPI seleccionada',
-  `kpi_subcategory` varchar(200) DEFAULT NULL COMMENT 'Subcategoría del KPI (solo para área IT)',
   `closed_date` date DEFAULT NULL,
   `deleted_at` datetime DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -152,51 +150,6 @@ ALTER TABLE `areas`
   ADD UNIQUE KEY `code` (`code`),
   ADD KEY `idx_areas_parent` (`parent_id`),
   ADD KEY `idx_areas_type` (`type`);
-
---
--- Indices de la tabla `kpis`
---
-ALTER TABLE `kpis`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `code` (`code`),
-  ADD KEY `idx_kpis_code` (`code`),
-  ADD KEY `idx_kpis_active` (`is_active`);
-
---
--- Indices de la tabla `kpi_categories`
---
-ALTER TABLE `kpi_categories`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `slug` (`slug`),
-  ADD KEY `idx_categories_area` (`area_id`),
-  ADD KEY `idx_categories_kpi` (`kpi_id`),
-  ADD KEY `idx_categories_active` (`is_active`),
-  ADD KEY `idx_categories_area_active` (`area_id`,`is_active`,`sort_order`);
-
---
--- Indices de la tabla `kpi_period_inputs`
---
-ALTER TABLE `kpi_period_inputs`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uk_area_kpi_period_field` (`area_id`,`kpi_id`,`period_key`,`field_key`),
-  ADD KEY `kpi_id` (`kpi_id`),
-  ADD KEY `idx_period_inputs_lookup` (`area_id`,`period_key`);
-
---
--- Indices de la tabla `kpi_required_inputs`
---
-ALTER TABLE `kpi_required_inputs`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uk_kpi_field` (`kpi_id`,`field_key`),
-  ADD KEY `idx_required_inputs_kpi` (`kpi_id`);
-
---
--- Indices de la tabla `kpi_thresholds`
---
-ALTER TABLE `kpi_thresholds`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_thresholds_kpi` (`kpi_id`),
-  ADD KEY `idx_thresholds_priority` (`kpi_id`,`priority`);
 
 --
 -- Indices de la tabla `login_attempts`
@@ -253,8 +206,6 @@ ALTER TABLE `tasks`
   ADD KEY `idx_tasks_responsible_status_due` (`responsible_id`,`status`,`due_date`),
   ADD KEY `idx_tasks_status_due` (`status`,`due_date`),
   ADD KEY `idx_tasks_area_updated` (`area_id`,`updated_at`),
-  ADD KEY `idx_tasks_kpi_category` (`kpi_category_id`),
-  ADD KEY `idx_tasks_kpi_subcategory` (`kpi_subcategory`),
   ADD KEY `fk_tasks_area_destinataria` (`area_destinataria_id`);
 
 --
@@ -297,24 +248,6 @@ ALTER TABLE `task_evidences`
   ADD KEY `idx_task_evidences_created` (`created_at`);
 
 --
--- Indices de la tabla `task_kpi_facts`
---
-ALTER TABLE `task_kpi_facts`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uk_task_kpi_period` (`task_id`,`kpi_id`,`period_key`),
-  ADD KEY `idx_facts_area_period_kpi` (`area_id`,`period_key`,`kpi_id`),
-  ADD KEY `idx_facts_kpi_period` (`kpi_id`,`period_key`),
-  ADD KEY `idx_facts_applicable` (`is_applicable`);
-
---
--- Indices de la tabla `task_kpi_inputs`
---
-ALTER TABLE `task_kpi_inputs`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uk_task_field` (`task_id`,`field_key`),
-  ADD KEY `idx_inputs_field` (`field_key`);
-
---
 -- Indices de la tabla `users`
 --
 ALTER TABLE `users`
@@ -331,45 +264,12 @@ ALTER TABLE `user_areas`
   ADD PRIMARY KEY (`user_id`,`area_id`),
   ADD KEY `idx_user_areas_area` (`area_id`);
 
---
--- AUTO_INCREMENT de las tablas volcadas
---
 
 --
 -- AUTO_INCREMENT de la tabla `areas`
 --
 ALTER TABLE `areas`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
-
---
--- AUTO_INCREMENT de la tabla `kpis`
---
-ALTER TABLE `kpis`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
-
---
--- AUTO_INCREMENT de la tabla `kpi_categories`
---
-ALTER TABLE `kpi_categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
-
---
--- AUTO_INCREMENT de la tabla `kpi_period_inputs`
---
-ALTER TABLE `kpi_period_inputs`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `kpi_required_inputs`
---
-ALTER TABLE `kpi_required_inputs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
-
---
--- AUTO_INCREMENT de la tabla `kpi_thresholds`
---
-ALTER TABLE `kpi_thresholds`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=136;
 
 --
 -- AUTO_INCREMENT de la tabla `login_attempts`
@@ -432,18 +332,6 @@ ALTER TABLE `task_evidences`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT de la tabla `task_kpi_facts`
---
-ALTER TABLE `task_kpi_facts`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11869;
-
---
--- AUTO_INCREMENT de la tabla `task_kpi_inputs`
---
-ALTER TABLE `task_kpi_inputs`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT de la tabla `users`
 --
 ALTER TABLE `users`
@@ -458,32 +346,6 @@ ALTER TABLE `users`
 --
 ALTER TABLE `areas`
   ADD CONSTRAINT `fk_areas_parent` FOREIGN KEY (`parent_id`) REFERENCES `areas` (`id`) ON DELETE SET NULL;
-
---
--- Filtros para la tabla `kpi_categories`
---
-ALTER TABLE `kpi_categories`
-  ADD CONSTRAINT `kpi_categories_ibfk_1` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `kpi_categories_ibfk_2` FOREIGN KEY (`kpi_id`) REFERENCES `kpis` (`id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `kpi_period_inputs`
---
-ALTER TABLE `kpi_period_inputs`
-  ADD CONSTRAINT `kpi_period_inputs_ibfk_1` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `kpi_period_inputs_ibfk_2` FOREIGN KEY (`kpi_id`) REFERENCES `kpis` (`id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `kpi_required_inputs`
---
-ALTER TABLE `kpi_required_inputs`
-  ADD CONSTRAINT `kpi_required_inputs_ibfk_1` FOREIGN KEY (`kpi_id`) REFERENCES `kpis` (`id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `kpi_thresholds`
---
-ALTER TABLE `kpi_thresholds`
-  ADD CONSTRAINT `kpi_thresholds_ibfk_1` FOREIGN KEY (`kpi_id`) REFERENCES `kpis` (`id`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `password_reset_otps`
@@ -510,7 +372,6 @@ ALTER TABLE `tasks`
   ADD CONSTRAINT `fk_tasks_area` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`),
   ADD CONSTRAINT `fk_tasks_area_destinataria` FOREIGN KEY (`area_destinataria_id`) REFERENCES `areas` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_tasks_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `fk_tasks_kpi_category` FOREIGN KEY (`kpi_category_id`) REFERENCES `kpi_categories` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `fk_tasks_responsible` FOREIGN KEY (`responsible_id`) REFERENCES `users` (`id`);
 
 --
@@ -541,20 +402,6 @@ ALTER TABLE `task_events`
 ALTER TABLE `task_evidences`
   ADD CONSTRAINT `fk_task_evidences_task` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_task_evidences_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-
---
--- Filtros para la tabla `task_kpi_facts`
---
-ALTER TABLE `task_kpi_facts`
-  ADD CONSTRAINT `task_kpi_facts_ibfk_1` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `task_kpi_facts_ibfk_2` FOREIGN KEY (`kpi_id`) REFERENCES `kpis` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `task_kpi_facts_ibfk_3` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `task_kpi_inputs`
---
-ALTER TABLE `task_kpi_inputs`
-  ADD CONSTRAINT `task_kpi_inputs_ibfk_1` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `users`

@@ -16,17 +16,14 @@ import {
   ChevronLeft,
   Calendar,
   Flag,
-  AlertCircle,
-  BarChart3
+  AlertCircle
 } from 'lucide-react';
 
 export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUser = null }) {
   const [step, setStep] = useState(1); // 1: seleccionar usuario, 2: crear tarea
   const [users, setUsers] = useState([]);
   const [areas, setAreas] = useState([]);
-  const [kpiCategories, setKpiCategories] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
-  const [filteredKpiCategories, setFilteredKpiCategories] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
@@ -40,7 +37,6 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
     description: '',
     priority: 'Media',
     area_id: '',
-    kpi_category_id: '',
     start_date: new Date().toISOString().split('T')[0],
     due_date: '',
     message: ''
@@ -66,41 +62,17 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
     }
   }, [searchTerm, users]);
 
-  // Filtrar categorías KPI cuando cambia el usuario seleccionado (soportar múltiples áreas)
-  useEffect(() => {
-    if (selectedUser) {
-      // Usar area_ids si existen, sino fallback a area_id
-      const userAreaIds = (selectedUser.area_ids || []).map(id => parseInt(id, 10));
-      const singleAreaId = selectedUser.area_id ? parseInt(selectedUser.area_id, 10) : null;
-      const allAreaIds = userAreaIds.length > 0 ? userAreaIds : (singleAreaId ? [singleAreaId] : []);
-
-      if (allAreaIds.length > 0) {
-        const categoriesForAreas = kpiCategories.filter(cat => {
-          const catAreaId = parseInt(cat.area_id, 10);
-          return allAreaIds.includes(catAreaId);
-        });
-        setFilteredKpiCategories(categoriesForAreas);
-      } else {
-        setFilteredKpiCategories([]);
-      }
-    } else {
-      setFilteredKpiCategories([]);
-    }
-  }, [selectedUser, kpiCategories]);
-
   function resetForm() {
     setStep(1);
     setSelectedUser(null);
     setSearchTerm('');
     setSuccess(false);
     setError(null);
-    setFilteredKpiCategories([]);
     setTaskData({
       title: '',
       description: '',
       priority: 'Media',
       area_id: '',
-      kpi_category_id: '',
       start_date: new Date().toISOString().split('T')[0],
       due_date: '',
       message: ''
@@ -110,17 +82,13 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
   async function loadData() {
     setLoading(true);
     try {
-      const [usersData, areasData, kpiCategoriesData] = await Promise.all([
+      const [usersData, areasData] = await Promise.all([
         apiRequest('/users/assignable'),
         apiRequest('/areas'),
-        apiRequest('/kpi-categories?all=true')
       ]);
       setUsers(usersData.data || []);
       setFilteredUsers(usersData.data || []);
       setAreas(areasData.data || []);
-      // Usar 'flat' para obtener la lista plana de categorías
-      const categories = kpiCategoriesData.flat || [];
-      setKpiCategories(categories);
     } catch (e) {
       console.error('Error loading data:', e);
     } finally {
@@ -135,21 +103,9 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
       setTaskData(prev => ({ 
         ...prev, 
         area_id: user.area_id,
-        kpi_category_id: '' // Resetear categoría KPI al cambiar de usuario
       }));
     }
     setStep(2);
-  }
-
-  // Manejar cambio de categoría KPI
-  function handleKpiCategoryChange(categoryId) {
-    const selectedCategory = kpiCategories.find(cat => cat.id == categoryId);
-    setTaskData(prev => ({
-      ...prev,
-      kpi_category_id: categoryId || '',
-      // Si la categoría tiene área, forzarla (aunque debería ser la misma del usuario)
-      area_id: selectedCategory ? selectedCategory.area_id : prev.area_id
-    }));
   }
 
   // Normalizar fechas: convertir vacías a null
@@ -221,7 +177,6 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
         ...taskData,
         area_id: areaId,
         responsible_id: responsibleId,
-        kpi_category_id: taskData.kpi_category_id ? parseInt(taskData.kpi_category_id, 10) : null,
         status: 'No iniciada',
         progress_percent: 0
       });
@@ -426,9 +381,6 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
                   </div>
                 </div>
               </div>
-              <p className="mt-2 text-xs text-indigo-600">
-                💡 Los KPIs disponibles corresponden al área: <strong>{selectedUserAreaName}</strong>
-              </p>
               {currentUser?.role === 'lider_area' && selectedUser?.role_name === 'lider_area' && (() => {
                 const myAreaIds = currentUser.area_ids || (currentUser.area_id ? [currentUser.area_id] : []);
                 const isOtherAreaLeader = selectedUser.area_id && !myAreaIds.includes(selectedUser.area_id);
@@ -438,43 +390,6 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
                   </p>
                 ) : null;
               })()}
-            </div>
-
-            {/* Categoría KPI (filtrada por área del usuario) */}
-            <div className="mb-4">
-              <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
-                <span className="flex items-center gap-1">
-                  <BarChart3 className="w-3.5 h-3.5" />
-                  Categoría KPI
-                  <span className="font-normal normal-case text-slate-400">(indicador a medir)</span>
-                </span>
-              </label>
-              <select
-                value={taskData.kpi_category_id || ''}
-                onChange={e => handleKpiCategoryChange(e.target.value)}
-                className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
-              >
-                <option value="">Sin KPI (tarea no medible)</option>
-                {filteredKpiCategories.length > 0 ? (
-                  filteredKpiCategories.map(cat => (
-                    <option key={`kpi-${cat.id}`} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))
-                ) : (
-                  <option disabled>No hay KPIs para esta área</option>
-                )}
-              </select>
-              {filteredKpiCategories.length === 0 && selectedUser?.area_id && (
-                <p className="mt-1 text-xs text-amber-600">
-                  ⚠️ No hay categorías KPI configuradas para el área {selectedUserAreaName}
-                </p>
-              )}
-              {taskData.kpi_category_id && (
-                <p className="mt-1 text-xs text-emerald-600">
-                  ✓ Esta tarea contribuirá al KPI seleccionado
-                </p>
-              )}
             </div>
 
             {/* Título */}
@@ -530,7 +445,7 @@ export default function AssignTaskModal({ isOpen, onClose, onSuccess, currentUse
               <div className="relative">
                 <select
                   value={taskData.area_id}
-                  onChange={e => setTaskData({ ...taskData, area_id: e.target.value, kpi_category_id: '' })}
+                  onChange={e => setTaskData({ ...taskData, area_id: e.target.value })}
                   disabled={!!selectedUser?.area_id}
                   className={`w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                     selectedUser?.area_id ? 'bg-slate-100 cursor-not-allowed text-slate-500' : 'bg-white'

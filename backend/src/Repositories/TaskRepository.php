@@ -18,12 +18,11 @@ class TaskRepository
     $sql = "
       SELECT t.*, a.name as area_name,
         COALESCE(ad.name, a.name) as area_destinataria_name,
-        u.name as responsible_name, kc.name as kpi_category_name
+        u.name as responsible_name
       FROM tasks t
       LEFT JOIN areas a ON t.area_id = a.id
       LEFT JOIN areas ad ON t.area_destinataria_id = ad.id
       LEFT JOIN users u ON t.responsible_id = u.id
-      LEFT JOIN kpi_categories kc ON t.kpi_category_id = kc.id
       WHERE (t.deleted_at IS NULL)
     ";
 
@@ -159,12 +158,11 @@ class TaskRepository
     $sql = "
       SELECT t.*, a.name as area_name,
         COALESCE(ad.name, a.name) as area_destinataria_name,
-        u.name as responsible_name, kc.name as kpi_category_name
+        u.name as responsible_name
       FROM tasks t
       LEFT JOIN areas a ON t.area_id = a.id
       LEFT JOIN areas ad ON t.area_destinataria_id = ad.id
       LEFT JOIN users u ON t.responsible_id = u.id
-      LEFT JOIN kpi_categories kc ON t.kpi_category_id = kc.id
       WHERE t.id = :id
     ";
 
@@ -228,11 +226,11 @@ class TaskRepository
       INSERT INTO tasks (
         area_id, area_destinataria_id, title, description, type, priority, status,
         progress_percent, observaciones, responsible_id, created_by,
-        start_date, due_date, kpi_category_id, kpi_subcategory
+        start_date, due_date
       ) VALUES (
         :area_id, :area_destinataria_id, :title, :description, :type, :priority, :status,
         :progress_percent, :observaciones, :responsible_id, :created_by,
-        :start_date, :due_date, :kpi_category_id, :kpi_subcategory
+        :start_date, :due_date
       )
     ";
 
@@ -248,13 +246,7 @@ class TaskRepository
         : null;
       $createdBy = isset($data['created_by']) ? (int)$data['created_by'] : null;
       $progressPercent = isset($data['progress_percent']) ? (int)$data['progress_percent'] : 0;
-      $kpiCategoryId = isset($data['kpi_category_id']) && $data['kpi_category_id'] !== '' && $data['kpi_category_id'] !== null
-        ? (int)$data['kpi_category_id']
-        : null;
-      $kpiSubcategory = isset($data['kpi_subcategory']) && $data['kpi_subcategory'] !== '' && $data['kpi_subcategory'] !== null
-        ? trim($data['kpi_subcategory'])
-        : null;
-      
+
       if (!$areaId) {
         throw new \Exception('El área es requerida');
       }
@@ -278,8 +270,6 @@ class TaskRepository
         ':created_by' => $createdBy,
         ':start_date' => !empty($data['start_date']) ? $data['start_date'] : null,
         ':due_date' => !empty($data['due_date']) ? $data['due_date'] : null,
-        ':kpi_category_id' => $kpiCategoryId,
-        ':kpi_subcategory' => $kpiSubcategory,
       ]);
 
       return (int) $this->db->lastInsertId();
@@ -296,7 +286,7 @@ class TaskRepository
     $allowedFields = [
       'title', 'description', 'type', 'priority', 'status',
       'progress_percent', 'observaciones', 'responsible_id', 'area_id', 'area_destinataria_id',
-      'start_date', 'due_date', 'closed_date', 'kpi_category_id', 'kpi_subcategory'
+      'start_date', 'due_date', 'closed_date'
     ];
 
     $updates = [];
@@ -344,7 +334,6 @@ class TaskRepository
       LEFT JOIN areas a ON t.area_id = a.id
       LEFT JOIN areas ad ON t.area_destinataria_id = ad.id
       LEFT JOIN users u ON t.responsible_id = u.id
-      LEFT JOIN kpi_categories kc ON t.kpi_category_id = kc.id
     ";
 
     $baseWhere = " WHERE t.deleted_at IS NULL";
@@ -479,20 +468,6 @@ class TaskRepository
         $params[':f_priority'] = $filters['priority'];
       }
     }
-    if (isset($filters['kpi_category_id'])) {
-      if (is_array($filters['kpi_category_id'])) {
-        $placeholders = [];
-        foreach ($filters['kpi_category_id'] as $i => $v) {
-          $key = ':f_kpi_' . $i;
-          $placeholders[] = $key;
-          $params[$key] = (int)$v;
-        }
-        $baseWhere .= " AND t.kpi_category_id IN (" . implode(',', $placeholders) . ")";
-      } else {
-        $baseWhere .= " AND t.kpi_category_id = :f_kpi";
-        $params[':f_kpi'] = (int)$filters['kpi_category_id'];
-      }
-    }
     if (isset($filters['area_id'])) {
       $baseWhere .= " AND t.area_id = :f_area";
       $params[':f_area'] = (int)$filters['area_id'];
@@ -539,7 +514,7 @@ class TaskRepository
     $dataSql = "
       SELECT t.*, a.name as area_name,
         COALESCE(ad.name, a.name) as area_destinataria_name,
-        u.name as responsible_name, kc.name as kpi_category_name
+        u.name as responsible_name
     " . $fromClause . $dataWhere . "
       ORDER BY t.{$sortCol} {$dir}, t.id {$dir}
       LIMIT :pg_limit

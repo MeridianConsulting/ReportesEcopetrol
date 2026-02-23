@@ -6,7 +6,6 @@ use App\Controllers\UserController;
 use App\Controllers\AreaController;
 use App\Controllers\ReportController;
 use App\Controllers\TaskAssignmentController;
-use App\Controllers\KpiController;
 use App\Middleware\CorsMiddleware;
 use App\Middleware\JwtAuthMiddleware;
 use App\Middleware\RoleMiddleware;
@@ -86,24 +85,6 @@ return [
       // Users list for assignments
       ['GET', '/api/v1/users/list', [UserController::class, 'listAll']],
       ['GET', '/api/v1/users/assignable', [UserController::class, 'assignable']],
-
-      // KPIs - Categorías y Summary
-      ['GET', '/api/v1/kpi-categories', [KpiController::class, 'categories']],
-      ['GET', '/api/v1/kpi-categories/by-area/{areaId}', [KpiController::class, 'categoriesByArea']],
-      ['GET', '/api/v1/kpis/summary/all', [KpiController::class, 'summaryAll'], [RoleMiddleware::class => ['admin']]],
-      ['GET', '/api/v1/kpis/summary', [KpiController::class, 'summary']],
-      ['GET', '/api/v1/kpis/periods', [KpiController::class, 'periods']],
-      ['GET', '/api/v1/kpis/{kpiId}/details', [KpiController::class, 'details']],
-      ['GET', '/api/v1/kpis/{kpiId}/trend', [KpiController::class, 'trend']],
-      
-      // KPIs - Task inputs
-      ['GET', '/api/v1/tasks/{taskId}/kpi-inputs', [KpiController::class, 'getTaskInputs']],
-      ['PUT', '/api/v1/tasks/{taskId}/kpi-inputs', [KpiController::class, 'saveTaskInputs']],
-      
-      // KPIs - Admin only
-      ['GET', '/api/v1/kpis/issues', [KpiController::class, 'issues'], [RoleMiddleware::class => ['admin']]],
-      ['GET', '/api/v1/kpis/global-trend', [KpiController::class, 'globalTrend'], [RoleMiddleware::class => ['admin']]],
-      ['POST', '/api/v1/kpis/backfill', [KpiController::class, 'backfill'], [RoleMiddleware::class => ['admin']]],
     ],
   ],
 ];

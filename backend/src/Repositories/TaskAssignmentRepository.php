@@ -24,23 +24,16 @@ class TaskAssignmentRepository
                 t.priority as task_priority,
                 t.status as task_status,
                 t.due_date as task_due_date,
-                t.kpi_category_id,
                 ub.name as assigned_by_name,
                 ub.email as assigned_by_email,
                 ut.name as assigned_to_name,
                 ut.email as assigned_to_email,
-                a.name as area_name,
-                kc.name as kpi_category_name,
-                kc.kpi_id,
-                k.code as kpi_code,
-                k.name as kpi_name
+                a.name as area_name
             FROM task_assignments ta
             INNER JOIN tasks t ON ta.task_id = t.id
             INNER JOIN users ub ON ta.assigned_by = ub.id
             INNER JOIN users ut ON ta.assigned_to = ut.id
             LEFT JOIN areas a ON t.area_id = a.id
-            LEFT JOIN kpi_categories kc ON t.kpi_category_id = kc.id
-            LEFT JOIN kpis k ON kc.kpi_id = k.id
             WHERE 1=1
         ";
 
@@ -83,21 +76,14 @@ class TaskAssignmentRepository
                 t.priority as task_priority,
                 t.status as task_status,
                 t.due_date as task_due_date,
-                t.kpi_category_id,
                 ub.name as assigned_by_name,
                 ut.name as assigned_to_name,
-                a.name as area_name,
-                kc.name as kpi_category_name,
-                kc.kpi_id,
-                k.code as kpi_code,
-                k.name as kpi_name
+                a.name as area_name
             FROM task_assignments ta
             INNER JOIN tasks t ON ta.task_id = t.id
             INNER JOIN users ub ON ta.assigned_by = ub.id
             INNER JOIN users ut ON ta.assigned_to = ut.id
             LEFT JOIN areas a ON t.area_id = a.id
-            LEFT JOIN kpi_categories kc ON t.kpi_category_id = kc.id
-            LEFT JOIN kpis k ON kc.kpi_id = k.id
             WHERE ta.id = :id
         ";
 

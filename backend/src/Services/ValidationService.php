@@ -242,13 +242,6 @@ class ValidationService
       }
     }
 
-    // KPI Subcategoría (opcional, máximo 200 caracteres)
-    if (isset($data['kpi_subcategory']) && $data['kpi_subcategory'] !== '' && $data['kpi_subcategory'] !== null) {
-      if (!self::validateLength($data['kpi_subcategory'], 1, 200)) {
-        $errors['kpi_subcategory'] = 'La subcategoría KPI debe tener entre 1 y 200 caracteres';
-      }
-    }
-
     return $errors;
   }
 

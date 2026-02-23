@@ -22,14 +22,9 @@ export default function TaskModal({ isOpen, onClose, task, onSave }) {
     responsible_id: '',
     start_date: '',
     due_date: '',
-    kpi_category_id: '',
-    kpi_inputs: {},
   });
   const [areas, setAreas] = useState([]);
   const [users, setUsers] = useState([]);
-  const [kpiCategories, setKpiCategories] = useState([]);
-  const [kpiCategoriesByArea, setKpiCategoriesByArea] = useState({});
-  const [selectedKpiRequiredInputs, setSelectedKpiRequiredInputs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [activeTab, setActiveTab] = useState('basic');
@@ -50,8 +45,6 @@ export default function TaskModal({ isOpen, onClose, task, onSave }) {
         responsible_id: task.responsible_id || '',
         start_date: task.start_date || '',
         due_date: task.due_date || '',
-        kpi_category_id: task.kpi_category_id || '',
-        kpi_inputs: task.kpi_inputs || {},
       });
     } else {
       // Reset form for new task
@@ -65,8 +58,6 @@ export default function TaskModal({ isOpen, onClose, task, onSave }) {
         responsible_id: '',
         start_date: new Date().toISOString().split('T')[0],
         due_date: '',
-        kpi_category_id: '',
-        kpi_inputs: {},
       });
     }
   }, [task, isOpen]);
@@ -76,27 +67,12 @@ export default function TaskModal({ isOpen, onClose, task, onSave }) {
       if (!isOpen) return;
       setLoadingData(true);
       try {
-        const [areasData, usersData, kpiCategoriesData] = await Promise.all([
+        const [areasData, usersData] = await Promise.all([
           apiRequest('/areas'),
           apiRequest('/users'),
-          // Usar all=true para obtener todas las categorías KPI
-          apiRequest('/kpi-categories?all=true'),
         ]);
         setAreas(areasData.data || []);
         setUsers(usersData.data || []);
-        // Usar 'flat' que es la lista plana de categorías
-        const categories = kpiCategoriesData.flat || [];
-        setKpiCategories(categories);
-        
-        // Organizar categorías por área para filtrado
-        const byArea = {};
-        categories.forEach(cat => {
-          if (!byArea[cat.area_id]) {
-            byArea[cat.area_id] = [];
-          }
-          byArea[cat.area_id].push(cat);
-        });
-        setKpiCategoriesByArea(byArea);
       } catch (e) {
         // Error loading data
       } finally {
@@ -449,45 +425,6 @@ export default function TaskModal({ isOpen, onClose, task, onSave }) {
 
                 {activeTab === 'details' && (
                   <div className="space-y-6">
-                    {/* Categoría KPI */}
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Categoría (KPI)
-                        <span className="ml-2 text-xs text-slate-500 font-normal">
-                          Opcional - Define el indicador a medir
-                        </span>
-                      </label>
-                      <select
-                        value={formData.kpi_category_id || ''}
-                        onChange={e => {
-                          const selectedCategoryId = e.target.value;
-                          const selectedCategory = kpiCategories.find(cat => cat.id == selectedCategoryId);
-                          setFormData(prev => ({
-                            ...prev,
-                            kpi_category_id: selectedCategoryId || '',
-                            // Actualizar area_id automáticamente si la categoría lo define
-                            area_id: selectedCategory ? selectedCategory.area_id : prev.area_id,
-                          }));
-                        }}
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow bg-white"
-                      >
-                        <option value="">Sin categoría KPI</option>
-                        {kpiCategories.map(category => (
-                          <option key={category.id} value={category.id}>
-                            {category.name} ({areas.find(a => a.id === category.area_id)?.name || 'N/A'})
-                          </option>
-                        ))}
-                      </select>
-                      {formData.kpi_category_id && (
-                        <p className="mt-2 text-xs text-indigo-600 bg-indigo-50 px-3 py-2 rounded-lg">
-                          💡 El área se establecerá automáticamente a:{' '}
-                          <span className="font-medium">
-                            {areas.find(a => a.id == formData.area_id)?.name || 'N/A'}
-                          </span>
-                        </p>
-                      )}
-                    </div>
-
                     {/* Area y Responsable */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -496,23 +433,15 @@ export default function TaskModal({ isOpen, onClose, task, onSave }) {
                         </label>
                         <select
                           value={formData.area_id}
-                          onChange={e => setFormData({ ...formData, area_id: e.target.value, kpi_category_id: '' })}
+                          onChange={e => setFormData({ ...formData, area_id: e.target.value })}
                           required
-                          disabled={!!formData.kpi_category_id}
-                          className={`w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow bg-white ${
-                            formData.kpi_category_id ? 'bg-slate-100 cursor-not-allowed text-slate-500' : ''
-                          }`}
+                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow bg-white"
                         >
                           <option value="">Seleccionar área</option>
                           {areas.map(area => (
                             <option key={area.id} value={area.id}>{area.name}</option>
                           ))}
                         </select>
-                        {formData.kpi_category_id && (
-                          <p className="mt-1 text-xs text-slate-500">
-                            Bloqueado por categoría KPI
-                          </p>
-                        )}
                       </div>
 
                       <div>

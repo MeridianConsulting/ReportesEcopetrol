@@ -27,9 +27,6 @@ class TaskResource
       'due_date' => $task['due_date'] ?? null,
       'closed_date' => $task['closed_date'] ?? null,
       'due_bucket' => $dueBucket,
-      'kpi_category_id' => isset($task['kpi_category_id']) ? (int)$task['kpi_category_id'] : null,
-      'kpi_category_name' => $task['kpi_category_name'] ?? null,
-      'kpi_subcategory' => $task['kpi_subcategory'] ?? null,
       'created_at' => $task['created_at'] ?? null,
       'updated_at' => $task['updated_at'] ?? null,
     ];

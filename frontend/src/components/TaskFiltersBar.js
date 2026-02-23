@@ -179,99 +179,19 @@ function MultiSelectFilter({
   );
 }
 
-// KPI: opciones son { id, name }; value = null | number[] | number
-function KpiMultiSelectFilter({ kpiCategories, value, onChange, open, onOpenChange, containerRef }) {
-  const options = kpiCategories.map((c) => c.id);
-  const selected = normalizeFilterValue(value);
-  const isAll = !selected || selected.length >= options.length;
-  const isIndeterminate = selected && selected.length > 0 && selected.length < options.length;
-  const allCheckboxRef = useRef(null);
-  useEffect(() => {
-    const el = allCheckboxRef.current;
-    if (el) el.indeterminate = isIndeterminate;
-  }, [isIndeterminate]);
-
-  const getLabel = (id) => kpiCategories.find((c) => c.id === id)?.name ?? String(id);
-
-  const handleToggleAll = () => onChange(null);
-  const handleSelectAll = () => onChange(null);
-  const handleClear = () => onChange(null);
-  const handleToggleOption = (id) => {
-    const next = selected ? [...selected] : options.slice();
-    const idx = next.indexOf(id);
-    if (idx === -1) next.push(id);
-    else next.splice(idx, 1);
-    if (next.length === 0) onChange(null);
-    else if (next.length >= options.length) onChange(null);
-    else onChange(next);
-  };
-
-  const optionChecked = (id) => isAll || (selected && selected.includes(id));
-
-  const getSummaryLabel = (val) => {
-    const s = normalizeFilterValue(val);
-    if (!s || s.length === 0) return 'Todos';
-    if (s.length >= options.length) return 'Todos';
-    if (s.length === 1) return getLabel(s[0]);
-    return `${s.length} seleccionados`;
-  };
-
-  return (
-    <div className="relative" ref={containerRef}>
-      <button
-        type="button"
-        onClick={() => onOpenChange(!open)}
-        className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-xs sm:text-sm min-w-[100px] sm:min-w-[150px]"
-      >
-        <span className="text-slate-700 truncate">{getSummaryLabel(value)}</span>
-        <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`} />
-      </button>
-      {open && (
-        <div className="absolute top-full left-0 mt-2 bg-white rounded-xl border border-slate-200 shadow-lg z-50 overflow-hidden min-w-[250px] max-h-[320px]">
-          <div className="max-h-[260px] overflow-y-auto">
-            <label className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer hover:bg-slate-50 border-b border-slate-100">
-              <span className="flex items-center justify-center w-4 h-4 flex-shrink-0 border border-slate-300 rounded text-indigo-600">
-                {isAll ? <Check className="w-2.5 h-2.5" /> : isIndeterminate ? <Minus className="w-2.5 h-2.5" /> : null}
-              </span>
-              <span className={isAll ? 'font-medium text-indigo-700' : 'text-slate-700'}>Todos</span>
-              <input type="checkbox" className="sr-only" checked={isAll} ref={allCheckboxRef} onChange={handleToggleAll} />
-            </label>
-            {kpiCategories.map((cat) => (
-              <label key={cat.id} className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer hover:bg-slate-50 text-slate-700">
-                <span className="flex items-center justify-center w-4 h-4 flex-shrink-0 border border-slate-300 rounded text-indigo-600">
-                  {optionChecked(cat.id) ? <Check className="w-2.5 h-2.5" /> : null}
-                </span>
-                <span className="truncate">{cat.name}</span>
-                <input type="checkbox" className="sr-only" checked={optionChecked(cat.id)} onChange={() => handleToggleOption(cat.id)} />
-              </label>
-            ))}
-          </div>
-          <div className="flex justify-between gap-2 px-3 py-2 border-t border-slate-100 bg-slate-50">
-            <button type="button" onClick={handleSelectAll} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Seleccionar todo</button>
-            <button type="button" onClick={handleClear} className="text-xs text-slate-600 hover:text-slate-800">Limpiar</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function TaskFiltersBar({ 
   filters, 
   onFiltersChange, 
-  kpiCategories = [],
   users = [],
   onClearFilters 
 }) {
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [isPriorityOpen, setIsPriorityOpen] = useState(false);
-  const [isKpiOpen, setIsKpiOpen] = useState(false);
   const [isPersonOpen, setIsPersonOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isCustomDateOpen, setIsCustomDateOpen] = useState(false);
   const statusRef = useRef(null);
   const priorityRef = useRef(null);
-  const kpiRef = useRef(null);
   const personRef = useRef(null);
   const sortRef = useRef(null);
   const customDateRef = useRef(null);
@@ -280,7 +200,6 @@ export default function TaskFiltersBar({
     function handleClickOutside(event) {
       if (statusRef.current && !statusRef.current.contains(event.target)) setIsStatusOpen(false);
       if (priorityRef.current && !priorityRef.current.contains(event.target)) setIsPriorityOpen(false);
-      if (kpiRef.current && !kpiRef.current.contains(event.target)) setIsKpiOpen(false);
       if (personRef.current && !personRef.current.contains(event.target)) setIsPersonOpen(false);
       if (sortRef.current && !sortRef.current.contains(event.target)) setIsSortOpen(false);
       if (customDateRef.current && !customDateRef.current.contains(event.target)) setIsCustomDateOpen(false);
@@ -309,11 +228,6 @@ export default function TaskFiltersBar({
     if (value == null) setIsPriorityOpen(false);
   };
 
-  const handleKpiChange = (value) => {
-    onFiltersChange({ ...filters, kpi_category_id: value ?? null });
-    if (value == null) setIsKpiOpen(false);
-  };
-
   const handlePersonChange = (userId) => {
     onFiltersChange({ ...filters, responsible_id: userId === '' || userId === 'Todos' ? null : parseInt(userId) });
     setIsPersonOpen(false);
@@ -327,7 +241,7 @@ export default function TaskFiltersBar({
   const activePreset = filters.datePreset || 'today';
   const hasStatusFilter = (v) => Array.isArray(v) ? v.length > 0 : v != null && v !== '';
   const hasActiveFilters =
-    hasStatusFilter(filters.status) || hasStatusFilter(filters.priority) || hasStatusFilter(filters.kpi_category_id) ||
+    hasStatusFilter(filters.status) || hasStatusFilter(filters.priority) ||
     filters.responsible_id || activePreset !== 'today' || filters.sortOrder !== 'desc';
 
   const getPersonLabel = () => {
@@ -434,16 +348,6 @@ export default function TaskFiltersBar({
           onOpenChange={setIsPriorityOpen}
           containerRef={priorityRef}
           minWidth="140px"
-        />
-
-        {/* Filtro de KPI (multiselección) */}
-        <KpiMultiSelectFilter
-          kpiCategories={kpiCategories}
-          value={filters.kpi_category_id}
-          onChange={handleKpiChange}
-          open={isKpiOpen}
-          onOpenChange={setIsKpiOpen}
-          containerRef={kpiRef}
         />
 
         {/* Filtro de Persona */}

@@ -28,8 +28,6 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
   const [tasks, setTasks] = useState([]);
   const [areas, setAreas] = useState([]);
   const [users, setUsers] = useState([]);
-  const [kpiCategories, setKpiCategories] = useState([]);
-  const [kpiCategoriesByArea, setKpiCategoriesByArea] = useState({});
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -64,103 +62,12 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
       date_to: today,
       status: null,
       priority: null,
-      kpi_category_id: null,
       sortOrder: 'desc'
     };
   });
 
   const prioridades = ['Alta', 'Media', 'Baja'];
   const estados = ['No iniciada', 'En progreso', 'En revisión', 'Completada', 'En riesgo'];
-
-  // Función para obtener subcategorías según el KPI seleccionado (solo para IT)
-  function getKpiSubcategories(kpiCategoryId) {
-    if (!kpiCategoryId) return [];
-    
-    const category = kpiCategories.find(cat => cat.id == kpiCategoryId);
-    if (!category) return [];
-    
-    // Solo para área IT (area_id = 1)
-    if (category.area_id !== 1) return [];
-    
-    // Usar el código del KPI para identificar (más confiable que el nombre)
-    const kpiCode = category.kpi_code || '';
-    
-    // IT_01: Continuidad Operativa de Servicios Críticos (Disponibilidad)
-    if (kpiCode === 'IT_01') {
-      return [
-        'Incidentes (urgente / caída)',
-        'Servidor / servicio crítico (caída o degradación)',
-        'Red / Internet / Wi-Fi (lento o intermitente)',
-        'Acceso remoto: VPN / dominio (no permite ingresar)',
-        'Backups y restauración (verificación / restauración / pruebas de recuperación)'
-      ];
-    }
-    
-    // IT_02: Cumplimiento del Plan de Mantenimiento Tecnológico (Infraestructura)
-    if (kpiCode === 'IT_02') {
-      return [
-        'Soporte usuario final (PC y periféricos)',
-        'Impresión y digitalización (impresora / escáner)',
-        'Configuración e instalación (software externo y básicos)',
-        'Mantenimiento preventivo (mantenimientos periódicos, parches, optimización)',
-        'Cotización y compras (equipos/software)'
-      ];
-    }
-    
-    // IT_03: Entrega de Desarrollo y Automatización (Software)
-    if (kpiCode === 'IT_03') {
-      return [
-        'Desarrollo de software (nuevas funcionalidades / módulos)',
-        'Mantenimiento correctivo de software (bugs / fallas en aplicativo propio)',
-        'Mantenimiento evolutivo de software (mejoras y optimizaciones)',
-        'Integraciones (APIs / conectores / interoperabilidad)',
-        'Automatización de procesos (scripts / flujos / RPA)',
-        'Bases de datos (modelado / consultas / optimización)',
-        'Despliegues y versionamiento (publicación / control de versiones)',
-        'Soporte a aplicativo propio (incidentes del sistema interno)'
-      ];
-    }
-    
-    // IT_04: Actualización de Documentación y Control de Activos IT
-    if (kpiCode === 'IT_04') {
-      return [
-        'Documentación y reportes (informes mensuales / guías / procedimientos / runbook)',
-        'Actualización de hojas de vida de equipos (inventario del activo)',
-        'Actualización del cronograma de mantenimiento de equipos',
-        'Informes de backups'
-      ];
-    }
-    
-    // IT_05: Eficiencia en Atención y Cierre de Soporte IT
-    if (kpiCode === 'IT_05') {
-      return [
-        'Usuarios y contraseñas (crear/bloquear/desactivar / reset / desbloqueos)',
-        'Permisos y accesos (carpetas / grupos / roles / cambios por cargo)',
-        'Correo y licencias (O365 / Google) (licencias, buzones/alias, configuración, envío/recepción)',
-        'Ciberseguridad (MFA / phishing / cuentas sospechosas / revisión básica de accesos)',
-        'Otros (no clasificado)'
-      ];
-    }
-    
-    return [];
-  }
-
-  // Función para verificar si una tarea es de IT y tiene KPI seleccionado
-  function shouldShowSubcategory(task) {
-    if (!task.kpi_category_id) return false;
-    const category = kpiCategories.find(cat => cat.id == task.kpi_category_id);
-    return category && category.area_id === 1; // Área IT
-  }
-
-  // Función para determinar si se debe mostrar la columna de subcategoría
-  function shouldShowSubcategoryColumn() {
-    // Si el usuario actual es de IT, siempre mostrar la columna
-    if (currentUser?.area_id === 1) return true;
-    
-    // Si hay alguna tarea de IT con KPI seleccionado, mostrar la columna
-    const allRows = [...newRows, ...tasks];
-    return allRows.some(task => shouldShowSubcategory(task));
-  }
 
   useEffect(() => {
     loadInitialData();
@@ -190,7 +97,7 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
     }
     loadTasks(filters, null, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.datePreset, filters.date_from, filters.date_to, filters.status, filters.priority, filters.kpi_category_id, filters.sortOrder]);
+  }, [filters.datePreset, filters.date_from, filters.date_to, filters.status, filters.priority, filters.sortOrder]);
 
   async function loadInitialData() {
     try {
@@ -198,24 +105,13 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
       const user = meData.data;
       setCurrentUser(user);
 
-      const [areasData, usersData, kpiCategoriesData] = await Promise.all([
+      const [areasData, usersData] = await Promise.all([
         apiRequest('/areas'),
         apiRequest('/users'),
-        apiRequest('/kpi-categories?all=true'),
       ]);
 
       setAreas(areasData.data || []);
       setUsers(usersData.data || []);
-
-      const categories = kpiCategoriesData.flat || [];
-      setKpiCategories(categories);
-
-      const byArea = {};
-      categories.forEach(cat => {
-        if (!byArea[cat.area_id]) byArea[cat.area_id] = [];
-        byArea[cat.area_id].push(cat);
-      });
-      setKpiCategoriesByArea(byArea);
 
       // Cargar primera página de tareas
       await loadTasks(undefined, null, false);
@@ -255,12 +151,6 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
       if (statusParam) params.set('status', statusParam);
       const priorityParam = toStatusParam(f.priority);
       if (priorityParam) params.set('priority', priorityParam);
-      const kpiVal = (() => {
-        if (f.kpi_category_id == null) return '';
-        if (Array.isArray(f.kpi_category_id)) return f.kpi_category_id.filter(Boolean).map(String).join(',');
-        return String(f.kpi_category_id).trim();
-      })();
-      if (kpiVal) params.set('kpi_category_id', kpiVal);
       params.set('limit', '100');
       params.set('sort', 'updated_at');
       params.set('order', f.sortOrder || 'desc');
@@ -327,7 +217,6 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
       date_to: today,
       status: null,
       priority: null,
-      kpi_category_id: null,
       sortOrder: 'desc'
     });
   }
@@ -353,8 +242,6 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
         responsible_id: currentUser?.id || '',
         start_date: new Date().toISOString().split('T')[0],
         due_date: '',
-        kpi_category_id: '',
-        kpi_subcategory: '',
       };
       return normalizeRows([...prev, newRow]);
     });
@@ -771,10 +658,7 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
       const allRows = [...newRows, ...tasks];
       const currentRowIndex = allRows.findIndex(r => (isNew ? r._tempId : r.id) === taskId);
       // Construir lista de campos según si se muestra la columna de subcategoría
-      const baseFields = ['title', 'kpi_category_id'];
-      const fields = shouldShowSubcategoryColumn() 
-        ? [...baseFields, 'kpi_subcategory', 'priority', 'status', 'area_id', 'area_destinataria_id', 'progress_percent', 'start_date', 'due_date', 'observaciones']
-        : [...baseFields, 'priority', 'status', 'area_id', 'area_destinataria_id', 'progress_percent', 'start_date', 'due_date', 'observaciones'];
+      const fields = ['title', 'priority', 'status', 'area_id', 'area_destinataria_id', 'progress_percent', 'start_date', 'due_date', 'observaciones'];
       const currentFieldIndex = fields.indexOf(field);
       
       let nextCell = null;
@@ -857,8 +741,6 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
               responsible_id: currentUser?.id || '',
               start_date: new Date().toISOString().split('T')[0],
               due_date: '',
-              kpi_category_id: '',
-              kpi_subcategory: '',
             };
 
             const normalized = normalizeRows([...prev, draft]);
@@ -891,9 +773,7 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
       setEditingCell(null);
       if (isNew) {
         // Mover al siguiente campo
-        const fields = shouldShowSubcategoryColumn()
-          ? ['title', 'kpi_category_id', 'kpi_subcategory', 'priority', 'status', 'area_id', 'area_destinataria_id', 'progress_percent', 'start_date', 'due_date', 'observaciones']
-          : ['title', 'kpi_category_id', 'priority', 'status', 'area_id', 'area_destinataria_id', 'progress_percent', 'start_date', 'due_date', 'observaciones'];
+        const fields = ['title', 'priority', 'status', 'area_id', 'area_destinataria_id', 'progress_percent', 'start_date', 'due_date', 'observaciones'];
         const currentFieldIndex = fields.indexOf(field);
         if (currentFieldIndex < fields.length - 1) {
           setEditingCell({ id: taskId, field: fields[currentFieldIndex + 1] });
@@ -942,8 +822,6 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
           responsible_id: currentUser?.id || '',
           start_date: new Date().toISOString().split('T')[0],
           due_date: '',
-          kpi_category_id: '',
-          kpi_subcategory: '',
         }));
         setNewRows(prev => normalizeRows([...prev, ...newRowsToAdd]));
       }
@@ -976,8 +854,6 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
         responsible_id: currentUser?.id || '',
         start_date: new Date().toISOString().split('T')[0],
         due_date: '',
-        kpi_category_id: '',
-        kpi_subcategory: '',
       }));
 
       // Crear todas las tareas en paralelo
@@ -1016,68 +892,6 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
       hasChanges ? 'bg-amber-50' : isNew ? 'bg-emerald-50/30' : 'bg-white'
     } ${isEditing ? 'ring-2 ring-inset ring-indigo-500' : ''} hover:bg-slate-50`;
 
-    // Campo especial: Categoría KPI (actualiza también area_id)
-    if (field === 'kpi_category_id') {
-      // Filtrar categorías por el área de la tarea (si tiene área) o mostrar todas
-      const taskAreaId = task.area_id;
-      const availableCategories = taskAreaId ? (kpiCategoriesByArea[taskAreaId] || []) : kpiCategories;
-      
-      return (
-        <td className={cellClass}>
-          <select
-            value={value || ''}
-            onChange={(e) => {
-              const selectedCategoryId = e.target.value;
-              const selectedCategory = kpiCategories.find(cat => cat.id == selectedCategoryId);
-              
-              // Actualizar kpi_category_id
-              updateCell(taskId, 'kpi_category_id', selectedCategoryId, isNew);
-              
-              // Limpiar subcategoría si cambia el KPI
-              updateCell(taskId, 'kpi_subcategory', '', isNew);
-              
-              // Si la categoría tiene un área definida, actualizar también el área
-              if (selectedCategory && selectedCategory.area_id) {
-                updateCell(taskId, 'area_id', selectedCategory.area_id, isNew);
-              }
-            }}
-            className="w-full bg-transparent border-0 text-xs focus:outline-none focus:ring-0 p-0 cursor-pointer truncate"
-          >
-            <option key="no-kpi" value="">Sin KPI</option>
-            {availableCategories.map(cat => (
-              <option key={`kpi-cat-${cat.id}`} value={cat.id}>{cat.name}</option>
-            ))}
-          </select>
-        </td>
-      );
-    }
-
-    // Campo especial: Subcategoría KPI (solo para IT con KPI seleccionado)
-    if (field === 'kpi_subcategory') {
-      const showSubcategory = shouldShowSubcategory(task);
-      const subcategories = getKpiSubcategories(task.kpi_category_id);
-      
-      if (!showSubcategory) {
-        // No mostrar si no es IT o no tiene KPI
-        return <td className={cellClass + ' bg-slate-50'}></td>;
-      }
-      
-      return (
-        <td className={cellClass}>
-          <select
-            value={value || ''}
-            onChange={(e) => updateCell(taskId, field, e.target.value, isNew)}
-            className="w-full bg-transparent border-0 text-xs focus:outline-none focus:ring-0 p-0 cursor-pointer truncate"
-          >
-            <option value="">Seleccionar subcategoría</option>
-            {subcategories.map((sub, idx) => (
-              <option key={`subcat-${idx}`} value={sub}>{sub}</option>
-            ))}
-          </select>
-        </td>
-      );
-    }
-
     // Campos de seleccion
     if (['priority', 'status', 'area_id', 'area_destinataria_id'].includes(field)) {
       let options = [];
@@ -1087,7 +901,6 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
       else if (field === 'status') options = estados.map(s => ({ value: s, label: s }));
       else if (field === 'area_id') {
         options = areas.map(a => ({ value: a.id, label: a.name }));
-        isDisabled = !!task.kpi_category_id;
       }
       else if (field === 'area_destinataria_id') {
         options = areas.map(a => ({ value: a.id, label: a.name }));
@@ -1104,9 +917,8 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
               } else {
                 updateCell(taskId, field, newVal, isNew);
               }
-              if (field === 'area_id') {
-                updateCell(taskId, 'kpi_category_id', '', isNew);
-                if (isNew) updateCell(taskId, 'area_destinataria_id', newVal, isNew);
+              if (field === 'area_id' && isNew) {
+                updateCell(taskId, 'area_destinataria_id', newVal, isNew);
               }
             }}
             disabled={isDisabled}
@@ -1240,8 +1052,6 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
         )}
         {isNew && <td className="px-1 py-2 bg-slate-50/50 border-r border-slate-200"></td>}
         {renderCell(task, 'title', isNew)}
-        {renderCell(task, 'kpi_category_id', isNew)}
-        {shouldShowSubcategoryColumn() && renderCell(task, 'kpi_subcategory', isNew)}
         {renderCell(task, 'priority', isNew)}
         {renderCell(task, 'status', isNew)}
         {renderCell(task, 'area_id', isNew)}
@@ -1317,7 +1127,6 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
         filters={filters}
         onFiltersChange={handleFiltersChange}
         onClearFilters={handleClearFilters}
-        kpiCategories={kpiCategories}
       />
 
       {/* Toolbar compacto */}
@@ -1413,7 +1222,7 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
           WebkitOverflowScrolling: 'touch'
         }}
       >
-        <table className="w-full border-collapse table-fixed" style={{ minWidth: shouldShowSubcategoryColumn() ? '1630px' : '1510px' }}>
+        <table className="w-full border-collapse table-fixed" style={{ minWidth: '1510px' }}>
           <thead className="sticky top-0 z-10 shadow-sm">
             <tr className="bg-slate-700 text-white">
               <th className="px-2 py-2.5 text-center text-xs font-semibold uppercase tracking-wider border-r border-slate-600" style={{ width: '40px' }}>
@@ -1453,20 +1262,6 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
               <th className="px-2 py-2.5 text-left text-xs font-semibold uppercase tracking-wider border-r border-slate-600" style={{ width: '370px' }}>
                 Titulo
               </th>
-              <th className="px-2 py-2.5 text-left text-xs font-semibold uppercase tracking-wider border-r border-slate-600" style={{ width: '120px' }}>
-                <span className="flex items-center gap-1 truncate">
-                  KPI
-                  <span className="text-[10px] font-normal normal-case text-slate-400">(Cat.)</span>
-                </span>
-              </th>
-              {shouldShowSubcategoryColumn() && (
-                <th className="px-2 py-2.5 text-left text-xs font-semibold uppercase tracking-wider border-r border-slate-600" style={{ width: '120px' }}>
-                  <span className="flex items-center gap-1 truncate">
-                    Subcat.
-                    <span className="text-[10px] font-normal normal-case text-slate-400">(IT)</span>
-                  </span>
-                </th>
-              )}
               <th className="px-2 py-2.5 text-left text-xs font-semibold uppercase tracking-wider border-r border-slate-600" style={{ width: '85px' }}>
                 Prioridad
               </th>
@@ -1506,7 +1301,7 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
             {/* Estado vacío */}
             {!hasFilteredResults && (
               <tr>
-                <td colSpan={shouldShowSubcategoryColumn() ? 14 : 13} className="px-4 py-12 text-center bg-slate-50">
+                <td colSpan={13} className="px-4 py-12 text-center bg-slate-50">
                   <div className="flex flex-col items-center gap-3">
                     <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
                       <Inbox className="w-8 h-8 text-slate-400" />
@@ -1543,7 +1338,7 @@ export default function TasksSpreadsheet({ userId, onTasksChange }) {
             {/* Botón Cargar más */}
             {hasMore && hasFilteredResults && (
               <tr>
-                <td colSpan={shouldShowSubcategoryColumn() ? 14 : 13} className="px-4 py-3 text-center bg-slate-50/50 border-t border-slate-100">
+                <td colSpan={13} className="px-4 py-3 text-center bg-slate-50/50 border-t border-slate-100">
                   <button
                     onClick={loadMore}
                     disabled={isLoadingMore}

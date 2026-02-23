@@ -3,22 +3,16 @@
 namespace App\Services;
 
 use App\Repositories\TaskRepository;
-use App\Repositories\KpiCategoryRepository;
-use App\Services\KpiEngineService;
 use App\Services\AssignmentPolicyService;
 
 class TaskService
 {
   private $taskRepository;
-  private $kpiCategoryRepository;
-  private $kpiEngineService;
   private $assignmentPolicyService;
 
   public function __construct()
   {
     $this->taskRepository = new TaskRepository();
-    $this->kpiCategoryRepository = new KpiCategoryRepository();
-    $this->kpiEngineService = new KpiEngineService();
     $this->assignmentPolicyService = new AssignmentPolicyService();
   }
 
@@ -62,19 +56,7 @@ class TaskService
     }
 
     $data['created_by'] = $userContext['id'];
-    
-    // === KPI: Si viene kpi_category_id, cargar la categoría y forzar area_id ===
-    if (!empty($data['kpi_category_id'])) {
-      $category = $this->kpiCategoryRepository->findById((int)$data['kpi_category_id']);
-      if ($category) {
-        // Forzar el area_id desde la categoría KPI
-        $data['area_id'] = $category['area_id'];
-      } else {
-        // Categoría no encontrada, limpiar
-        unset($data['kpi_category_id']);
-      }
-    }
-    
+
     // Normalizar fechas vacías o inválidas
     if (isset($data['start_date'])) {
       $data['start_date'] = $this->normalizeDate($data['start_date']);
@@ -94,22 +76,7 @@ class TaskService
         error_log('TaskService::create - Tarea creada con ID ' . $id . ' pero no se pudo recuperar con userContext: ' . json_encode($userContext));
         throw new \Exception('La tarea se creó pero no se pudo recuperar. Verifica los permisos.');
       }
-      
-      // === KPI: Guardar inputs KPI si vienen ===
-      if (!empty($data['kpi_inputs']) && is_array($data['kpi_inputs'])) {
-        $this->kpiEngineService->saveTaskInputs($id, $data['kpi_inputs']);
-      }
-      
-      // === KPI: Recalcular KPI para la tarea ===
-      if (!empty($task['kpi_category_id'])) {
-        try {
-          $this->kpiEngineService->recomputeForTask($id, $userContext);
-        } catch (\Exception $e) {
-          error_log('TaskService::create - Error recalculando KPI: ' . $e->getMessage());
-          // No fallar la creación de tarea por error de KPI
-        }
-      }
-      
+
       return $task;
     } catch (\PDOException $e) {
       error_log('TaskService::create PDO error: ' . $e->getMessage());
@@ -124,23 +91,6 @@ class TaskService
     $task = $this->taskRepository->findById($id, $userContext);
     if (!$task) {
       return null;
-    }
-
-    // === KPI: Si viene kpi_category_id, cargar la categoría y forzar area_id ===
-    if (isset($data['kpi_category_id'])) {
-      if (!empty($data['kpi_category_id'])) {
-        $category = $this->kpiCategoryRepository->findById((int)$data['kpi_category_id']);
-        if ($category) {
-          // Forzar el area_id desde la categoría KPI
-          $data['area_id'] = $category['area_id'];
-        } else {
-          // Categoría no encontrada, limpiar
-          $data['kpi_category_id'] = null;
-        }
-      } else {
-        // Se está quitando la categoría KPI
-        $data['kpi_category_id'] = null;
-      }
     }
 
     // Normalizar fechas vacías o inválidas
@@ -218,41 +168,8 @@ class TaskService
     }
 
     $this->taskRepository->update($id, $data);
-    
-    // Obtener tarea actualizada
-    $updatedTask = $this->taskRepository->findById($id, $userContext);
-    
-    // === KPI: Guardar inputs KPI si vienen ===
-    if (!empty($data['kpi_inputs']) && is_array($data['kpi_inputs'])) {
-      $this->kpiEngineService->saveTaskInputs($id, $data['kpi_inputs']);
-    }
-    
-    // === KPI: Recalcular si hay cambios relevantes ===
-    $kpiRelevantFields = ['status', 'due_date', 'closed_date', 'kpi_category_id'];
-    $shouldRecalculate = false;
-    
-    foreach ($kpiRelevantFields as $field) {
-      if (isset($data[$field])) {
-        $shouldRecalculate = true;
-        break;
-      }
-    }
-    
-    // También recalcular si hay inputs KPI
-    if (!empty($data['kpi_inputs'])) {
-      $shouldRecalculate = true;
-    }
-    
-    if ($shouldRecalculate && !empty($updatedTask['kpi_category_id'])) {
-      try {
-        $this->kpiEngineService->recomputeForTask($id, $userContext);
-      } catch (\Exception $e) {
-        error_log('TaskService::update - Error recalculando KPI: ' . $e->getMessage());
-        // No fallar la actualización por error de KPI
-      }
-    }
-    
-    return $updatedTask;
+
+    return $this->taskRepository->findById($id, $userContext);
   }
 
   public function listPaginated(array $filters, array $userContext, int $limit = 100, ?string $cursor = null, string $sort = 'updated_at', string $order = 'desc'): array
