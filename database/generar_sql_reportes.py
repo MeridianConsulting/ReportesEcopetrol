@@ -126,6 +126,18 @@ ON DUPLICATE KEY UPDATE
 """.strip() + "\n\n"
         lines.append(stmt)
 
+    # 1.5) Asegurar que existan usuarios en users (por email) para poder enlazar employee_profiles
+    lines.append("-- =========================================================\n")
+    lines.append("-- 1.5) users (correos del Excel; se insertan si no existen)\n")
+    lines.append("--    Necesario para que employee_profiles y service_order_employees encuentren user_id.\n")
+    lines.append("-- =========================================================\n\n")
+    distinct_emails = df["Correo_corporativo"].dropna().map(lambda x: normalize_str(x)).dropna().unique()
+    for corporate_email in distinct_emails:
+        if corporate_email is None:
+            continue
+        lines.append(f"INSERT IGNORE INTO users (email) VALUES ({sql_literal(corporate_email)});\n")
+    lines.append("\n")
+
     # 2) employee_profiles (perfil)
     lines.append("-- =========================================================\n")
     lines.append("-- 2) employee_profiles (perfil de empleado)\n")
