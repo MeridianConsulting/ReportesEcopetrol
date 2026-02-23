@@ -10,6 +10,8 @@ OUTPUT_SQL = SCRIPT_DIR / "migration_reportes_ods.sql"
 
 # Config: ajusta si tu tabla users usa otro campo (ej: corporate_email)
 USERS_EMAIL_FIELD = "email"  # users.email
+# Rol por defecto para usuarios del Excel (debe existir en roles.name)
+DEFAULT_ROLE = "colaborador"
 
 # -------------- Helpers --------------
 
@@ -86,8 +88,8 @@ def generate_sql_from_employees(excel_path: str, output_sql: str):
     lines = []
     lines.append("-- =========================================================\n")
     lines.append("-- Migración generada desde database.xlsx\n")
-    lines.append("-- Compatible con reportes_ods.sql (reports.is_active, task_report_links, tasks, índices)\n")
-    lines.append("-- Pobla: users (email), service_orders, employee_profiles, service_order_employees.\n")
+    lines.append("-- Compatible con reportes_ods.sql (RBAC: roles, user_roles, permissions; reports.is_active; task_report_links; tasks; índices).\n")
+    lines.append(f"-- Pobla: users (email), user_roles (rol '{DEFAULT_ROLE}' por defecto), service_orders, employee_profiles, service_order_employees.\n")
     lines.append("-- Ejecutar en la BD reportes_ods (estructura creada con reportes_ods.sql).\n")
     lines.append("-- =========================================================\n\n")
 
@@ -139,6 +141,22 @@ ON DUPLICATE KEY UPDATE
         if corporate_email is None:
             continue
         lines.append(f"INSERT IGNORE INTO users (email) VALUES ({sql_literal(corporate_email)});\n")
+    lines.append("\n")
+
+    # 1.6) Asignar rol colaborador a todos los usuarios del Excel (por defecto)
+    lines.append("-- =========================================================\n")
+    lines.append(f"-- 1.6) user_roles (rol '{DEFAULT_ROLE}' por defecto para usuarios del Excel)\n")
+    lines.append("-- =========================================================\n\n")
+    emails_list = [e for e in distinct_emails if e is not None]
+    if emails_list:
+        emails_sql = ", ".join(sql_literal(e) for e in emails_list)
+        lines.append(f"""INSERT IGNORE INTO user_roles (user_id, role_id)
+SELECT u.id, r.id
+FROM users u
+CROSS JOIN roles r
+WHERE r.name = {sql_literal(DEFAULT_ROLE)}
+  AND u.email IN ({emails_sql});
+""")
     lines.append("\n")
 
     # 2) employee_profiles (perfil)
