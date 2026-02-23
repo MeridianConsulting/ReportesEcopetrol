@@ -1,420 +1,330 @@
--- phpMyAdmin SQL Dump
--- version 5.2.2
--- https://www.phpmyadmin.net/
---
--- Servidor: localhost:3306
--- Tiempo de generación: 20-02-2026 a las 07:56:35
--- Versión del servidor: 10.6.24-MariaDB-cll-lve
--- Versión de PHP: 8.3.29
-
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
-
-
-
--- Base de datos: `tareas`
---
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `areas`
---
-
-CREATE TABLE `areas` (
-  `id` int(11) NOT NULL,
-  `name` varchar(100) NOT NULL,
-  `code` varchar(50) NOT NULL,
-  `type` enum('AREA','PROYECTO') NOT NULL DEFAULT 'AREA',
-  `parent_id` int(11) DEFAULT NULL,
-  `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `areas`
-
-
---
--- Estructura de tabla para la tabla `login_attempts`
---
-
-CREATE TABLE `login_attempts` (
-  `id` bigint(20) NOT NULL,
-  `ip_address` varchar(45) NOT NULL,
-  `email` varchar(150) DEFAULT NULL,
-  `success` tinyint(1) NOT NULL DEFAULT 0,
-  `user_agent` varchar(255) DEFAULT NULL,
-  `attempted_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `login_attempts`
---
-
-
-
---
-
--- Estructura de tabla para la tabla `refresh_tokens`
---
-
-CREATE TABLE `refresh_tokens` (
-  `id` bigint(20) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `token_hash` varchar(255) NOT NULL,
-  `expires_at` datetime NOT NULL,
-  `revoked_at` datetime DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `ip` varchar(45) DEFAULT NULL,
-  `user_agent` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `roles`
---
-
-CREATE TABLE `roles` (
-  `id` int(11) NOT NULL,
-  `name` varchar(50) NOT NULL,
-  `description` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `roles`
---
-
-INSERT INTO `roles` (`id`, `name`, `description`) VALUES
-(1, 'admin', 'Administrador del sistema'),
-(2,'profesional', 'Profesional de Proyectos'),
-(3, '', 'Ingenieros');
-
--- Estructura de tabla para la tabla `tasks`
---
-
-CREATE TABLE `tasks` (
-  `id` int(11) NOT NULL,
-  `area_id` int(11) NOT NULL,
-  `area_destinataria_id` int(11) DEFAULT NULL COMMENT 'Área destinataria (si null, se asume area_id)',
-  `title` varchar(200) NOT NULL,
-  `description` text DEFAULT NULL,
-  `type` enum('Clave','Operativa','Mejora','Obligatoria') NOT NULL DEFAULT 'Operativa',
-  `priority` enum('Alta','Media','Baja') NOT NULL DEFAULT 'Media',
-  `status` enum('No iniciada','En progreso','En revisión','Completada','En riesgo') NOT NULL DEFAULT 'No iniciada',
-  `progress_percent` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
-  `observaciones` text DEFAULT NULL COMMENT 'Observaciones de la tarea',
-  `responsible_id` int(11) NOT NULL,
-  `created_by` int(11) NOT NULL,
-  `start_date` date DEFAULT NULL,
-  `due_date` date DEFAULT NULL,
-  `closed_date` date DEFAULT NULL,
-  `deleted_at` datetime DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-
-
-CREATE TABLE `task_assignments` (
-  `id` int(11) NOT NULL,
-  `task_id` int(11) NOT NULL,
-  `assigned_by` int(11) NOT NULL,
-  `assigned_to` int(11) NOT NULL,
-  `message` text DEFAULT NULL,
-  `is_read` tinyint(1) NOT NULL DEFAULT 0,
-  `status` enum('pending','accepted','rejected') NOT NULL DEFAULT 'pending',
-  `response_message` text DEFAULT NULL,
-  `responded_at` timestamp NULL DEFAULT NULL,
-  `response_read` tinyint(1) NOT NULL DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-
-CREATE TABLE `user_areas` (
-  `user_id` int(11) NOT NULL,
-  `area_id` int(11) NOT NULL,
-  `is_primary` tinyint(1) NOT NULL DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-
---
--- Indices de la tabla `areas`
---
-ALTER TABLE `areas`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `code` (`code`),
-  ADD KEY `idx_areas_parent` (`parent_id`),
-  ADD KEY `idx_areas_type` (`type`);
-
---
--- Indices de la tabla `login_attempts`
---
-ALTER TABLE `login_attempts`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_ip_attempted` (`ip_address`,`attempted_at`),
-  ADD KEY `idx_attempted_at` (`attempted_at`);
-
---
--- Indices de la tabla `password_reset_otps`
---
-ALTER TABLE `password_reset_otps`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_user_active` (`user_id`,`used_at`,`expires_at`);
-
---
--- Indices de la tabla `password_reset_tokens`
---
-ALTER TABLE `password_reset_tokens`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `token_hash` (`token_hash`),
-  ADD KEY `idx_user_active` (`user_id`,`used_at`,`expires_at`);
-
---
--- Indices de la tabla `refresh_tokens`
---
-ALTER TABLE `refresh_tokens`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_refresh_tokens_user` (`user_id`),
-  ADD KEY `idx_refresh_tokens_expires` (`expires_at`),
-  ADD KEY `idx_refresh_tokens_revoked` (`revoked_at`);
-
---
--- Indices de la tabla `roles`
---
-ALTER TABLE `roles`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `name` (`name`);
-
---
--- Indices de la tabla `tasks`
---
-ALTER TABLE `tasks`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_tasks_created_by` (`created_by`),
-  ADD KEY `idx_tasks_area` (`area_id`),
-  ADD KEY `idx_tasks_responsible` (`responsible_id`),
-  ADD KEY `idx_tasks_status` (`status`),
-  ADD KEY `idx_tasks_due_date` (`due_date`),
-  ADD KEY `idx_tasks_updated_at` (`updated_at`),
-  ADD KEY `idx_tasks_deleted_at` (`deleted_at`),
-  ADD KEY `idx_tasks_area_status_due` (`area_id`,`status`,`due_date`),
-  ADD KEY `idx_tasks_responsible_status_due` (`responsible_id`,`status`,`due_date`),
-  ADD KEY `idx_tasks_status_due` (`status`,`due_date`),
-  ADD KEY `idx_tasks_area_updated` (`area_id`,`updated_at`),
-  ADD KEY `fk_tasks_area_destinataria` (`area_destinataria_id`);
-
---
--- Indices de la tabla `task_assignments`
---
-ALTER TABLE `task_assignments`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_assigned_to` (`assigned_to`),
-  ADD KEY `idx_assigned_by` (`assigned_by`),
-  ADD KEY `idx_is_read` (`is_read`),
-  ADD KEY `idx_created_at` (`created_at`),
-  ADD KEY `fk_task_assignments_task` (`task_id`);
-
---
--- Indices de la tabla `task_comments`
---
-ALTER TABLE `task_comments`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_task_comments_user` (`user_id`),
-  ADD KEY `idx_task_comments_task` (`task_id`),
-  ADD KEY `idx_task_comments_created` (`created_at`);
-
---
--- Indices de la tabla `task_events`
---
-ALTER TABLE `task_events`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_task_events_user` (`user_id`),
-  ADD KEY `idx_task_events_task` (`task_id`),
-  ADD KEY `idx_task_events_created` (`created_at`),
-  ADD KEY `idx_task_events_type` (`event_type`);
-
---
--- Indices de la tabla `task_evidences`
---
-ALTER TABLE `task_evidences`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_task_evidences_user` (`user_id`),
-  ADD KEY `idx_task_evidences_task` (`task_id`),
-  ADD KEY `idx_task_evidences_created` (`created_at`);
-
---
--- Indices de la tabla `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`),
-  ADD KEY `idx_users_role` (`role_id`),
-  ADD KEY `idx_users_area` (`area_id`),
-  ADD KEY `idx_users_active` (`is_active`);
-
---
--- Indices de la tabla `user_areas`
---
-ALTER TABLE `user_areas`
-  ADD PRIMARY KEY (`user_id`,`area_id`),
-  ADD KEY `idx_user_areas_area` (`area_id`);
-
-
---
--- AUTO_INCREMENT de la tabla `areas`
---
-ALTER TABLE `areas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
-
---
--- AUTO_INCREMENT de la tabla `login_attempts`
---
-ALTER TABLE `login_attempts`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=305;
-
---
--- AUTO_INCREMENT de la tabla `password_reset_otps`
---
-ALTER TABLE `password_reset_otps`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
-
---
--- AUTO_INCREMENT de la tabla `password_reset_tokens`
---
-ALTER TABLE `password_reset_tokens`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT de la tabla `refresh_tokens`
---
-ALTER TABLE `refresh_tokens`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10477;
-
---
--- AUTO_INCREMENT de la tabla `roles`
---
-ALTER TABLE `roles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT de la tabla `tasks`
---
-ALTER TABLE `tasks`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9515;
-
---
--- AUTO_INCREMENT de la tabla `task_assignments`
---
-ALTER TABLE `task_assignments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=94;
-
---
--- AUTO_INCREMENT de la tabla `task_comments`
---
-ALTER TABLE `task_comments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `task_events`
---
-ALTER TABLE `task_events`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `task_evidences`
---
-ALTER TABLE `task_evidences`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `users`
---
-ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
-
---
--- Restricciones para tablas volcadas
---
-
---
--- Filtros para la tabla `areas`
---
-ALTER TABLE `areas`
-  ADD CONSTRAINT `fk_areas_parent` FOREIGN KEY (`parent_id`) REFERENCES `areas` (`id`) ON DELETE SET NULL;
-
---
--- Filtros para la tabla `password_reset_otps`
---
-ALTER TABLE `password_reset_otps`
-  ADD CONSTRAINT `fk_pro_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `password_reset_tokens`
---
-ALTER TABLE `password_reset_tokens`
-  ADD CONSTRAINT `fk_prt_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `refresh_tokens`
---
-ALTER TABLE `refresh_tokens`
-  ADD CONSTRAINT `fk_refresh_tokens_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `tasks`
---
-ALTER TABLE `tasks`
-  ADD CONSTRAINT `fk_tasks_area` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`),
-  ADD CONSTRAINT `fk_tasks_area_destinataria` FOREIGN KEY (`area_destinataria_id`) REFERENCES `areas` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_tasks_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `fk_tasks_responsible` FOREIGN KEY (`responsible_id`) REFERENCES `users` (`id`);
-
---
--- Filtros para la tabla `task_assignments`
---
-ALTER TABLE `task_assignments`
-  ADD CONSTRAINT `fk_task_assignments_assigned_by` FOREIGN KEY (`assigned_by`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_task_assignments_assigned_to` FOREIGN KEY (`assigned_to`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_task_assignments_task` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `task_comments`
---
-ALTER TABLE `task_comments`
-  ADD CONSTRAINT `fk_task_comments_task` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_task_comments_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-
---
--- Filtros para la tabla `task_events`
---
-ALTER TABLE `task_events`
-  ADD CONSTRAINT `fk_task_events_task` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_task_events_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-
---
--- Filtros para la tabla `task_evidences`
---
-ALTER TABLE `task_evidences`
-  ADD CONSTRAINT `fk_task_evidences_task` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_task_evidences_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-
---
--- Filtros para la tabla `users`
---
-ALTER TABLE `users`
-  ADD CONSTRAINT `fk_users_area` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `fk_users_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`);
-
---
--- Filtros para la tabla `user_areas`
---
-ALTER TABLE `user_areas`
-  ADD CONSTRAINT `fk_user_areas_area` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_user_areas_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
-COMMIT;
-
+-- =========================================================
+-- 0) Catálogos
+-- =========================================================
+
+CREATE TABLE employee_levels (
+  id INT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(50) NOT NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_employee_levels_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE service_classifications (
+  id INT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(120) NOT NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_service_classifications_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE delivery_media (
+  id INT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(50) NOT NULL, -- Digital, Físico, Link, etc.
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_delivery_media_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Soporte: texto libre o catálogo. Recomiendo catálogo + "otros".
+CREATE TABLE support_types (
+  id INT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(120) NOT NULL, -- Informe, Código, Modelo, Presentación, Base de datos, etc.
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_support_types_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- =========================================================
+-- 1) Extensión de usuarios -> perfil de empleado (Excel database.xlsx)
+-- =========================================================
+
+CREATE TABLE employee_profiles (
+  user_id INT NOT NULL,
+  external_employee_id VARCHAR(50) DEFAULT NULL, -- el "Id" del excel si no coincide con users.id
+  full_name VARCHAR(200) NOT NULL,
+  corporate_email VARCHAR(150) DEFAULT NULL,
+  phone VARCHAR(50) DEFAULT NULL,
+  profession VARCHAR(120) DEFAULT NULL,
+  job_title VARCHAR(120) DEFAULT NULL,       -- Cargo
+  contract_type VARCHAR(120) DEFAULT NULL,   -- Contrato (texto del excel)
+  hire_date DATE DEFAULT NULL,               -- Fecha_contrato
+  contract_end_date DATE DEFAULT NULL,       -- Terminacion_contrato
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id),
+  UNIQUE KEY uq_employee_profiles_email (corporate_email),
+  KEY idx_employee_profiles_name (full_name),
+  CONSTRAINT fk_employee_profiles_user
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- =========================================================
+-- 2) ODS / Orden de servicio
+-- =========================================================
+
+CREATE TABLE service_orders (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  ods_code VARCHAR(50) NOT NULL,           -- Ej: 90598918
+  project_name VARCHAR(200) DEFAULT NULL,  -- Proyecto (del excel)
+  area_id INT DEFAULT NULL,                -- si lo quieres amarrar a areas
+  object_text TEXT DEFAULT NULL,           -- Objeto_ods
+  term_text VARCHAR(200) DEFAULT NULL,     -- Plazo_ods (si viene como texto)
+  start_date DATE DEFAULT NULL,
+  end_date DATE DEFAULT NULL,
+  status ENUM('Activa','Suspendida','Cerrada') NOT NULL DEFAULT 'Activa',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_service_orders_ods (ods_code),
+  KEY idx_service_orders_area (area_id),
+  KEY idx_service_orders_status (status),
+  CONSTRAINT fk_service_orders_area
+    FOREIGN KEY (area_id) REFERENCES areas(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE service_order_employees (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  service_order_id BIGINT NOT NULL,
+  user_id INT NOT NULL,
+  level_id INT DEFAULT NULL,                 -- Junior/Senior
+  assignment_start DATE DEFAULT NULL,
+  assignment_end DATE DEFAULT NULL,
+  contracted_days INT DEFAULT NULL,          -- "Días contratados Acta de Inicio" (si aplica por persona)
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_ods_user_active (service_order_id, user_id, is_active),
+  KEY idx_soe_user (user_id),
+  KEY idx_soe_level (level_id),
+  CONSTRAINT fk_soe_service_order
+    FOREIGN KEY (service_order_id) REFERENCES service_orders(id) ON DELETE CASCADE,
+  CONSTRAINT fk_soe_user
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_soe_level
+    FOREIGN KEY (level_id) REFERENCES employee_levels(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- =========================================================
+-- 3) Periodos y reportes
+-- =========================================================
+
+CREATE TABLE report_periods (
+  id INT NOT NULL AUTO_INCREMENT,
+  year SMALLINT NOT NULL,
+  month TINYINT UNSIGNED NOT NULL, -- 1..12
+  label VARCHAR(20) NOT NULL,      -- "2026-01"
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_report_periods_year_month (year, month),
+  UNIQUE KEY uq_report_periods_label (label)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE reports (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  service_order_id BIGINT NOT NULL,
+  period_id INT NOT NULL,
+  reported_by INT NOT NULL, -- user que reporta (Nombre del profesional - Reporta)
+  report_date DATE NOT NULL,
+  service_classification_id INT DEFAULT NULL,
+  status ENUM('Borrador','Enviado','En revision','Aprobado','Rechazado','Anulado')
+    NOT NULL DEFAULT 'Borrador',
+  month_contracted_days INT DEFAULT NULL, -- si hay un "días contratados" a nivel reporte (no por línea)
+  notes TEXT DEFAULT NULL,
+  deleted_at DATETIME DEFAULT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_reports_unique (service_order_id, period_id, reported_by, deleted_at),
+  KEY idx_reports_service_order (service_order_id),
+  KEY idx_reports_period (period_id),
+  KEY idx_reports_reported_by (reported_by),
+  KEY idx_reports_status (status),
+  KEY idx_reports_deleted (deleted_at),
+  CONSTRAINT fk_reports_service_order
+    FOREIGN KEY (service_order_id) REFERENCES service_orders(id),
+  CONSTRAINT fk_reports_period
+    FOREIGN KEY (period_id) REFERENCES report_periods(id),
+  CONSTRAINT fk_reports_reported_by
+    FOREIGN KEY (reported_by) REFERENCES users(id),
+  CONSTRAINT fk_reports_classification
+    FOREIGN KEY (service_classification_id) REFERENCES service_classifications(id)
+      ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- =========================================================
+-- 4) Catálogo de ítems (recomendado)
+-- =========================================================
+
+CREATE TABLE report_item_catalog (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  item_general VARCHAR(20) NOT NULL,    -- "1", "2", "8"
+  item_activity VARCHAR(20) NOT NULL,   -- "1.1", "1.15", etc.
+  title VARCHAR(255) DEFAULT NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_item_codes (item_general, item_activity),
+  KEY idx_item_activity (item_activity)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- =========================================================
+-- 5) Líneas del reporte (actividades)
+-- =========================================================
+
+CREATE TABLE report_lines (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  report_id BIGINT NOT NULL,
+  item_catalog_id BIGINT DEFAULT NULL,      -- si usas catálogo
+  item_general VARCHAR(20) DEFAULT NULL,    -- respaldo si no hay catálogo / import legacy
+  item_activity VARCHAR(20) DEFAULT NULL,
+  activity_description TEXT NOT NULL,       -- Descripción de la actividad
+  support_text TEXT DEFAULT NULL,           -- texto libre del excel (por si viene multilinea)
+  support_type_id INT DEFAULT NULL,
+  delivery_medium_id INT DEFAULT NULL,
+  contracted_days INT DEFAULT NULL,         -- Días contratados (si aplica por línea)
+  days_month DECIMAL(10,2) NOT NULL DEFAULT 0,     -- "Días" del mes
+  progress_percent DECIMAL(6,4) NOT NULL DEFAULT 0, -- 0..1 o 0..100 (define y estandariza)
+  accumulated_days DECIMAL(10,2) NOT NULL DEFAULT 0,
+  accumulated_progress DECIMAL(6,4) NOT NULL DEFAULT 0,
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_report_lines_report (report_id),
+  KEY idx_report_lines_item (item_general, item_activity),
+  KEY idx_report_lines_support_type (support_type_id),
+  KEY idx_report_lines_delivery (delivery_medium_id),
+  CONSTRAINT fk_report_lines_report
+    FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE,
+  CONSTRAINT fk_report_lines_item_catalog
+    FOREIGN KEY (item_catalog_id) REFERENCES report_item_catalog(id) ON DELETE SET NULL,
+  CONSTRAINT fk_report_lines_support_type
+    FOREIGN KEY (support_type_id) REFERENCES support_types(id) ON DELETE SET NULL,
+  CONSTRAINT fk_report_lines_delivery_medium
+    FOREIGN KEY (delivery_medium_id) REFERENCES delivery_media(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- =========================================================
+-- 6) Adjuntos / evidencias
+-- =========================================================
+
+CREATE TABLE report_attachments (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  report_id BIGINT NOT NULL,
+  report_line_id BIGINT DEFAULT NULL,
+  uploaded_by INT NOT NULL,
+  file_name VARCHAR(255) NOT NULL,
+  storage_path TEXT NOT NULL,           -- ruta/URL en tu storage
+  mime_type VARCHAR(120) DEFAULT NULL,
+  file_size BIGINT DEFAULT NULL,
+  sha256 CHAR(64) DEFAULT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_report_attachments_report (report_id),
+  KEY idx_report_attachments_line (report_line_id),
+  KEY idx_report_attachments_uploaded_by (uploaded_by),
+  CONSTRAINT fk_report_attachments_report
+    FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE,
+  CONSTRAINT fk_report_attachments_line
+    FOREIGN KEY (report_line_id) REFERENCES report_lines(id) ON DELETE SET NULL,
+  CONSTRAINT fk_report_attachments_uploaded_by
+    FOREIGN KEY (uploaded_by) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- =========================================================
+-- 7) Comentarios / workflow / auditoría
+-- =========================================================
+
+CREATE TABLE report_comments (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  report_id BIGINT NOT NULL,
+  report_line_id BIGINT DEFAULT NULL,
+  user_id INT NOT NULL,
+  comment TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_report_comments_report (report_id),
+  KEY idx_report_comments_line (report_line_id),
+  KEY idx_report_comments_user (user_id),
+  CONSTRAINT fk_report_comments_report
+    FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE,
+  CONSTRAINT fk_report_comments_line
+    FOREIGN KEY (report_line_id) REFERENCES report_lines(id) ON DELETE SET NULL,
+  CONSTRAINT fk_report_comments_user
+    FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE report_approvals (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  report_id BIGINT NOT NULL,
+  approver_id INT NOT NULL,
+  decision ENUM('Pendiente','Aprobado','Rechazado') NOT NULL DEFAULT 'Pendiente',
+  decision_message TEXT DEFAULT NULL,
+  decided_at DATETIME DEFAULT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_report_approver (report_id, approver_id),
+  KEY idx_report_approvals_decision (decision),
+  CONSTRAINT fk_report_approvals_report
+    FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE,
+  CONSTRAINT fk_report_approvals_approver
+    FOREIGN KEY (approver_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE report_events (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  report_id BIGINT NOT NULL,
+  user_id INT DEFAULT NULL,
+  event_type ENUM('CREATED','UPDATED','SUBMITTED','APPROVED','REJECTED','STATUS_CHANGED','IMPORTED','DELETED')
+    NOT NULL,
+  payload JSON DEFAULT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_report_events_report (report_id),
+  KEY idx_report_events_type (event_type),
+  KEY idx_report_events_created_at (created_at),
+  CONSTRAINT fk_report_events_report
+    FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE,
+  CONSTRAINT fk_report_events_user
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- =========================================================
+-- 8) Importación desde Excel (opcional pero MUY útil)
+-- =========================================================
+
+CREATE TABLE import_batches (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  source_name VARCHAR(255) NOT NULL, -- nombre del archivo
+  imported_by INT NOT NULL,
+  imported_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  status ENUM('Procesando','Exitoso','Con errores') NOT NULL DEFAULT 'Procesando',
+  summary JSON DEFAULT NULL,
+  PRIMARY KEY (id),
+  KEY idx_import_batches_imported_by (imported_by),
+  CONSTRAINT fk_import_batches_user
+    FOREIGN KEY (imported_by) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE import_errors (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  batch_id BIGINT NOT NULL,
+  row_ref VARCHAR(50) DEFAULT NULL,
+  message TEXT NOT NULL,
+  raw_payload JSON DEFAULT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_import_errors_batch (batch_id),
+  CONSTRAINT fk_import_errors_batch
+    FOREIGN KEY (batch_id) REFERENCES import_batches(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
