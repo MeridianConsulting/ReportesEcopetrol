@@ -130,4 +130,271 @@ class ReportService
       'top_users' => [],
     ];
   }
+
+  /**
+   * Líneas de reporte del usuario actual (reportes ODS).
+   * Incluye observations si existe la columna en report_lines.
+   */
+  public function getMyReportLines(int $userId): array
+  {
+    try {
+      $sql = "
+        SELECT
+          so.ods_code,
+          rp.label AS period_label,
+          r.report_date,
+          ep.full_name AS reporter_name,
+          rl.item_general,
+          rl.item_activity,
+          rl.activity_description,
+          rl.support_text,
+          dm.name AS delivery_medium_name,
+          rl.delivery_medium_id,
+          rl.contracted_days,
+          rl.days_month,
+          rl.progress_percent,
+          rl.accumulated_days,
+          rl.accumulated_progress,
+          r.id AS report_id,
+          rl.id AS report_line_id
+        FROM reports r
+        INNER JOIN report_lines rl ON rl.report_id = r.id
+        INNER JOIN service_orders so ON so.id = r.service_order_id
+        INNER JOIN report_periods rp ON rp.id = r.period_id
+        LEFT JOIN employee_profiles ep ON ep.user_id = r.reported_by
+        LEFT JOIN delivery_media dm ON dm.id = rl.delivery_medium_id
+        WHERE r.reported_by = :user_id
+          AND (r.deleted_at IS NULL AND r.is_active = 1)
+        ORDER BY r.report_date DESC, r.id DESC, rl.sort_order ASC, rl.id ASC
+      ";
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute([':user_id' => $userId]);
+      $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+      // Añadir observations si la columna existe (evitar error si no se ejecutó la migración)
+      try {
+        $stmt2 = $this->db->query("SELECT observations FROM report_lines LIMIT 0");
+        $hasObservations = true;
+      } catch (\PDOException $e) {
+        $hasObservations = false;
+      }
+      if ($hasObservations && !empty($rows)) {
+        $ids = array_column($rows, 'report_line_id');
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmtObs = $this->db->prepare("SELECT id, observations FROM report_lines WHERE id IN ($placeholders)");
+        $stmtObs->execute(array_values($ids));
+        $obsMap = [];
+        while ($r = $stmtObs->fetch(\PDO::FETCH_ASSOC)) {
+          $obsMap[$r['id']] = $r['observations'] ?? '';
+        }
+        foreach ($rows as &$row) {
+          $row['observations'] = $obsMap[$row['report_line_id']] ?? '';
+        }
+      } else {
+        foreach ($rows as &$row) {
+          $row['observations'] = '';
+        }
+      }
+      return $rows;
+    } catch (\PDOException $e) {
+      return [];
+    }
+  }
+
+  /** Lista de órdenes de servicio (código ODS) para selector */
+  public function getServiceOrdersList(): array
+  {
+    try {
+      $stmt = $this->db->query("SELECT id, ods_code FROM service_orders ORDER BY ods_code");
+      return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    } catch (\PDOException $e) {
+      return [];
+    }
+  }
+
+  /** Lista de períodos (mes a reportar) para selector */
+  public function getReportPeriodsList(): array
+  {
+    try {
+      $stmt = $this->db->query("SELECT id, label, year, month FROM report_periods ORDER BY year DESC, month DESC LIMIT 60");
+      return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    } catch (\PDOException $e) {
+      return [];
+    }
+  }
+
+  /** Lista de medios de entrega para selector */
+  public function getDeliveryMediaList(): array
+  {
+    try {
+      $stmt = $this->db->query("SELECT id, name FROM delivery_media WHERE is_active = 1 ORDER BY name");
+      return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    } catch (\PDOException $e) {
+      return [];
+    }
+  }
+
+  /**
+   * Obtener o crear reporte (reports) para service_order + period + user.
+   * Devuelve report id.
+   */
+  public function getOrCreateReport(int $userId, int $serviceOrderId, int $periodId, string $reportDate): int
+  {
+    $stmt = $this->db->prepare("
+      SELECT id FROM reports
+      WHERE service_order_id = ? AND period_id = ? AND reported_by = ? AND (deleted_at IS NULL AND is_active = 1)
+      LIMIT 1
+    ");
+    $stmt->execute([$serviceOrderId, $periodId, $userId]);
+    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+    if ($row) {
+      return (int) $row['id'];
+    }
+    $this->db->prepare("
+      INSERT INTO reports (service_order_id, period_id, reported_by, report_date, status, is_active)
+      VALUES (?, ?, ?, ?, 'Borrador', 1)
+    ")->execute([$serviceOrderId, $periodId, $userId, $reportDate]);
+    return (int) $this->db->lastInsertId();
+  }
+
+  /**
+   * Crear una línea de reporte. Payload: codigo_orden_servicio (o service_order_id), mes (period_id o label),
+   * fecha_reporte, item_general, item_activity, activity_description, support_text, delivery_medium_id (o medio_entrega nombre),
+   * contracted_days, days_month, progress_percent, accumulated_days, accumulated_progress, observations.
+   */
+  public function storeReportLine(int $userId, array $payload): array
+  {
+    $serviceOrderId = null;
+    if (!empty($payload['service_order_id'])) {
+      $serviceOrderId = (int) $payload['service_order_id'];
+    } elseif (!empty($payload['codigo_orden_servicio'])) {
+      $stmt = $this->db->prepare("SELECT id FROM service_orders WHERE ods_code = ? LIMIT 1");
+      $stmt->execute([trim($payload['codigo_orden_servicio'])]);
+      $r = $stmt->fetch(\PDO::FETCH_ASSOC);
+      $serviceOrderId = $r ? (int) $r['id'] : null;
+    }
+    if (!$serviceOrderId) {
+      throw new \InvalidArgumentException('Código de orden de servicio no válido.');
+    }
+
+    $periodId = null;
+    if (!empty($payload['period_id'])) {
+      $periodId = (int) $payload['period_id'];
+    } elseif (!empty($payload['mes_a_reportar'])) {
+      $stmt = $this->db->prepare("SELECT id FROM report_periods WHERE label = ? LIMIT 1");
+      $stmt->execute([trim($payload['mes_a_reportar'])]);
+      $r = $stmt->fetch(\PDO::FETCH_ASSOC);
+      $periodId = $r ? (int) $r['id'] : null;
+    }
+    if (!$periodId) {
+      throw new \InvalidArgumentException('Mes a reportar no válido.');
+    }
+
+    $reportDate = !empty($payload['fecha_reporte']) ? $payload['fecha_reporte'] : date('Y-m-d');
+    $reportId = $this->getOrCreateReport($userId, $serviceOrderId, $periodId, $reportDate);
+
+    $deliveryMediumId = null;
+    if (!empty($payload['delivery_medium_id'])) {
+      $deliveryMediumId = (int) $payload['delivery_medium_id'];
+    } elseif (!empty($payload['medio_entrega'])) {
+      $stmt = $this->db->prepare("SELECT id FROM delivery_media WHERE name = ? AND is_active = 1 LIMIT 1");
+      $stmt->execute([trim($payload['medio_entrega'])]);
+      $r = $stmt->fetch(\PDO::FETCH_ASSOC);
+      $deliveryMediumId = $r ? (int) $r['id'] : null;
+    }
+
+    $contractedDays = isset($payload['contracted_days']) ? (int) $payload['contracted_days'] : null;
+    $daysMonth = isset($payload['days_month']) ? (float) str_replace(',', '.', $payload['days_month']) : 0;
+    $progressPercent = isset($payload['progress_percent']) ? (float) str_replace(',', '.', $payload['progress_percent']) : 0;
+    $accumulatedDays = isset($payload['accumulated_days']) ? (float) str_replace(',', '.', $payload['accumulated_days']) : 0;
+    $accumulatedProgress = isset($payload['accumulated_progress']) ? (float) str_replace(',', '.', $payload['accumulated_progress']) : 0;
+    $observations = isset($payload['observations']) ? (string) $payload['observations'] : null;
+
+    $sql = "INSERT INTO report_lines (
+      report_id, item_general, item_activity, activity_description, support_text,
+      delivery_medium_id, contracted_days, days_month, progress_percent, accumulated_days, accumulated_progress, sort_order
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)";
+    $params = [
+      $reportId,
+      $payload['item_general'] ?? '',
+      $payload['item_activity'] ?? '',
+      $payload['activity_description'] ?? '',
+      $payload['support_text'] ?? null,
+      $deliveryMediumId,
+      $contractedDays,
+      $daysMonth,
+      $progressPercent,
+      $accumulatedDays,
+      $accumulatedProgress,
+    ];
+    $this->db->prepare($sql)->execute($params);
+    $lineId = (int) $this->db->lastInsertId();
+
+    if ($observations !== null) {
+      try {
+        $this->db->prepare("UPDATE report_lines SET observations = ? WHERE id = ?")->execute([$observations, $lineId]);
+      } catch (\PDOException $e) {
+        // Columna observations puede no existir
+      }
+    }
+
+    return ['report_line_id' => $lineId, 'report_id' => $reportId];
+  }
+
+  /**
+   * Actualizar una línea de reporte. El usuario solo puede editar líneas propias (vía report.reported_by).
+   */
+  public function updateReportLine(int $userId, int $lineId, array $payload): void
+  {
+    $stmt = $this->db->prepare("
+      SELECT rl.id FROM report_lines rl
+      INNER JOIN reports r ON r.id = rl.report_id
+      WHERE rl.id = ? AND r.reported_by = ? AND r.deleted_at IS NULL AND r.is_active = 1
+    ");
+    $stmt->execute([$lineId, $userId]);
+    if (!$stmt->fetch()) {
+      throw new \RuntimeException('Línea no encontrada o sin permiso.');
+    }
+
+    $updates = [];
+    $params = [];
+    $fields = [
+      'item_general' => 'string', 'item_activity' => 'string', 'activity_description' => 'string',
+      'support_text' => 'string', 'delivery_medium_id' => 'int', 'contracted_days' => 'int',
+      'days_month' => 'float', 'progress_percent' => 'float', 'accumulated_days' => 'float', 'accumulated_progress' => 'float', 'observations' => 'string'
+    ];
+    foreach ($fields as $key => $type) {
+      if (!array_key_exists($key, $payload)) continue;
+      if ($type === 'int') {
+        $updates[] = "`$key` = ?";
+        $params[] = $payload[$key] === '' || $payload[$key] === null ? null : (int) $payload[$key];
+      } elseif ($type === 'float') {
+        $updates[] = "`$key` = ?";
+        $params[] = (float) str_replace(',', '.', $payload[$key]);
+      } else {
+        $updates[] = "`$key` = ?";
+        $params[] = $payload[$key] === null ? null : (string) $payload[$key];
+      }
+    }
+    if (empty($updates)) {
+      return;
+    }
+    $params[] = $lineId;
+    $sql = "UPDATE report_lines SET " . implode(', ', $updates) . " WHERE id = ?";
+    $this->db->prepare($sql)->execute($params);
+  }
+
+  /** Eliminar línea de reporte (solo si el reporte es del usuario). */
+  public function deleteReportLine(int $userId, int $lineId): void
+  {
+    $stmt = $this->db->prepare("
+      SELECT rl.id FROM report_lines rl
+      INNER JOIN reports r ON r.id = rl.report_id
+      WHERE rl.id = ? AND r.reported_by = ? AND r.deleted_at IS NULL AND r.is_active = 1
+    ");
+    $stmt->execute([$lineId, $userId]);
+    if (!$stmt->fetch()) {
+      throw new \RuntimeException('Línea no encontrada o sin permiso.');
+    }
+    $this->db->prepare("DELETE FROM report_lines WHERE id = ?")->execute([$lineId]);
+  }
 }

@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { login } from '../../lib/auth';
 import { apiRequest } from '../../lib/api';
-import { Loader2, Mail, Lock, Eye, EyeOff, Shield, BarChart3, Users, CheckCircle } from 'lucide-react';
+import { Loader2, Mail, Lock, Eye, EyeOff, Shield, FileText, History, TrendingUp, CheckCircle } from 'lucide-react';
 import Alert from '../../components/Alert';
 
 export default function LoginPage() {
@@ -62,42 +62,32 @@ export default function LoginPage() {
           <div className="space-y-8">
             <div>
               <h1 className="text-4xl font-bold text-white leading-tight">
-                Gestiona tus tareas<br />
-                de forma inteligente
+                Mantén tu reporte al día
               </h1>
               <p className="mt-4 text-lg text-green-200 max-w-md">
-                Plataforma integral para el seguimiento y control de actividades empresariales.
+                Carga tu información diaria de forma sencilla y consulta tu progreso cuando lo necesites.
               </p>
             </div>
             
-            {/* Features */}
+            {/* Bullets */}
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
-                  <BarChart3 className="w-5 h-5 text-green-300" />
+                  <FileText className="w-5 h-5 text-green-300" />
                 </div>
-                <div>
-                  <p className="text-white font-medium">Dashboards en tiempo real</p>
-                  <p className="text-green-300 text-sm">Visualiza métricas y KPIs actualizados</p>
-                </div>
+                <p className="text-white font-medium">Reporte diario</p>
               </div>
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
-                  <Users className="w-5 h-5 text-green-300" />
+                  <History className="w-5 h-5 text-green-300" />
                 </div>
-                <div>
-                  <p className="text-white font-medium">Colaboración en equipo</p>
-                  <p className="text-green-300 text-sm">Asigna y gestiona tareas fácilmente</p>
-                </div>
+                <p className="text-white font-medium">Historial de actividades</p>
               </div>
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
-                  <Shield className="w-5 h-5 text-green-300" />
+                  <TrendingUp className="w-5 h-5 text-green-300" />
                 </div>
-                <div>
-                  <p className="text-white font-medium">Seguridad empresarial</p>
-                  <p className="text-green-300 text-sm">Datos protegidos y acceso controlado</p>
-                </div>
+                <p className="text-white font-medium">Control de avances</p>
               </div>
             </div>
           </div>

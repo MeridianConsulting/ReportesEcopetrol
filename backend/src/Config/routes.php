@@ -60,6 +60,13 @@ return [
       ['GET', '/api/v1/roles', [UserController::class, 'roles']],
 
       // Reports
+      ['GET', '/api/v1/reports/my-lines', [ReportController::class, 'myReportLines']],
+      ['GET', '/api/v1/reports/service-orders', [ReportController::class, 'serviceOrders']],
+      ['GET', '/api/v1/reports/periods', [ReportController::class, 'reportPeriods']],
+      ['GET', '/api/v1/reports/delivery-media', [ReportController::class, 'deliveryMedia']],
+      ['POST', '/api/v1/reports/lines', [ReportController::class, 'reportLineStore']],
+      ['PUT', '/api/v1/reports/lines/{id}', [ReportController::class, 'reportLineUpdate']],
+      ['DELETE', '/api/v1/reports/lines/{id}', [ReportController::class, 'reportLineDestroy']],
       ['GET', '/api/v1/reports/daily', [ReportController::class, 'daily']],
       ['GET', '/api/v1/reports/management', [ReportController::class, 'management'], [RoleMiddleware::class => ['admin']]],
       ['GET', '/api/v1/reports/weekly-evolution', [ReportController::class, 'weeklyEvolution'], [RoleMiddleware::class => ['admin']]],

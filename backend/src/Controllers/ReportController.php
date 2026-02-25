@@ -73,5 +73,104 @@ class ReportController
       'data' => $data
     ]);
   }
+
+  /**
+   * Líneas de reporte del usuario (ODS): para pantalla "Mis reportes" / My Tasks.
+   */
+  public function myReportLines(Request $request)
+  {
+    $userContext = $request->getAttribute('userContext');
+    $userId = (int)($userContext['id'] ?? 0);
+    if (!$userId) {
+      return Response::json(['error' => ['code' => 'UNAUTHORIZED', 'message' => 'User not found']], 401);
+    }
+    $rows = $this->reportService->getMyReportLines($userId);
+    return Response::json(['data' => $rows]);
+  }
+
+  /** Catálogo: órdenes de servicio (ODS) */
+  public function serviceOrders(Request $request)
+  {
+    $list = $this->reportService->getServiceOrdersList();
+    return Response::json(['data' => $list]);
+  }
+
+  /** Catálogo: períodos (mes a reportar) */
+  public function reportPeriods(Request $request)
+  {
+    $list = $this->reportService->getReportPeriodsList();
+    return Response::json(['data' => $list]);
+  }
+
+  /** Catálogo: medios de entrega */
+  public function deliveryMedia(Request $request)
+  {
+    $list = $this->reportService->getDeliveryMediaList();
+    return Response::json(['data' => $list]);
+  }
+
+  /** Crear línea de reporte (POST) */
+  public function reportLineStore(Request $request)
+  {
+    $userContext = $request->getAttribute('userContext');
+    $userId = (int)($userContext['id'] ?? 0);
+    if (!$userId) {
+      return Response::json(['error' => ['code' => 'UNAUTHORIZED', 'message' => 'User not found']], 401);
+    }
+    $body = $request->getBody() ?? [];
+    if (!is_array($body)) {
+      return Response::json(['error' => ['code' => 'BAD_REQUEST', 'message' => 'Invalid body']], 400);
+    }
+    try {
+      $result = $this->reportService->storeReportLine($userId, $body);
+      return Response::json(['data' => $result]);
+    } catch (\InvalidArgumentException $e) {
+      return Response::json(['error' => ['code' => 'VALIDATION', 'message' => $e->getMessage()]], 400);
+    } catch (\Exception $e) {
+      return Response::json(['error' => ['code' => 'SERVER_ERROR', 'message' => $e->getMessage()]], 500);
+    }
+  }
+
+  /** Actualizar línea de reporte (PUT) */
+  public function reportLineUpdate(Request $request, $id)
+  {
+    $userContext = $request->getAttribute('userContext');
+    $userId = (int)($userContext['id'] ?? 0);
+    if (!$userId) {
+      return Response::json(['error' => ['code' => 'UNAUTHORIZED', 'message' => 'User not found']], 401);
+    }
+    $lineId = (int) $id;
+    $body = $request->getBody() ?? [];
+    if (!is_array($body)) {
+      return Response::json(['error' => ['code' => 'BAD_REQUEST', 'message' => 'Invalid body']], 400);
+    }
+    try {
+      $this->reportService->updateReportLine($userId, $lineId, $body);
+      return Response::json(['data' => ['report_line_id' => $lineId]]);
+    } catch (\RuntimeException $e) {
+      return Response::json(['error' => ['code' => 'NOT_FOUND', 'message' => $e->getMessage()]], 404);
+    } catch (\Exception $e) {
+      return Response::json(['error' => ['code' => 'SERVER_ERROR', 'message' => $e->getMessage()]], 500);
+    }
+  }
+
+  /** Eliminar línea de reporte (DELETE) */
+  public function reportLineDestroy(Request $request, $id)
+  {
+    $userContext = $request->getAttribute('userContext');
+    $userId = (int)($userContext['id'] ?? 0);
+    if (!$userId) {
+      return Response::json(['error' => ['code' => 'UNAUTHORIZED', 'message' => 'User not found']], 401);
+    }
+    $lineId = (int) $id;
+    try {
+      $this->reportService->deleteReportLine($userId, $lineId);
+      return Response::json(['data' => ['deleted' => true]]);
+    } catch (\RuntimeException $e) {
+      return Response::json(['error' => ['code' => 'NOT_FOUND', 'message' => $e->getMessage()]], 404);
+    } catch (\Exception $e) {
+      return Response::json(['error' => ['code' => 'SERVER_ERROR', 'message' => $e->getMessage()]], 500);
+    }
+  }
 }
 

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 25-02-2026 a las 20:36:15
+-- Tiempo de generación: 25-02-2026 a las 21:09:36
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -393,6 +393,7 @@ CREATE TABLE `report_lines` (
   `progress_percent` decimal(6,4) NOT NULL DEFAULT 0.0000,
   `accumulated_days` decimal(10,2) NOT NULL DEFAULT 0.00,
   `accumulated_progress` decimal(6,4) NOT NULL DEFAULT 0.0000,
+  `observations` text DEFAULT NULL,
   `sort_order` int(11) NOT NULL DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
