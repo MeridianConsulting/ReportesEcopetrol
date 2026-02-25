@@ -8,7 +8,7 @@ export default function Home() {
 
   useEffect(() => {
     // Redirigir a dashboard por defecto
-    router.push('/dashboard/');
+    router.push('/my-tasks/');
   }, [router]);
 
   return (

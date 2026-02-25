@@ -4,7 +4,6 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Sidebar from './Sidebar';
-import NotificationBell from './NotificationBell';
 import { apiRequest, bootstrapAuth, getAccessToken } from '../lib/api';
 import { Loader2 } from 'lucide-react';
 
@@ -73,13 +72,10 @@ export default function Layout({ children }) {
     <div className="flex h-screen bg-slate-100 overflow-hidden">
       <Sidebar user={user} isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
-        {/* Header con campana de notificaciones */}
         <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 flex-shrink-0">
           <div className="flex-1" />
           
           <div className="flex items-center gap-3">
-            <NotificationBell />
-            
             {user && (
               <div className="hidden sm:flex items-center gap-2 pl-3 border-l border-slate-200">
                 <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center text-white text-sm font-medium">

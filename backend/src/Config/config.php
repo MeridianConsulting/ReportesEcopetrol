@@ -34,12 +34,12 @@ if ($isLocalhost) {
 // En localhost, usar credenciales por defecto de XAMPP
 if ($isLocalhost) {
     define('DB_HOST', 'localhost');
-    define('DB_NAME', 'tareas');
+    define('DB_NAME', 'reportes_ods');
     define('DB_USER', 'root');
     define('DB_PASS', '');
 } else {
     define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
-    define('DB_NAME', $_ENV['DB_NAME'] ?? 'tareas');
+    define('DB_NAME', $_ENV['DB_NAME'] ?? 'reportes_ods');
     define('DB_USER', $_ENV['DB_USER'] ?? 'root');
     define('DB_PASS', $_ENV['DB_PASS'] ?? '');
 }

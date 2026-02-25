@@ -8,7 +8,7 @@ class UserResource
   {
     $result = [
       'id' => (int)$user['id'],
-      'name' => $user['name'],
+      'name' => $user['name'] ?? $user['email'] ?? '',
       'email' => $user['email'],
       'role' => $user['role_name'] ?? null,
       'role_id' => (int)($user['role_id'] ?? 0),

@@ -35,7 +35,7 @@ export default function AreasPage() {
       try {
         const data = await apiRequest('/auth/me');
         if (data.data.role !== 'admin') {
-          router.push('/dashboard/');
+          router.push('/my-tasks/');
           return;
         }
         setUser(data.data);

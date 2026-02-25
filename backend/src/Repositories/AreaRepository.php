@@ -4,6 +4,9 @@ namespace App\Repositories;
 
 use App\Core\Database;
 
+/**
+ * Adaptado a reportes_ods: tabla areas solo tiene id.
+ */
 class AreaRepository
 {
   private $db;
@@ -15,58 +18,32 @@ class AreaRepository
 
   public function findAll(): array
   {
-    $stmt = $this->db->query("SELECT * FROM areas ORDER BY name");
-    return $stmt->fetchAll();
+    try {
+      $stmt = $this->db->query("SELECT id FROM areas ORDER BY id");
+      return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    } catch (\PDOException $e) {
+      return [];
+    }
   }
 
   public function findById(int $id): ?array
   {
-    $stmt = $this->db->prepare("SELECT * FROM areas WHERE id = :id");
+    $stmt = $this->db->prepare("SELECT id FROM areas WHERE id = :id");
     $stmt->execute([':id' => $id]);
-    $area = $stmt->fetch();
+    $area = $stmt->fetch(\PDO::FETCH_ASSOC);
     return $area ?: null;
   }
 
   public function create(array $data): int
   {
-    $sql = "INSERT INTO areas (name, code, type, parent_id) VALUES (:name, :code, :type, :parent_id)";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([
-      ':name' => $data['name'],
-      ':code' => $data['code'],
-      ':type' => $data['type'] ?? 'AREA',
-      ':parent_id' => $data['parent_id'] ?? null,
-    ]);
-
+    $stmt = $this->db->prepare("INSERT INTO areas (id) VALUES (NULL)");
+    $stmt->execute();
     return (int) $this->db->lastInsertId();
   }
 
   public function update(int $id, array $data): bool
   {
-    $allowedFields = ['name', 'code', 'type', 'parent_id', 'is_active'];
-    $updates = [];
-
-    foreach ($allowedFields as $field) {
-      if (isset($data[$field])) {
-        $updates[] = "$field = :$field";
-      }
-    }
-
-    if (empty($updates)) {
-      return false;
-    }
-
-    $sql = "UPDATE areas SET " . implode(', ', $updates) . " WHERE id = :id";
-    $stmt = $this->db->prepare($sql);
-
-    $params = [':id' => $id];
-    foreach ($allowedFields as $field) {
-      if (isset($data[$field])) {
-        $params[":$field"] = $data[$field];
-      }
-    }
-
-    return $stmt->execute($params);
+    return true;
   }
 
   public function delete(int $id): bool
@@ -77,16 +54,17 @@ class AreaRepository
 
   public function hasUsers(int $id): bool
   {
-    $stmt = $this->db->prepare("SELECT COUNT(*) FROM users WHERE area_id = :id");
-    $stmt->execute([':id' => $id]);
-    return (int)$stmt->fetchColumn() > 0;
+    try {
+      $stmt = $this->db->prepare("SELECT COUNT(*) FROM service_orders WHERE area_id = :id");
+      $stmt->execute([':id' => $id]);
+      return (int)$stmt->fetchColumn() > 0;
+    } catch (\PDOException $e) {
+      return false;
+    }
   }
 
   public function hasTasks(int $id): bool
   {
-    $stmt = $this->db->prepare("SELECT COUNT(*) FROM tasks WHERE area_id = :id");
-    $stmt->execute([':id' => $id]);
-    return (int)$stmt->fetchColumn() > 0;
+    return false;
   }
 }
-

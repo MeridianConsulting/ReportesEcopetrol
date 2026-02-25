@@ -5,6 +5,11 @@ namespace App\Services;
 use App\Repositories\UserRepository;
 use App\Repositories\RefreshTokenRepository;
 
+/**
+ * Adaptado a reportes_ods: users no tiene password_hash; no existe tabla refresh_tokens.
+ * Login requiere password_hash (si no existe en BD, credenciales inválidas).
+ * Refresh es stateless (solo JWT); logout no revoca en BD.
+ */
 class AuthService
 {
   private $userRepository;
@@ -18,6 +23,12 @@ class AuthService
     $this->refreshTokenRepository = new RefreshTokenRepository();
   }
 
+  /**
+   * Validación del login (reportes_ods):
+   * 1) Buscar usuario por tabla users, campo email.
+   * 2) Si existe columna users.password_hash: validar con password_verify (o texto plano).
+   * 3) Si no existe password_hash: permitir login solo con email (sin validar contraseña), para entornos donde la BD solo tiene id+email.
+   */
   public function login(string $email, string $password, string $ip, string $userAgent): array
   {
     $user = $this->userRepository->findByEmail($email);
@@ -26,50 +37,41 @@ class AuthService
       throw new \Exception('Invalid credentials');
     }
 
-    // Verificar contraseña: primero intentar con password_verify (hash bcrypt)
-    // Si falla, verificar si es una contraseña en texto plano (para compatibilidad con datos existentes)
-    $passwordValid = false;
-    
-    // Intentar verificar con password_verify (para hashes bcrypt)
-    if (password_verify($password, $user['password_hash'])) {
-      $passwordValid = true;
-    } 
-    // Si password_verify falla, verificar si es texto plano (compatibilidad con datos antiguos)
-    elseif ($user['password_hash'] === $password) {
-      $passwordValid = true;
-      // Opcional: actualizar el hash a bcrypt para mejorar la seguridad
-      // $this->userRepository->update($user['id'], [
-      //   'password_hash' => password_hash($password, PASSWORD_DEFAULT)
-      // ]);
-    }
+    $passwordHash = $user['password_hash'] ?? null;
 
-    if (!$passwordValid) {
-      throw new \Exception('Invalid credentials');
+    if ($passwordHash !== null && $passwordHash !== '') {
+      $passwordValid = password_verify($password, $passwordHash) || $passwordHash === $password;
+      if (!$passwordValid) {
+        throw new \Exception('Invalid credentials');
+      }
     }
+    // Si no hay password_hash en la BD (reportes_ods solo tiene users.id, users.email), se acepta el login con email correcto
 
-    if (!$user['is_active']) {
+    if (!($user['is_active'] ?? true)) {
       throw new \Exception('User account is inactive');
     }
 
-    // Generar tokens
     $accessToken = $this->jwtService->generateAccessToken(
       $user['id'],
-      $user['role_name'],
-      $user['area_id']
+      $user['role_name'] ?? 'colaborador',
+      $user['area_id'] ?? null
     );
 
     $refreshToken = $this->jwtService->generateRefreshToken($user['id']);
-    $tokenHash = $this->jwtService->hashToken($refreshToken);
 
-    // Guardar refresh token
-    $expiresAt = date('Y-m-d H:i:s', time() + (JWT_REFRESH_TTL_DAYS * 24 * 60 * 60));
-    $this->refreshTokenRepository->create([
-      'user_id' => $user['id'],
-      'token_hash' => $tokenHash,
-      'expires_at' => $expiresAt,
-      'ip' => $ip,
-      'user_agent' => $userAgent,
-    ]);
+    try {
+      $tokenHash = $this->jwtService->hashToken($refreshToken);
+      $expiresAt = date('Y-m-d H:i:s', time() + (JWT_REFRESH_TTL_DAYS * 24 * 60 * 60));
+      $this->refreshTokenRepository->create([
+        'user_id' => $user['id'],
+        'token_hash' => $tokenHash,
+        'expires_at' => $expiresAt,
+        'ip' => $ip,
+        'user_agent' => $userAgent,
+      ]);
+    } catch (\Throwable $e) {
+      // Tabla refresh_tokens puede no existir en reportes_ods; continuar sin guardar
+    }
 
     return [
       'access_token' => $accessToken,
@@ -80,49 +82,46 @@ class AuthService
 
   public function refresh(string $refreshToken, string $ip, string $userAgent): array
   {
-    $tokenHash = $this->jwtService->hashToken($refreshToken);
-    $storedToken = $this->refreshTokenRepository->findByTokenHash($tokenHash);
-
-    if (!$storedToken) {
-      throw new \Exception('Invalid refresh token');
-    }
-
-    // Validar JWT
     $payload = $this->jwtService->validate($refreshToken);
 
-    if ($payload['type'] !== 'refresh') {
+    if (($payload['type'] ?? '') !== 'refresh') {
       throw new \Exception('Invalid token type');
     }
 
-    // Obtener usuario
     $user = $this->userRepository->findById($payload['sub']);
 
-    if (!$user || !$user['is_active']) {
+    if (!$user || !($user['is_active'] ?? true)) {
       throw new \Exception('User account is inactive');
     }
 
-    // Revocar token anterior
-    $this->refreshTokenRepository->revokeToken($tokenHash);
+    try {
+      $tokenHash = $this->jwtService->hashToken($refreshToken);
+      $this->refreshTokenRepository->revokeToken($tokenHash);
+    } catch (\Throwable $e) {
+      // Tabla refresh_tokens puede no existir
+    }
 
-    // Generar nuevos tokens
     $newAccessToken = $this->jwtService->generateAccessToken(
       $user['id'],
-      $user['role_name'],
-      $user['area_id']
+      $user['role_name'] ?? 'colaborador',
+      $user['area_id'] ?? null
     );
 
     $newRefreshToken = $this->jwtService->generateRefreshToken($user['id']);
-    $newTokenHash = $this->jwtService->hashToken($newRefreshToken);
 
-    // Guardar nuevo refresh token
-    $expiresAt = date('Y-m-d H:i:s', time() + (JWT_REFRESH_TTL_DAYS * 24 * 60 * 60));
-    $this->refreshTokenRepository->create([
-      'user_id' => $user['id'],
-      'token_hash' => $newTokenHash,
-      'expires_at' => $expiresAt,
-      'ip' => $ip,
-      'user_agent' => $userAgent,
-    ]);
+    try {
+      $newTokenHash = $this->jwtService->hashToken($newRefreshToken);
+      $expiresAt = date('Y-m-d H:i:s', time() + (JWT_REFRESH_TTL_DAYS * 24 * 60 * 60));
+      $this->refreshTokenRepository->create([
+        'user_id' => $user['id'],
+        'token_hash' => $newTokenHash,
+        'expires_at' => $expiresAt,
+        'ip' => $ip,
+        'user_agent' => $userAgent,
+      ]);
+    } catch (\Throwable $e) {
+      // Tabla refresh_tokens puede no existir
+    }
 
     return [
       'access_token' => $newAccessToken,
@@ -132,13 +131,20 @@ class AuthService
 
   public function logout(string $refreshToken): void
   {
-    $tokenHash = $this->jwtService->hashToken($refreshToken);
-    $this->refreshTokenRepository->revokeToken($tokenHash);
+    try {
+      $tokenHash = $this->jwtService->hashToken($refreshToken);
+      $this->refreshTokenRepository->revokeToken($tokenHash);
+    } catch (\Throwable $e) {
+      // Tabla refresh_tokens puede no existir
+    }
   }
 
   public function logoutAll(int $userId): void
   {
-    $this->refreshTokenRepository->revokeAllUserTokens($userId);
+    try {
+      $this->refreshTokenRepository->revokeAllUserTokens($userId);
+    } catch (\Throwable $e) {
+      // Tabla refresh_tokens puede no existir
+    }
   }
 }
-

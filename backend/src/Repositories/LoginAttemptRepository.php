@@ -5,6 +5,10 @@ namespace App\Repositories;
 use App\Core\Database;
 use PDO;
 
+/**
+ * Adaptado a reportes_ods: tabla login_attempts puede no existir.
+ * Si falla la consulta, se retorna valor seguro (sin romper login).
+ */
 class LoginAttemptRepository
 {
   private PDO $db;
@@ -14,44 +18,46 @@ class LoginAttemptRepository
     $this->db = Database::getInstance()->getConnection();
   }
 
-  /**
-   * Contar intentos de login fallidos por IP en la ventana de tiempo
-   */
   public function countFailedAttempts(string $ip, int $windowMinutes): int
   {
-    $stmt = $this->db->prepare("
-      SELECT COUNT(*) 
-      FROM login_attempts
-      WHERE ip_address = ? 
-        AND success = 0 
-        AND attempted_at >= (NOW() - INTERVAL ? MINUTE)
-    ");
-    $stmt->execute([$ip, $windowMinutes]);
-    return (int)$stmt->fetchColumn();
+    try {
+      $stmt = $this->db->prepare("
+        SELECT COUNT(*) 
+        FROM login_attempts
+        WHERE ip_address = ? 
+          AND success = 0 
+          AND attempted_at >= (NOW() - INTERVAL ? MINUTE)
+      ");
+      $stmt->execute([$ip, $windowMinutes]);
+      return (int)$stmt->fetchColumn();
+    } catch (\PDOException $e) {
+      return 0;
+    }
   }
 
-  /**
-   * Registrar un intento de login
-   */
   public function recordAttempt(string $ip, string $email, bool $success, ?string $userAgent = null): void
   {
-    $stmt = $this->db->prepare("
-      INSERT INTO login_attempts (ip_address, email, success, user_agent, attempted_at)
-      VALUES (?, ?, ?, ?, NOW())
-    ");
-    $stmt->execute([$ip, $email, $success ? 1 : 0, $userAgent]);
+    try {
+      $stmt = $this->db->prepare("
+        INSERT INTO login_attempts (ip_address, email, success, user_agent, attempted_at)
+        VALUES (?, ?, ?, ?, NOW())
+      ");
+      $stmt->execute([$ip, $email, $success ? 1 : 0, $userAgent]);
+    } catch (\PDOException $e) {
+      // Tabla puede no existir
+    }
   }
 
-  /**
-   * Limpiar intentos antiguos (más de 24 horas)
-   */
   public function cleanupOldAttempts(): void
   {
-    $stmt = $this->db->prepare("
-      DELETE FROM login_attempts
-      WHERE attempted_at < (NOW() - INTERVAL 24 HOUR)
-    ");
-    $stmt->execute();
+    try {
+      $stmt = $this->db->prepare("
+        DELETE FROM login_attempts
+        WHERE attempted_at < (NOW() - INTERVAL 24 HOUR)
+      ");
+      $stmt->execute();
+    } catch (\PDOException $e) {
+      // Tabla puede no existir
+    }
   }
 }
-

@@ -6,19 +6,13 @@ import Link from 'next/link';
 import { logout } from '../lib/auth';
 import NotificationBell from './NotificationBell';
 import { 
-  ListTodo, 
-  BarChart3, 
   Building2, 
   Users, 
   ChevronLeft, 
   ChevronRight, 
   LogOut,
   Table2,
-  PieChart,
-  Layers,
-  FileDown,
-  Bell,
-  Send
+  FileDown
 } from 'lucide-react';
 
 export default function Sidebar({ user, isOpen, onToggle }) {
@@ -32,30 +26,7 @@ export default function Sidebar({ user, isOpen, onToggle }) {
       label: 'Mis Tareas', 
       icon: Table2
     },
-    { 
-      href: '/assignments/', 
-      label: 'Asignaciones', 
-      icon: Send
-    },
   ];
-
-  // Dashboard principal solo para admin y lider_area
-  if (user?.role === 'admin' || user?.role === 'lider_area') {
-    menuItems.unshift({ 
-      href: '/dashboard/', 
-      label: 'Todas las Tareas', 
-      icon: ListTodo
-    });
-  }
-
-  // Dashboard por área para admin, lider_area y colaborador
-  if (user?.role === 'admin' || user?.role === 'lider_area' || user?.role === 'colaborador') {
-    menuItems.push({ 
-      href: '/reports/areas/', 
-      label: 'Dashboard por Area', 
-      icon: Layers
-    });
-  }
 
   // Reportes adicionales solo para admin y lider_area
   if (user?.role === 'admin' || user?.role === 'lider_area') {
@@ -63,14 +34,6 @@ export default function Sidebar({ user, isOpen, onToggle }) {
       href: '/reports/download/', 
       label: 'Descargar Reportes', 
       icon: FileDown
-    });
-  }
-
-  if (user?.role === 'admin') {
-    menuItems.push({ 
-      href: '/reports/management/', 
-      label: 'Dashboard General', 
-      icon: PieChart
     });
   }
 
