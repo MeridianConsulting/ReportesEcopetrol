@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { logout } from '../lib/auth';
 import NotificationBell from './NotificationBell';
 import { 
-  Building2, 
   Users, 
   ChevronLeft, 
   ChevronRight, 
@@ -38,18 +37,11 @@ export default function Sidebar({ user, isOpen, onToggle }) {
   }
 
   if (user?.role === 'admin') {
-    menuItems.push(
-      { 
-        href: '/admin/areas/', 
-        label: 'Areas', 
-        icon: Building2
-      },
-      { 
-        href: '/admin/users/', 
-        label: 'Usuarios', 
-        icon: Users
-      }
-    );
+    menuItems.push({ 
+      href: '/admin/users/', 
+      label: 'Usuarios', 
+      icon: Users
+    });
   }
 
   async function handleLogout() {
