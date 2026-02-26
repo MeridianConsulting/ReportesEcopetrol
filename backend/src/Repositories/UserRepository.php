@@ -67,10 +67,53 @@ class UserRepository
       $user['area_id'] = null;
       $user['area_name'] = null;
       $user['is_active'] = true;
+      $user['service_orders'] = $this->getServiceOrdersForUser((int)$user['id']);
+      $user['service_order_ids'] = array_map(fn($so) => (int)$so['id'], $user['service_orders']);
       return $user;
     } catch (\PDOException $e) {
       error_log('UserRepository::findById error: ' . $e->getMessage());
       throw new \Exception('Database error: ' . $e->getMessage());
+    }
+  }
+
+  /**
+   * ODS asociados al usuario (service_order_employees + service_orders).
+   */
+  public function getServiceOrdersForUser(int $userId): array
+  {
+    try {
+      $stmt = $this->db->prepare("
+        SELECT so.id, so.ods_code
+        FROM service_order_employees soe
+        INNER JOIN service_orders so ON so.id = soe.service_order_id
+        WHERE soe.user_id = ? AND soe.is_active = 1
+        ORDER BY so.ods_code
+      ");
+      $stmt->execute([$userId]);
+      return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    } catch (\PDOException $e) {
+      return [];
+    }
+  }
+
+  /**
+   * Sincroniza los ODS del usuario en service_order_employees.
+   */
+  public function setUserServiceOrders(int $userId, array $serviceOrderIds): void
+  {
+    $this->db->prepare("DELETE FROM service_order_employees WHERE user_id = ?")->execute([$userId]);
+    $serviceOrderIds = array_map('intval', array_filter($serviceOrderIds));
+    if (empty($serviceOrderIds)) {
+      return;
+    }
+    $stmt = $this->db->prepare("
+      INSERT INTO service_order_employees (service_order_id, user_id, is_active)
+      VALUES (?, ?, 1)
+    ");
+    foreach ($serviceOrderIds as $soId) {
+      if ($soId > 0) {
+        $stmt->execute([$soId, $userId]);
+      }
     }
   }
 
@@ -90,20 +133,58 @@ class UserRepository
     $stmt = $this->db->prepare($sql);
     $stmt->execute($params);
     $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    $userIds = array_column($rows, 'id');
+    $odsByUser = $this->getServiceOrdersByUserIds($userIds);
     foreach ($rows as &$u) {
       $u['area_id'] = null;
       $u['area_name'] = null;
       $u['is_active'] = true;
+      $uid = (int)$u['id'];
+      $u['service_orders'] = $odsByUser[$uid] ?? [];
+      $u['service_order_ids'] = array_map(fn($so) => (int)$so['id'], $u['service_orders']);
     }
     return $rows;
+  }
+
+  /**
+   * ODS por usuario (para listado).
+   */
+  public function getServiceOrdersByUserIds(array $userIds): array
+  {
+    if (empty($userIds)) {
+      return [];
+    }
+    $placeholders = implode(',', array_fill(0, count($userIds), '?'));
+    $stmt = $this->db->prepare("
+      SELECT soe.user_id, so.id, so.ods_code
+      FROM service_order_employees soe
+      INNER JOIN service_orders so ON so.id = soe.service_order_id
+      WHERE soe.user_id IN ($placeholders) AND soe.is_active = 1
+      ORDER BY soe.user_id, so.ods_code
+    ");
+    $stmt->execute(array_values($userIds));
+    $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    $byUser = [];
+    foreach ($rows as $r) {
+      $uid = (int)$r['user_id'];
+      if (!isset($byUser[$uid])) {
+        $byUser[$uid] = [];
+      }
+      $byUser[$uid][] = ['id' => (int)$r['id'], 'ods_code' => $r['ods_code']];
+    }
+    return $byUser;
   }
 
   public function create(array $data): int
   {
     $this->db->beginTransaction();
     try {
-      $stmt = $this->db->prepare("INSERT INTO users (email) VALUES (:email)");
-      $stmt->execute([':email' => $data['email']]);
+      $passwordHash = $data['password_hash'] ?? null;
+      $stmt = $this->db->prepare("INSERT INTO users (email, password_hash) VALUES (:email, :password_hash)");
+      $stmt->execute([
+        ':email' => $data['email'],
+        ':password_hash' => $passwordHash,
+      ]);
       $userId = (int) $this->db->lastInsertId();
 
       $stmt = $this->db->prepare("
@@ -119,6 +200,10 @@ class UserRepository
       $roleId = isset($data['role_id']) ? (int)$data['role_id'] : 1;
       $stmt = $this->db->prepare("INSERT INTO user_roles (user_id, role_id) VALUES (:user_id, :role_id)");
       $stmt->execute([':user_id' => $userId, ':role_id' => $roleId]);
+
+      if (!empty($data['service_order_ids']) && is_array($data['service_order_ids'])) {
+        $this->setUserServiceOrders($userId, $data['service_order_ids']);
+      }
 
       $this->db->commit();
       return $userId;
@@ -166,6 +251,11 @@ class UserRepository
         ':user_id' => $id,
         ':role_id' => (int)$data['role_id'],
       ]);
+    }
+
+    if (array_key_exists('service_order_ids', $data)) {
+      $ids = is_array($data['service_order_ids']) ? $data['service_order_ids'] : [];
+      $this->setUserServiceOrders($id, $ids);
     }
 
     return true;

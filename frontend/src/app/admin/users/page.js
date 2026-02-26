@@ -16,16 +16,14 @@ import {
   AlertTriangle,
   Search,
   Eye,
-  EyeOff,
-  UserCheck,
-  UserX
+  EyeOff
 } from 'lucide-react';
 
 export default function UsersPage() {
   const router = useRouter();
   const [users, setUsers] = useState([]);
-  const [areas, setAreas] = useState([]);
   const [roles, setRoles] = useState([]);
+  const [serviceOrders, setServiceOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -40,9 +38,7 @@ export default function UsersPage() {
     email: '',
     password: '',
     role_id: '',
-    area_id: '',
-    area_ids: [],
-    is_active: true,
+    service_order_ids: [],
   });
 
   useEffect(() => {
@@ -68,14 +64,14 @@ export default function UsersPage() {
 
   async function loadData() {
     try {
-      const [usersData, areasData, rolesData] = await Promise.all([
+      const [usersData, rolesData, ordersData] = await Promise.all([
         apiRequest('/users'),
-        apiRequest('/areas'),
         apiRequest('/roles'),
+        apiRequest('/reports/service-orders').catch(() => ({ data: [] })),
       ]);
       setUsers(usersData.data || []);
-      setAreas(areasData.data || []);
       setRoles(rolesData.data || []);
+      setServiceOrders(ordersData.data || []);
     } catch (e) {
       // Error loading data
     } finally {
@@ -89,9 +85,7 @@ export default function UsersPage() {
       email: '',
       password: '',
       role_id: '',
-      area_id: '',
-      area_ids: [],
-      is_active: true,
+      service_order_ids: [],
     });
     setEditingId(null);
     setShowForm(false);
@@ -99,61 +93,52 @@ export default function UsersPage() {
   }
 
   function handleEdit(u) {
-    const userAreaIds = u.area_ids || (u.area_id ? [u.area_id] : []);
     setFormData({
-      name: u.name,
-      email: u.email,
-      password: '', // No mostramos la contraseña actual
+      name: u.name ?? '',
+      email: u.email ?? '',
+      password: '',
       role_id: u.role_id || '',
-      area_id: u.area_id || '',
-      area_ids: userAreaIds.map(id => parseInt(id, 10)),
-      is_active: u.is_active === 1 || u.is_active === true,
+      service_order_ids: Array.isArray(u.service_order_ids) ? u.service_order_ids.map(id => parseInt(id, 10)) : [],
     });
     setEditingId(u.id);
     setShowForm(true);
   }
 
-  function toggleAreaId(areaId) {
-    const id = parseInt(areaId, 10);
+  function toggleServiceOrder(soId) {
+    const id = parseInt(soId, 10);
     setFormData(prev => {
-      const current = prev.area_ids || [];
-      let newIds;
+      const current = prev.service_order_ids || [];
       if (current.includes(id)) {
-        newIds = current.filter(a => a !== id);
-      } else {
-        newIds = [...current, id];
+        return { ...prev, service_order_ids: current.filter(x => x !== id) };
       }
-      // Si se quita el area principal, actualizar al primero disponible
-      const primaryId = newIds.includes(parseInt(prev.area_id, 10)) ? prev.area_id : (newIds[0] || '');
-      return { ...prev, area_ids: newIds, area_id: primaryId };
+      return { ...prev, service_order_ids: [...current, id] };
     });
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
-    
     try {
-      const dataToSend = { ...formData };
-      
-      // Si estamos editando y no hay contraseña, no la enviamos
-      if (editingId && !dataToSend.password) {
-        delete dataToSend.password;
+      const dataToSend = {
+        name: formData.name,
+        email: formData.email,
+        role_id: formData.role_id,
+        service_order_ids: Array.isArray(formData.service_order_ids) ? formData.service_order_ids : [],
+      };
+      if (formData.password && formData.password.trim()) {
+        dataToSend.password = formData.password;
       }
-
-      // Si hay area_ids, asegurar que area_id esté incluido
-      if (dataToSend.area_ids && dataToSend.area_ids.length > 0) {
-        if (!dataToSend.area_id) {
-          dataToSend.area_id = dataToSend.area_ids[0];
-        }
-      }
-
       if (editingId) {
         await apiRequest(`/users/${editingId}`, {
           method: 'PUT',
           body: JSON.stringify(dataToSend),
         });
       } else {
+        if (!dataToSend.password) {
+          alert('La contraseña es obligatoria para nuevos usuarios.');
+          setSaving(false);
+          return;
+        }
         await apiRequest('/users', {
           method: 'POST',
           body: JSON.stringify(dataToSend),
@@ -183,26 +168,11 @@ export default function UsersPage() {
     }
   }
 
-  async function toggleUserStatus(u) {
-    try {
-      await apiRequest(`/users/${u.id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ is_active: !u.is_active }),
-      });
-      await loadData();
-    } catch (e) {
-      alert('Error al cambiar estado: ' + e.message);
-    }
-  }
-
   const filteredUsers = users.filter(u => {
     const term = searchTerm.toLowerCase();
-    const areaMatch = u.area_names?.some(n => n?.toLowerCase().includes(term)) || 
-                      u.area_name?.toLowerCase().includes(term);
-    return u.name?.toLowerCase().includes(term) ||
-           u.email?.toLowerCase().includes(term) ||
-           u.role?.toLowerCase().includes(term) ||
-           areaMatch;
+    return (u.name ?? '').toLowerCase().includes(term) ||
+           (u.email ?? '').toLowerCase().includes(term) ||
+           (u.role ?? '').toLowerCase().includes(term);
   });
 
   if (loading) {
@@ -287,7 +257,7 @@ export default function UsersPage() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
                     Contraseña {!editingId && <span className="text-rose-500">*</span>}
@@ -326,56 +296,35 @@ export default function UsersPage() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Áreas {formData.area_ids.length > 0 && <span className="text-green-500 normal-case">({formData.area_ids.length} seleccionada{formData.area_ids.length > 1 ? 's' : ''})</span>}
-                  </label>
-                  <div className="max-h-40 overflow-y-auto border border-slate-300 rounded-lg p-2 space-y-1 bg-white">
-                    {areas.map(area => (
-                      <label key={area.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-50 cursor-pointer">
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
+                  ODS asociados al perfil
+                </label>
+                <p className="text-xs text-slate-500 mb-2">Selecciona las órdenes de servicio (ODS) con las que trabaja este usuario. Se usan para asignar automáticamente el ODS al crear reportes.</p>
+                <div className="max-h-48 overflow-y-auto border border-slate-300 rounded-lg p-2 space-y-1 bg-white">
+                  {serviceOrders.length === 0 ? (
+                    <p className="text-sm text-slate-500 py-2">No hay ODS cargados en el sistema.</p>
+                  ) : (
+                    serviceOrders.map(so => (
+                      <label key={so.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-50 cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={formData.area_ids.includes(parseInt(area.id, 10))}
-                          onChange={() => toggleAreaId(area.id)}
+                          checked={(formData.service_order_ids || []).includes(parseInt(so.id, 10))}
+                          onChange={() => toggleServiceOrder(so.id)}
                           className="rounded border-slate-300 text-green-600 focus:ring-green-500"
                         />
-                        <span className="text-sm text-slate-700">{area.name}</span>
-                        {formData.area_ids.includes(parseInt(area.id, 10)) && parseInt(formData.area_id, 10) === parseInt(area.id, 10) && (
-                          <span className="ml-auto text-[10px] font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded">Principal</span>
-                        )}
+                        <span className="text-sm text-slate-700 font-mono">{so.ods_code}</span>
                       </label>
-                    ))}
-                  </div>
-                  {formData.area_ids.length > 1 && (
-                    <div className="mt-1.5">
-                      <label className="text-[11px] text-slate-500">Área principal:</label>
-                      <select
-                        value={formData.area_id}
-                        onChange={e => setFormData({ ...formData, area_id: e.target.value })}
-                        className="ml-2 px-2 py-0.5 text-xs border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-green-500 bg-white"
-                      >
-                        {formData.area_ids.map(aId => {
-                          const area = areas.find(a => parseInt(a.id, 10) === aId);
-                          return area ? <option key={area.id} value={area.id}>{area.name}</option> : null;
-                        })}
-                      </select>
-                    </div>
+                    ))
                   )}
                 </div>
-              </div>
-              
-              {/* Estado activo */}
-              <div className="flex items-center gap-3">
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_active}
-                    onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                </label>
-                <span className="text-sm text-slate-700">Usuario activo</span>
+                {(formData.service_order_ids || []).length > 0 && (
+                  <p className="text-xs text-slate-500 mt-1">
+                    {formData.service_order_ids.length} ODS seleccionado(s)
+                  </p>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 pt-2">
@@ -430,8 +379,7 @@ export default function UsersPage() {
                   <th className="px-5 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Usuario</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Email</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Rol</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Área</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Estado</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">ODS</th>
                   <th className="px-5 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Acciones</th>
                 </tr>
               </thead>
@@ -451,46 +399,26 @@ export default function UsersPage() {
                       <td className="px-5 py-3.5">
                         <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${
                           u.role === 'admin' ? 'bg-teal-50 text-teal-700' :
-                          u.role === 'lider_area' ? 'bg-amber-50 text-amber-700' :
+                          u.role === 'profesional_proyectos' ? 'bg-blue-50 text-blue-700' :
+                          u.role === 'interventoria' ? 'bg-amber-50 text-amber-700' :
+                          u.role === 'gerencia' ? 'bg-slate-100 text-slate-700' :
                           'bg-slate-100 text-slate-700'
                         }`}>
                           {u.role || 'Sin rol'}
                         </span>
                       </td>
-                      <td className="px-5 py-3.5 text-sm text-slate-600">
-                        {u.area_names && u.area_names.length > 1 ? (
-                          <div className="flex flex-wrap gap-1">
-                            {u.area_names.map((name, idx) => (
-                              <span key={idx} className={`inline-flex px-1.5 py-0.5 text-xs rounded ${
-                                u.area_ids && parseInt(u.area_id, 10) === parseInt(u.area_ids[idx], 10)
-                                  ? 'bg-green-50 text-green-700 font-medium'
-                                  : 'bg-slate-100 text-slate-600'
-                              }`}>
-                                {name}
+                      <td className="px-5 py-3.5 text-sm text-slate-600 max-w-[200px]">
+                        {u.service_orders?.length > 0 ? (
+                          <span className="flex flex-wrap gap-1">
+                            {u.service_orders.map(so => (
+                              <span key={so.id} className="inline-flex px-1.5 py-0.5 text-xs font-mono bg-slate-100 text-slate-700 rounded">
+                                {so.ods_code}
                               </span>
                             ))}
-                          </div>
+                          </span>
                         ) : (
-                          u.area_name || 'Sin área'
+                          <span className="text-slate-400">—</span>
                         )}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <button
-                          onClick={() => toggleUserStatus(u)}
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded cursor-pointer transition-colors ${
-                            u.is_active 
-                              ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' 
-                              : 'bg-rose-50 text-rose-700 hover:bg-rose-100'
-                          }`}
-                          title={u.is_active ? 'Clic para desactivar' : 'Clic para activar'}
-                        >
-                          {u.is_active ? (
-                            <UserCheck className="w-3 h-3" />
-                          ) : (
-                            <UserX className="w-3 h-3" />
-                          )}
-                          {u.is_active ? 'Activo' : 'Inactivo'}
-                        </button>
                       </td>
                       <td className="px-5 py-3.5">
                         <div className="flex items-center justify-end gap-2">
@@ -514,7 +442,7 @@ export default function UsersPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="px-5 py-12 text-center">
+                    <td colSpan="5" className="px-5 py-12 text-center">
                       <div className="flex flex-col items-center">
                         <Users className="w-10 h-10 text-slate-300 mb-3" strokeWidth={1.5} />
                         <p className="text-sm font-medium text-slate-900 mb-1">
@@ -554,7 +482,7 @@ export default function UsersPage() {
               </div>
             </div>
             <p className="text-slate-600 mb-6">
-              ¿Estás seguro de que deseas eliminar este usuario? Si tiene tareas asociadas, no podrá ser eliminado. Considera desactivarlo en su lugar.
+              ¿Estás seguro de que deseas eliminar este usuario? Si tiene reportes o vínculos asociados, no podrá ser eliminado.
             </p>
             <div className="flex justify-end gap-3">
               <button

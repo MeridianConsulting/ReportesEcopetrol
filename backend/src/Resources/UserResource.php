@@ -18,6 +18,8 @@ class UserResource
       'area_names' => $user['area_names'] ?? ($user['area_name'] ? [$user['area_name']] : []),
       'is_active' => (bool)($user['is_active'] ?? true),
       'created_at' => $user['created_at'] ?? null,
+      'service_orders' => $user['service_orders'] ?? [],
+      'service_order_ids' => $user['service_order_ids'] ?? [],
     ];
 
     return $result;
