@@ -200,6 +200,89 @@ class ReportService
     }
   }
 
+  /**
+   * Líneas de reporte para exportación (GP-F-23, etc.).
+   * - Admin puede solicitar por user_id; si no, se usa el usuario autenticado.
+   * - Filtro opcional por date_from y date_to (r.report_date).
+   */
+  public function getReportLinesForExport(int $requestingUserId, ?int $filterUserId, ?string $dateFrom, ?string $dateTo): array
+  {
+    $userId = $filterUserId !== null && $filterUserId > 0 ? $filterUserId : $requestingUserId;
+
+    $conditions = ["r.reported_by = :user_id", "(r.deleted_at IS NULL AND r.is_active = 1)"];
+    $params = [':user_id' => $userId];
+
+    if ($dateFrom !== null && $dateFrom !== '') {
+      $conditions[] = "r.report_date >= :date_from";
+      $params[':date_from'] = $dateFrom;
+    }
+    if ($dateTo !== null && $dateTo !== '') {
+      $conditions[] = "r.report_date <= :date_to";
+      $params[':date_to'] = $dateTo;
+    }
+
+    $where = implode(' AND ', $conditions);
+    $sql = "
+      SELECT
+        so.ods_code,
+        rp.label AS period_label,
+        r.report_date,
+        ep.full_name AS reporter_name,
+        rl.item_general,
+        rl.item_activity,
+        rl.activity_description,
+        rl.support_text,
+        dm.name AS delivery_medium_name,
+        rl.delivery_medium_id,
+        rl.contracted_days,
+        rl.days_month,
+        rl.progress_percent,
+        rl.accumulated_days,
+        rl.accumulated_progress,
+        r.id AS report_id,
+        rl.id AS report_line_id
+      FROM reports r
+      INNER JOIN report_lines rl ON rl.report_id = r.id
+      INNER JOIN service_orders so ON so.id = r.service_order_id
+      INNER JOIN report_periods rp ON rp.id = r.period_id
+      LEFT JOIN employee_profiles ep ON ep.user_id = r.reported_by
+      LEFT JOIN delivery_media dm ON dm.id = rl.delivery_medium_id
+      WHERE {$where}
+      ORDER BY r.report_date ASC, r.id ASC, rl.sort_order ASC, rl.id ASC
+    ";
+    try {
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute($params);
+      $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+      try {
+        $this->db->query("SELECT observations FROM report_lines LIMIT 0");
+        $hasObservations = true;
+      } catch (\PDOException $e) {
+        $hasObservations = false;
+      }
+      if ($hasObservations && !empty($rows)) {
+        $ids = array_column($rows, 'report_line_id');
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmtObs = $this->db->prepare("SELECT id, observations FROM report_lines WHERE id IN ($placeholders)");
+        $stmtObs->execute(array_values($ids));
+        $obsMap = [];
+        while ($r = $stmtObs->fetch(\PDO::FETCH_ASSOC)) {
+          $obsMap[$r['id']] = $r['observations'] ?? '';
+        }
+        foreach ($rows as &$row) {
+          $row['observations'] = $obsMap[$row['report_line_id']] ?? '';
+        }
+      } else {
+        foreach ($rows as &$row) {
+          $row['observations'] = '';
+        }
+      }
+      return $rows;
+    } catch (\PDOException $e) {
+      return [];
+    }
+  }
+
   /** Lista de órdenes de servicio (código ODS) para selector */
   public function getServiceOrdersList(): array
   {

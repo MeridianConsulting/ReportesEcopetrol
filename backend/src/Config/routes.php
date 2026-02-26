@@ -61,6 +61,7 @@ return [
 
       // Reports
       ['GET', '/api/v1/reports/my-lines', [ReportController::class, 'myReportLines']],
+      ['GET', '/api/v1/reports/lines', [ReportController::class, 'reportLinesForExport']],
       ['GET', '/api/v1/reports/service-orders', [ReportController::class, 'serviceOrders']],
       ['GET', '/api/v1/reports/periods', [ReportController::class, 'reportPeriods']],
       ['GET', '/api/v1/reports/delivery-media', [ReportController::class, 'deliveryMedia']],

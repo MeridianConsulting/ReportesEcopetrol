@@ -75,6 +75,36 @@ class ReportController
   }
 
   /**
+   * Líneas de reporte para exportación (GP-F-23): filtro por user_id (solo admin), date_from, date_to.
+   */
+  public function reportLinesForExport(Request $request)
+  {
+    $userContext = $request->getAttribute('userContext');
+    $requestingUserId = (int)($userContext['id'] ?? 0);
+    $role = $userContext['role'] ?? '';
+    if (!$requestingUserId) {
+      return Response::json(['error' => ['code' => 'UNAUTHORIZED', 'message' => 'User not found']], 401);
+    }
+
+    $filterUserId = $request->getQuery('user_id');
+    if ($filterUserId !== null && $filterUserId !== '') {
+      $filterUserId = (int) $filterUserId;
+      if ($role !== 'admin') {
+        $filterUserId = null;
+      }
+    } else {
+      $filterUserId = null;
+    }
+    $dateFrom = $request->getQuery('date_from');
+    $dateTo = $request->getQuery('date_to');
+    if ($dateFrom === '') $dateFrom = null;
+    if ($dateTo === '') $dateTo = null;
+
+    $rows = $this->reportService->getReportLinesForExport($requestingUserId, $filterUserId, $dateFrom, $dateTo);
+    return Response::json(['data' => $rows]);
+  }
+
+  /**
    * Líneas de reporte del usuario (ODS): para pantalla "Mis reportes" / My Tasks.
    */
   public function myReportLines(Request $request)
