@@ -1,13 +1,13 @@
 // components/ReportLinesSpreadsheet.js
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { apiRequest } from '../lib/api';
 import { Plus, Save, Trash2, Loader2, Check, X, AlertCircle, Inbox } from 'lucide-react';
 import Alert from './Alert';
 import ConfirmDialog from './ConfirmDialog';
 
-const COLUMNS = [
+const FULL_COLUMNS = [
   { key: 'report_date', label: 'Fecha reporte', width: '115px', type: 'date' },
   { key: 'reporter_name', label: 'Nombre del profesional', width: '180px', type: 'text', readOnly: true },
   { key: 'item_general', label: 'Ítem general', width: '120px', type: 'text' },
@@ -23,13 +23,89 @@ const COLUMNS = [
   { key: 'observations', label: 'Observaciones', width: '160px', type: 'text' },
 ];
 
+const COMPACT_COLUMNS = [
+  { key: 'report_date', label: 'Fecha', width: '115px', type: 'date' },
+  { key: 'item_general', label: 'Ítem general', width: '180px', type: 'text' },
+  { key: 'item_activity', label: 'Ítem actividad', width: '180px', type: 'text' },
+  { key: 'days_month', label: 'Días', width: '90px', type: 'number' },
+  { key: 'progress_percent', label: '% Avance', width: '110px', type: 'number' },
+  { key: '__status', label: 'Estado', width: '130px', type: 'status' },
+];
+
 function fmtDate(d) {
   if (!d) return '';
   const x = new Date(d);
-  return isNaN(x.getTime()) ? '' : x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+  return isNaN(x.getTime())
+    ? ''
+    : x.getFullYear() +
+        '-' +
+        String(x.getMonth() + 1).padStart(2, '0') +
+        '-' +
+        String(x.getDate()).padStart(2, '0');
 }
 
-export default function ReportLinesSpreadsheet({ userId, reporterName, onDataChange }) {
+function parseDecimal(v) {
+  if (v === null || v === undefined || v === '') return null;
+  const n = parseFloat(String(v).replace(',', '.'));
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Estado derivado (para Wireframe 1)
+ * - draft: faltan campos base (ítem general/actividad o descripción)
+ * - alert: inconsistencias numéricas o fuera de rango
+ * - ready: completo y sin alertas
+ */
+function deriveRowStatus(row) {
+  const itemGen = (row.item_general ?? '').trim();
+  const itemAct = (row.item_activity ?? '').trim();
+  const desc = (row.activity_description ?? '').trim();
+
+  const days = parseDecimal(row.days_month);
+  const prog = parseDecimal(row.progress_percent);
+
+  const hasRequired = !!itemGen && !!itemAct; // descripción la puedes exigir si quieres
+  const hasDesc = !!desc;
+
+  const hasBadDays = days !== null && days < 0;
+  const hasBadProg = prog !== null && (prog < 0 || prog > 100);
+
+  const isAlert = hasBadDays || hasBadProg;
+  if (isAlert) return 'alert';
+
+  // Si quieres exigir descripción para estar "Listo", descomenta esta línea:
+  // if (!hasRequired || !hasDesc) return 'draft';
+
+  if (!hasRequired) return 'draft';
+  return 'ready';
+}
+
+function StatusChip({ status }) {
+  const cfg =
+    status === 'ready'
+      ? { label: 'Listo', cls: 'bg-emerald-100 text-emerald-800 border-emerald-200' }
+      : status === 'alert'
+      ? { label: 'Alerta', cls: 'bg-rose-100 text-rose-800 border-rose-200' }
+      : { label: 'Borrador', cls: 'bg-slate-100 text-slate-700 border-slate-200' };
+
+  return (
+    <span className={`inline-flex items-center justify-center px-2 py-0.5 text-xs rounded-full border ${cfg.cls}`}>
+      {cfg.label}
+    </span>
+  );
+}
+
+export default function ReportLinesSpreadsheet({
+  userId,
+  reporterName,
+  onDataChange,
+
+  // 🔌 Wireframe 1 props
+  filters = { reportDate: '', status: 'all', search: '' },
+  createRequestId,
+  viewMode = 'full', // 'full' | 'compact'
+  hideInternalToolbar = false, // para que NO se duplique con la toolbar del page
+}) {
   const [lines, setLines] = useState([]);
   const [newRows, setNewRows] = useState([]);
   const [deliveryMedia, setDeliveryMedia] = useState([]);
@@ -43,8 +119,14 @@ export default function ReportLinesSpreadsheet({ userId, reporterName, onDataCha
   const inputRef = useRef(null);
   const savingRowRef = useRef(new Set());
 
+  // ✅ Columnas según modo
+  const COLUMNS = useMemo(() => {
+    return viewMode === 'compact' ? COMPACT_COLUMNS : FULL_COLUMNS;
+  }, [viewMode]);
+
   useEffect(() => {
     loadCatalogsAndLines();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   useEffect(() => {
@@ -58,6 +140,13 @@ export default function ReportLinesSpreadsheet({ userId, reporterName, onDataCha
       });
     }
   }, [editingCell]);
+
+  // ✅ Wireframe 1: botón externo "Nueva línea"
+  useEffect(() => {
+    if (createRequestId === undefined) return;
+    addNewRowFromExternal();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [createRequestId]);
 
   async function loadCatalogsAndLines() {
     setLoading(true);
@@ -99,12 +188,14 @@ export default function ReportLinesSpreadsheet({ userId, reporterName, onDataCha
     }));
   }
 
-  function getEmptyNewRow() {
+  function getEmptyNewRow(forcedDate) {
     const today = new Date().toISOString().split('T')[0];
+    const date = forcedDate || today;
+
     return {
       _tempId: Date.now(),
       _isNew: true,
-      report_date: today,
+      report_date: date,
       reporter_name: reporterName ?? '',
       item_general: '',
       item_activity: '',
@@ -126,19 +217,23 @@ export default function ReportLinesSpreadsheet({ userId, reporterName, onDataCha
     setNewRows((prev) => [...prev, getEmptyNewRow()]);
   }
 
+  function addNewRowFromExternal() {
+    // si hay filtro de fecha en el toolbar, úsalo para precargar la fecha
+    const forcedDate = (filters?.reportDate || '').trim();
+    const hasEmpty = newRows.some((r) => !r.report_line_id && !(r.item_general ?? '').trim() && !(r.item_activity ?? '').trim());
+    if (hasEmpty) return;
+    setNewRows((prev) => [...prev, getEmptyNewRow(forcedDate || undefined)]);
+  }
+
   function updateCell(rowId, key, value, isNew) {
     if (isNew) {
-      setNewRows((prev) =>
-        prev.map((row) => (row._tempId === rowId ? { ...row, [key]: value } : row))
-      );
+      setNewRows((prev) => prev.map((row) => (row._tempId === rowId ? { ...row, [key]: value } : row)));
     } else {
       setPendingChanges((prev) => ({
         ...prev,
         [rowId]: { ...prev[rowId], [key]: value },
       }));
-      setLines((prev) =>
-        prev.map((r) => (r.report_line_id === rowId ? { ...r, [key]: value } : r))
-      );
+      setLines((prev) => prev.map((r) => (r.report_line_id === rowId ? { ...r, [key]: value } : r)));
     }
   }
 
@@ -156,11 +251,13 @@ export default function ReportLinesSpreadsheet({ userId, reporterName, onDataCha
   async function saveNewRow(row) {
     const key = row._tempId;
     if (savingRowRef.current.has(key)) return false;
+
     const reportDate = row.report_date || new Date().toISOString().split('T')[0];
     if (!reportDate.trim()) {
       setAlert({ type: 'warning', message: 'Fecha de reporte es obligatoria', dismissible: true });
       return false;
     }
+
     savingRowRef.current.add(key);
     setSaving(true);
     try {
@@ -187,11 +284,7 @@ export default function ReportLinesSpreadsheet({ userId, reporterName, onDataCha
       setAlert({ type: 'success', message: 'Línea guardada correctamente', dismissible: true });
       return true;
     } catch (e) {
-      setAlert({
-        type: 'error',
-        message: e.message || 'Error al guardar la línea',
-        dismissible: true,
-      });
+      setAlert({ type: 'error', message: e.message || 'Error al guardar la línea', dismissible: true });
       return false;
     } finally {
       savingRowRef.current.delete(key);
@@ -263,9 +356,61 @@ export default function ReportLinesSpreadsheet({ userId, reporterName, onDataCha
     }
   }
 
+  // ✅ Filtros del Wireframe 1 aplicados al listado (solo líneas existentes; newRows siempre visibles arriba)
+  const filteredLines = useMemo(() => {
+    const dateFilter = (filters?.reportDate || '').trim(); // YYYY-MM-DD
+    const statusFilter = (filters?.status || 'all').trim(); // all|draft|ready|alert
+    const q = (filters?.search || '').trim().toLowerCase();
+
+    return lines.filter((row) => {
+      // Fecha: match exacto
+      if (dateFilter) {
+        const rowDate = fmtDate(row.report_date) || row.report_date || '';
+        if (rowDate !== dateFilter) return false;
+      }
+
+      // Estado: derivado
+      if (statusFilter && statusFilter !== 'all') {
+        const s = deriveRowStatus(row);
+        if (s !== statusFilter) return false;
+      }
+
+      // Búsqueda: ítem/actividad/descripción/obs/soporte
+      if (q) {
+        const haystack = [
+          row.item_general,
+          row.item_activity,
+          row.activity_description,
+          row.observations,
+          row.support_text,
+          row.delivery_medium_name,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+
+        if (!haystack.includes(q)) return false;
+      }
+
+      return true;
+    });
+  }, [lines, filters]);
+
   function renderCell(row, col, isNew) {
     const rowId = isNew ? row._tempId : row.report_line_id;
     const key = col.key;
+
+    if (key === '__status') {
+      const status = deriveRowStatus(row);
+      const cellClass =
+        'px-2 py-1.5 border-r border-slate-200 text-sm overflow-hidden whitespace-nowrap bg-white hover:bg-slate-50';
+      return (
+        <td key={key} className={cellClass} style={{ width: col.width }}>
+          <StatusChip status={status} />
+        </td>
+      );
+    }
+
     const value = getValue(row, key, isNew);
     const isEditing = editingCell?.id === rowId && editingCell?.key === key;
     const hasChanges = !isNew && pendingChanges[rowId]?.[key] !== undefined;
@@ -293,6 +438,7 @@ export default function ReportLinesSpreadsheet({ userId, reporterName, onDataCha
         </td>
       );
     }
+
     if (col.type === 'date') {
       return (
         <td key={key} className={cellClass} style={{ width: col.width }}>
@@ -305,6 +451,7 @@ export default function ReportLinesSpreadsheet({ userId, reporterName, onDataCha
         </td>
       );
     }
+
     if (col.type === 'number') {
       return (
         <td key={key} className={cellClass} style={{ width: col.width }}>
@@ -319,14 +466,16 @@ export default function ReportLinesSpreadsheet({ userId, reporterName, onDataCha
         </td>
       );
     }
+
     if (readOnly) {
-      const displayValue = key === 'reporter_name' ? (value || reporterName || '-') : (value || '-');
+      const displayValue = key === 'reporter_name' ? value || reporterName || '-' : value || '-';
       return (
         <td key={key} className={cellClass} style={{ width: col.width }}>
           <span className="block truncate text-slate-600">{displayValue}</span>
         </td>
       );
     }
+
     if (isEditing) {
       return (
         <td key={key} className={cellClass} style={{ width: col.width }}>
@@ -346,6 +495,7 @@ export default function ReportLinesSpreadsheet({ userId, reporterName, onDataCha
         </td>
       );
     }
+
     return (
       <td
         key={key}
@@ -420,31 +570,35 @@ export default function ReportLinesSpreadsheet({ userId, reporterName, onDataCha
     );
   }
 
-  const hasResults = lines.length > 0 || newRows.length > 0;
+  // newRows arriba siempre visibles; líneas filtradas debajo
+  const hasResults = filteredLines.length > 0 || newRows.length > 0;
   const minTableWidth = COLUMNS.reduce((acc, c) => acc + (parseInt(c.width, 10) || 100), 0) + 80;
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 bg-slate-50 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-slate-600">
-            {lines.length} línea(s) de reporte
-            {Object.keys(pendingChanges).length > 0 && (
-              <span className="flex items-center gap-1 text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full ml-2">
-                <AlertCircle className="w-3 h-3" />
-                Sin guardar
-              </span>
-            )}
-          </span>
+      {/* Toolbar interna opcional (desactívala para Wireframe 1) */}
+      {!hideInternalToolbar && (
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 bg-slate-50 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-slate-600">
+              {filteredLines.length} línea(s) de reporte
+              {Object.keys(pendingChanges).length > 0 && (
+                <span className="flex items-center gap-1 text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full ml-2">
+                  <AlertCircle className="w-3 h-3" />
+                  Sin guardar
+                </span>
+              )}
+            </span>
+          </div>
+          <button
+            onClick={addNewRow}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
+          >
+            <Plus className="w-4 h-4" strokeWidth={2.5} />
+            Nueva línea
+          </button>
         </div>
-        <button
-          onClick={addNewRow}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
-        >
-          <Plus className="w-4 h-4" strokeWidth={2.5} />
-          Nueva línea
-        </button>
-      </div>
+      )}
 
       <div className="overflow-auto flex-1 min-h-0">
         <table className="w-full border-collapse table-fixed" style={{ minWidth: minTableWidth }}>
@@ -464,15 +618,16 @@ export default function ReportLinesSpreadsheet({ userId, reporterName, onDataCha
           </thead>
           <tbody>
             {newRows.map((row) => renderRow(row, true))}
-            {lines.map((row) => renderRow(row, false))}
+            {filteredLines.map((row) => renderRow(row, false))}
+
             {!hasResults && (
               <tr>
                 <td colSpan={COLUMNS.length + 1} className="px-4 py-12 text-center bg-slate-50">
                   <div className="flex flex-col items-center gap-3">
                     <Inbox className="w-10 h-10 text-slate-400" />
-                    <p className="text-sm text-slate-600">No hay líneas de reporte. Agregue una con el botón &quot;Nueva línea&quot;.</p>
+                    <p className="text-sm text-slate-600">No hay líneas de reporte para los filtros seleccionados.</p>
                     <button
-                      onClick={addNewRow}
+                      onClick={addNewRowFromExternal}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-green-600 hover:bg-green-700 rounded-lg"
                     >
                       <Plus className="w-4 h-4" />
