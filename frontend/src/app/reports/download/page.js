@@ -1,25 +1,42 @@
 // app/reports/download/page.js
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '../../../components/Layout';
 import DateRangeFilter from '../../../components/DateRangeFilter';
 import { apiRequest } from '../../../lib/api';
-import { FileDown, Loader2, FileText, FileSpreadsheet } from 'lucide-react';
+import { FileDown, Loader2, FileText, FileSpreadsheet, Search, Download } from 'lucide-react';
 
 export default function ReportsDownload() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [generatingExcel, setGeneratingExcel] = useState(false);
+  const [generatingForId, setGeneratingForId] = useState(null);
   const [users, setUsers] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const today = new Date().toISOString().split('T')[0];
   const [dateFrom, setDateFrom] = useState(today);
   const [dateTo, setDateTo] = useState(today);
   const [currentPeriod, setCurrentPeriod] = useState('today');
-  const [selectedProfessionalId, setSelectedProfessionalId] = useState('');
   const [exportAlert, setExportAlert] = useState(null);
+
+  const professionals = useMemo(() => {
+    if (user?.role === 'admin') {
+      return (users || []).filter(u => !['admin', 'lider_area'].includes(u.role || ''));
+    }
+    return user ? [user] : [];
+  }, [user, users]);
+
+  const filteredProfessionals = useMemo(() => {
+    const q = (searchQuery || '').trim().toLowerCase();
+    if (!q) return professionals;
+    return professionals.filter(p => {
+      const name = (p.name || '').toLowerCase();
+      const email = (p.email || '').toLowerCase();
+      return name.includes(q) || email.includes(q);
+    });
+  }, [professionals, searchQuery]);
 
 
   useEffect(() => {
@@ -59,17 +76,10 @@ export default function ReportsDownload() {
     if (user) loadData();
   }, [user, loadData]);
 
-  useEffect(() => {
-    if (user?.role === 'lider_area' && user?.id && !selectedProfessionalId) {
-      setSelectedProfessionalId(String(user.id));
-    }
-  }, [user?.id, user?.role, selectedProfessionalId]);
-
   const handleDateChange = (from, to, period) => {
     setDateFrom(from || '');
     setDateTo(to || '');
     setCurrentPeriod(period);
-    setShowPreview(false);
   };
 
   // --- Helpers y generador GP-F-23 (template corporativo) ---
@@ -157,11 +167,10 @@ export default function ReportsDownload() {
     return map;
   }
 
-  async function generateExcelGPF23() {
+  async function generateExcelGPF23(selectedUser) {
     const ExcelJS = (await import('exceljs')).default;
     const { saveAs } = await import('file-saver');
 
-    const selectedUser = users.find(u => String(u.id) === String(selectedProfessionalId));
     if (!selectedUser) {
       setExportAlert({ type: 'warning', message: 'Seleccione un profesional para generar el GP-F-23.' });
       return;
@@ -260,16 +269,16 @@ export default function ReportsDownload() {
   }
 
 
-  // Generar Excel usando ExcelJS
-  const generateExcel = async () => {
-    setGeneratingExcel(true);
+  const generateExcelForProfessional = async (professional) => {
+    if (!professional) return;
+    setGeneratingForId(professional.id);
     setExportAlert(null);
     try {
-      await generateExcelGPF23();
+      await generateExcelGPF23(professional);
     } catch (error) {
       alert('Error al generar el Excel. Por favor intente de nuevo.');
     } finally {
-      setGeneratingExcel(false);
+      setGeneratingForId(null);
     }
   };
 
@@ -302,57 +311,32 @@ export default function ReportsDownload() {
             ConfiguraciÃ³n
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Profesional */}
-            <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
-                Profesional
-              </label>
-              <select
-                value={selectedProfessionalId}
-                onChange={(e) => {
-                  setSelectedProfessionalId(e.target.value);
-                  setExportAlert(null);
-                }}
-                className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white"
-              >
-                <option value="">Seleccione un profesional...</option>
-                {(user?.role === 'admin'
-                  ? users.filter(u => !['admin', 'lider_area'].includes(u.role || ''))
-                  : user ? [user] : []
-                ).map(u => (
-                  <option key={u.id} value={u.id}>{u.name || u.email}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Periodo */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
                 Periodo
               </label>
-              <DateRangeFilter 
+              <DateRangeFilter
                 onChange={handleDateChange}
                 defaultPeriod={currentPeriod}
                 valueFrom={dateFrom}
                 valueTo={dateTo}
               />
             </div>
-
-            {/* Boton Excel */}
-            <div className="flex items-end">
-              <button
-                onClick={generateExcel}
-                disabled={generatingExcel || loading || !selectedProfessionalId}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {generatingExcel ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <FileSpreadsheet className="w-4 h-4" />
-                )}
-                {generatingExcel ? 'Generando...' : 'Descargar Excel'}
-              </button>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
+                Buscar profesional
+              </label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Nombre o correo..."
+                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                />
+              </div>
             </div>
           </div>
           {exportAlert && (
@@ -369,12 +353,63 @@ export default function ReportsDownload() {
           )}
         </div>
 
-        <div className="bg-slate-50 rounded-xl border border-slate-200 p-12 text-center">
-          <FileSpreadsheet className="w-16 h-16 text-slate-300 mx-auto mb-4" strokeWidth={1.5} />
-          <h3 className="text-lg font-semibold text-slate-700 mb-2">GP-F-23 Base Individual</h3>
-          <p className="text-slate-500 max-w-md mx-auto">
-            Seleccione el profesional, el periodo y pulse &quot;Descargar Excel&quot; para generar el archivo a partir del template corporativo.
-          </p>
+        {/* Tabla de profesionales */}
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-200 bg-slate-50">
+            <h2 className="text-base font-semibold text-slate-900">Profesionales</h2>
+            <p className="text-sm text-slate-500 mt-0.5">
+              Seleccione el periodo arriba y use el boton &quot;Descargar&quot; para generar el GP-F-23 de cada profesional.
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-100 border-b border-slate-200">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Nombre</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Correo</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wide w-40">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {loading ? (
+                  <tr>
+                    <td colSpan={3} className="px-4 py-12 text-center text-slate-500">
+                      <Loader2 className="w-8 h-8 text-green-600 animate-spin mx-auto mb-2" />
+                      Cargando profesionales...
+                    </td>
+                  </tr>
+                ) : filteredProfessionals.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="px-4 py-12 text-center text-slate-500">
+                      {professionals.length === 0 ? 'No hay profesionales disponibles.' : 'Ningun resultado coincide con la busqueda.'}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredProfessionals.map((pro) => (
+                    <tr key={pro.id} className="hover:bg-slate-50/80">
+                      <td className="px-4 py-3 font-medium text-slate-900">{pro.name || pro.email || '-'}</td>
+                      <td className="px-4 py-3 text-slate-600">{pro.email || '-'}</td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => generateExcelForProfessional(pro)}
+                          disabled={!!generatingForId}
+                          className="inline-flex items-center justify-center gap-2 px-3 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {generatingForId === pro.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Download className="w-4 h-4" />
+                          )}
+                          {generatingForId === pro.id ? 'Generando...' : 'Descargar'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </Layout>
