@@ -18,7 +18,7 @@ import {
 export default function Sidebar({ user, isOpen, onToggle }) {
   const router = useRouter();
   const pathname = usePathname();
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost/tareas/backend/public/api/v1';
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost/ReportesEcopetrol/backend/public/api/v1';
 
   const menuItems = [
     { 

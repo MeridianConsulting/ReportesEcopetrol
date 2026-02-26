@@ -14,7 +14,7 @@ function getApiUrl() {
                        hostname === '';
     
     if (isLocalhost) {
-      return 'http://localhost/tareas/backend/public/api/v1';
+      return 'http://localhost/ReportesEcopetrol/backend/public/api/v1';
     }
     
     // Si estamos en producción (control.meridianltda.com), usar la URL de producción
@@ -30,7 +30,7 @@ function getApiUrl() {
   
   // Prioridad 3: Detectar por NODE_ENV (útil durante build/SSR)
   if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost/tareas/backend/public/api/v1';
+    return 'http://localhost/ReportesEcopetrol/backend/public/api/v1';
   }
   
   // Prioridad 4: Fallback (producción por defecto)
