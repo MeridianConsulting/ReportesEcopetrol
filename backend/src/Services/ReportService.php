@@ -254,6 +254,36 @@ class ReportService
     }
   }
 
+  /**
+   * Obtener o crear el período para la fecha de reporte.
+   * Si no existe un período con label YYYY-MM, lo crea (start_date = día 1, end_date = último día del mes).
+   */
+  public function getOrCreatePeriodFromReportDate(string $reportDate): int
+  {
+    $ts = strtotime($reportDate);
+    if ($ts === false) {
+      throw new \InvalidArgumentException('Fecha de reporte no válida.');
+    }
+    $year = (int) date('Y', $ts);
+    $month = (int) date('n', $ts);
+    $label = date('Y-m', $ts);
+    $startDate = date('Y-m-01', $ts);
+    $endDate = date('Y-m-t', $ts);
+
+    $stmt = $this->db->prepare("SELECT id FROM report_periods WHERE label = ? LIMIT 1");
+    $stmt->execute([$label]);
+    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+    if ($row) {
+      return (int) $row['id'];
+    }
+
+    $this->db->prepare("
+      INSERT INTO report_periods (year, month, label, start_date, end_date)
+      VALUES (?, ?, ?, ?, ?)
+    ")->execute([$year, $month, $label, $startDate, $endDate]);
+    return (int) $this->db->lastInsertId();
+  }
+
   /** Lista de períodos (mes a reportar) para selector */
   public function getReportPeriodsList(): array
   {
@@ -338,7 +368,7 @@ class ReportService
       $periodId = $this->getPeriodIdFromReportDate($reportDate);
     }
     if (!$periodId) {
-      throw new \InvalidArgumentException('No existe período configurado para la fecha de reporte. Use una fecha dentro de un mes con período registrado.');
+      $periodId = $this->getOrCreatePeriodFromReportDate($reportDate);
     }
     $reportId = $this->getOrCreateReport($userId, $serviceOrderId, $periodId, $reportDate);
 

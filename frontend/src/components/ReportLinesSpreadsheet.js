@@ -356,34 +356,36 @@ export default function ReportLinesSpreadsheet({
     }
   }
 
-  // ✅ Filtros del Wireframe 1 aplicados al listado (solo líneas existentes; newRows siempre visibles arriba)
+  // ✅ Filtros del Wireframe 1 aplicados al listado (solo líneas existentes; newRows siempre visibles arriba).
+  // Las filas con cambios pendientes siempre se muestran para no "perder" lo que el usuario está editando.
   const filteredLines = useMemo(() => {
     const dateFilter = (filters?.reportDate || '').trim(); // YYYY-MM-DD
     const statusFilter = (filters?.status || 'all').trim(); // all|draft|ready|alert
     const q = (filters?.search || '').trim().toLowerCase();
 
-    return lines.filter((row) => {
+    const filtered = lines.filter((row) => {
+      const merged = { ...row, ...(pendingChanges[row.report_line_id] || {}) };
       // Fecha: match exacto
       if (dateFilter) {
-        const rowDate = fmtDate(row.report_date) || row.report_date || '';
+        const rowDate = fmtDate(merged.report_date) || merged.report_date || '';
         if (rowDate !== dateFilter) return false;
       }
 
-      // Estado: derivado
+      // Estado: derivado con datos actuales (incl. pendientes)
       if (statusFilter && statusFilter !== 'all') {
-        const s = deriveRowStatus(row);
+        const s = deriveRowStatus(merged);
         if (s !== statusFilter) return false;
       }
 
       // Búsqueda: ítem/actividad/descripción/obs/soporte
       if (q) {
         const haystack = [
-          row.item_general,
-          row.item_activity,
-          row.activity_description,
-          row.observations,
-          row.support_text,
-          row.delivery_medium_name,
+          merged.item_general,
+          merged.item_activity,
+          merged.activity_description,
+          merged.observations,
+          merged.support_text,
+          merged.delivery_medium_name,
         ]
           .filter(Boolean)
           .join(' ')
@@ -394,14 +396,22 @@ export default function ReportLinesSpreadsheet({
 
       return true;
     });
-  }, [lines, filters]);
+
+    const hasPendingIds = new Set(Object.keys(pendingChanges));
+    const filteredIds = new Set(filtered.map((r) => r.report_line_id));
+    const missingWithPending = lines.filter(
+      (r) => hasPendingIds.has(String(r.report_line_id)) && !filteredIds.has(r.report_line_id)
+    );
+    return missingWithPending.length > 0 ? [...filtered, ...missingWithPending] : filtered;
+  }, [lines, filters, pendingChanges]);
 
   function renderCell(row, col, isNew) {
     const rowId = isNew ? row._tempId : row.report_line_id;
     const key = col.key;
 
     if (key === '__status') {
-      const status = deriveRowStatus(row);
+      const displayRow = isNew ? row : { ...row, ...(pendingChanges[rowId] || {}) };
+      const status = deriveRowStatus(displayRow);
       const cellClass =
         'px-2 py-1.5 border-r border-slate-200 text-sm overflow-hidden whitespace-nowrap bg-white hover:bg-slate-50';
       return (
