@@ -28,6 +28,10 @@ class UserController
     if ($request->getQuery('is_active') !== null) {
       $filters['is_active'] = (int)$request->getQuery('is_active');
     }
+    $serviceOrderId = $request->getQuery('service_order_id');
+    if ($serviceOrderId !== null && $serviceOrderId !== '') {
+      $filters['service_order_id'] = (int) $serviceOrderId;
+    }
 
     $users = $this->userService->list($filters);
 

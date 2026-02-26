@@ -120,15 +120,22 @@ class UserRepository
   public function findAll(array $filters = []): array
   {
     $sql = "
-      SELECT u.id, u.email,
+      SELECT DISTINCT u.id, u.email,
         ep.full_name AS name,
         (SELECT r.name FROM user_roles ur2 INNER JOIN roles r ON r.id = ur2.role_id WHERE ur2.user_id = u.id LIMIT 1) AS role_name,
         (SELECT ur2.role_id FROM user_roles ur2 WHERE ur2.user_id = u.id LIMIT 1) AS role_id
       FROM users u
       LEFT JOIN employee_profiles ep ON ep.user_id = u.id
-      WHERE 1=1
     ";
     $params = [];
+    if (!empty($filters['service_order_id'])) {
+      $sid = (int) $filters['service_order_id'];
+      if ($sid > 0) {
+        $sql .= " INNER JOIN service_order_employees soe ON soe.user_id = u.id AND soe.service_order_id = :service_order_id AND soe.is_active = 1 ";
+        $params[':service_order_id'] = $sid;
+      }
+    }
+    $sql .= " WHERE 1=1 ";
     $sql .= " ORDER BY COALESCE(ep.full_name, u.email) ASC";
     $stmt = $this->db->prepare($sql);
     $stmt->execute($params);

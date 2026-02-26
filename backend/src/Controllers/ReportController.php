@@ -75,7 +75,7 @@ class ReportController
   }
 
   /**
-   * Líneas de reporte para exportación (GP-F-23): filtro por user_id (solo admin), date_from, date_to.
+   * Líneas de reporte para exportación (GP-F-23): filtro por user_id (solo admin), date_from, date_to, service_order_id (ODS).
    */
   public function reportLinesForExport(Request $request)
   {
@@ -100,7 +100,14 @@ class ReportController
     if ($dateFrom === '') $dateFrom = null;
     if ($dateTo === '') $dateTo = null;
 
-    $rows = $this->reportService->getReportLinesForExport($requestingUserId, $filterUserId, $dateFrom, $dateTo);
+    $serviceOrderId = $request->getQuery('service_order_id');
+    if ($serviceOrderId !== null && $serviceOrderId !== '') {
+      $serviceOrderId = (int) $serviceOrderId;
+    } else {
+      $serviceOrderId = null;
+    }
+
+    $rows = $this->reportService->getReportLinesForExport($requestingUserId, $filterUserId, $dateFrom, $dateTo, $serviceOrderId);
     return Response::json(['data' => $rows]);
   }
 

@@ -203,9 +203,9 @@ class ReportService
   /**
    * Líneas de reporte para exportación (GP-F-23, etc.).
    * - Admin puede solicitar por user_id; si no, se usa el usuario autenticado.
-   * - Filtro opcional por date_from y date_to (r.report_date).
+   * - Filtro opcional por date_from, date_to (r.report_date) y service_order_id (ODS).
    */
-  public function getReportLinesForExport(int $requestingUserId, ?int $filterUserId, ?string $dateFrom, ?string $dateTo): array
+  public function getReportLinesForExport(int $requestingUserId, ?int $filterUserId, ?string $dateFrom, ?string $dateTo, ?int $serviceOrderId = null): array
   {
     $userId = $filterUserId !== null && $filterUserId > 0 ? $filterUserId : $requestingUserId;
 
@@ -219,6 +219,10 @@ class ReportService
     if ($dateTo !== null && $dateTo !== '') {
       $conditions[] = "r.report_date <= :date_to";
       $params[':date_to'] = $dateTo;
+    }
+    if ($serviceOrderId !== null && $serviceOrderId > 0) {
+      $conditions[] = "r.service_order_id = :service_order_id";
+      $params[':service_order_id'] = $serviceOrderId;
     }
 
     $where = implode(' AND ', $conditions);

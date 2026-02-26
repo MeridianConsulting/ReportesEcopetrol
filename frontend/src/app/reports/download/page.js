@@ -15,6 +15,8 @@ export default function ReportsDownload() {
   const [generatingForId, setGeneratingForId] = useState(null);
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [serviceOrders, setServiceOrders] = useState([]);
+  const [selectedOdsId, setSelectedOdsId] = useState('');
   const today = new Date().toISOString().split('T')[0];
   const [dateFrom, setDateFrom] = useState(today);
   const [dateTo, setDateTo] = useState(today);
@@ -22,11 +24,18 @@ export default function ReportsDownload() {
   const [exportAlert, setExportAlert] = useState(null);
 
   const professionals = useMemo(() => {
+    let list;
     if (user?.role === 'admin') {
-      return (users || []).filter(u => !['admin', 'lider_area'].includes(u.role || ''));
+      list = (users || []).filter(u => !['admin', 'lider_area'].includes(u.role || ''));
+    } else {
+      list = user ? [user] : [];
     }
-    return user ? [user] : [];
-  }, [user, users]);
+    if (selectedOdsId) {
+      const sid = Number(selectedOdsId);
+      list = list.filter(u => (u.service_order_ids || []).some(id => Number(id) === sid));
+    }
+    return list;
+  }, [user, users, selectedOdsId]);
 
   const filteredProfessionals = useMemo(() => {
     const q = (searchQuery || '').trim().toLowerCase();
@@ -59,12 +68,12 @@ export default function ReportsDownload() {
     if (!user) return;
     setLoading(true);
     try {
-      if (user.role === 'admin') {
-        const usersData = await apiRequest('/users');
-        setUsers(usersData.data || []);
-      } else {
-        setUsers(user ? [user] : []);
-      }
+      const [usersRes, odsRes] = await Promise.all([
+        user.role === 'admin' ? apiRequest('/users') : Promise.resolve({ data: user ? [user] : [] }),
+        apiRequest('/reports/service-orders')
+      ]);
+      setUsers(usersRes.data || []);
+      setServiceOrders(odsRes.data || []);
     } catch (e) {
       if (user?.role === 'lider_area') setUsers(user ? [user] : []);
     } finally {
@@ -129,26 +138,31 @@ export default function ReportsDownload() {
     }));
   }
 
-  async function fetchLinesForExport({ userId, dateFrom, dateTo }) {
+  async function fetchLinesForExport({ userId, dateFrom, dateTo, serviceOrderId, odsCode }) {
     const params = new URLSearchParams();
     if (userId) params.append('user_id', userId);
     if (dateFrom) params.append('date_from', dateFrom);
     if (dateTo) params.append('date_to', dateTo);
+    if (serviceOrderId) params.append('service_order_id', serviceOrderId);
     try {
       const res = await apiRequest(`/reports/lines?${params.toString()}`);
       return normalizeReportLines(res.data || []);
     } catch {
       const res = await apiRequest('/reports/my-lines');
-      const rows = normalizeReportLines(res.data || []);
+      let rows = normalizeReportLines(res.data || []);
       const fromD = toDateOnly(dateFrom);
       const toD = toDateOnly(dateTo);
-      return rows.filter(r => {
+      rows = rows.filter(r => {
         const rd = toDateOnly(r.report_date);
         if (!rd) return false;
         if (fromD && rd < fromD) return false;
         if (toD && rd > toD) return false;
         return true;
       });
+      if (odsCode) {
+        rows = rows.filter(r => (r.ods_code || '').trim() === odsCode);
+      }
+      return rows;
     }
   }
 
@@ -176,7 +190,10 @@ export default function ReportsDownload() {
       return;
     }
 
-    const lines = await fetchLinesForExport({ userId: selectedUser.id, dateFrom, dateTo });
+    const odsId = selectedOdsId && selectedOdsId !== '' ? selectedOdsId : null;
+    const selectedOds = odsId ? serviceOrders.find(o => String(o.id) === String(odsId)) : null;
+    const odsCode = selectedOds?.ods_code || null;
+    const lines = await fetchLinesForExport({ userId: selectedUser.id, dateFrom, dateTo, serviceOrderId: odsId, odsCode });
     if (!lines.length) {
       setExportAlert({ type: 'warning', message: 'No hay lÃƒÆ’Ã‚Â­neas de reporte en el rango seleccionado.' });
       return;
@@ -308,10 +325,10 @@ export default function ReportsDownload() {
         <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
           <h2 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <FileText className="w-5 h-5 text-slate-600" />
-            ConfiguraciÃ³n
+            Configuración
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
                 Periodo
@@ -322,6 +339,21 @@ export default function ReportsDownload() {
                 valueFrom={dateFrom}
                 valueTo={dateTo}
               />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
+                ODS
+              </label>
+              <select
+                value={selectedOdsId}
+                onChange={(e) => setSelectedOdsId(e.target.value)}
+                className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white"
+              >
+                <option value="">Todos los ODS</option>
+                {serviceOrders.map((so) => (
+                  <option key={so.id} value={so.id}>{so.ods_code || `ODS ${so.id}`}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
@@ -358,7 +390,7 @@ export default function ReportsDownload() {
           <div className="px-5 py-4 border-b border-slate-200 bg-slate-50">
             <h2 className="text-base font-semibold text-slate-900">Profesionales</h2>
             <p className="text-sm text-slate-500 mt-0.5">
-              Seleccione el periodo arriba y use el boton &quot;Descargar&quot; para generar el GP-F-23 de cada profesional.
+              Seleccione periodo y ODS (opcional) arriba y use &quot;Descargar&quot; para generar el GP-F-23 de cada profesional.
             </p>
           </div>
           <div className="overflow-x-auto">
