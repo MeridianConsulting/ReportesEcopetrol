@@ -211,6 +211,49 @@ class ReportService
     }
   }
 
+  /**
+   * ODS asociado al usuario por perfil (service_order_employees).
+   * Se usa para asignar automáticamente la orden de servicio al crear reportes.
+   */
+  public function getDefaultServiceOrderForUser(int $userId): ?array
+  {
+    try {
+      $stmt = $this->db->prepare("
+        SELECT so.id, so.ods_code
+        FROM service_order_employees soe
+        INNER JOIN service_orders so ON so.id = soe.service_order_id
+        WHERE soe.user_id = ? AND soe.is_active = 1
+        ORDER BY soe.id
+        LIMIT 1
+      ");
+      $stmt->execute([$userId]);
+      $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+      return $row ? ['id' => (int) $row['id'], 'ods_code' => $row['ods_code']] : null;
+    } catch (\PDOException $e) {
+      return null;
+    }
+  }
+
+  /**
+   * Obtener period_id a partir de una fecha (YYYY-MM-DD). Deriva el mes (YYYY-MM) y busca en report_periods.
+   */
+  public function getPeriodIdFromReportDate(string $reportDate): ?int
+  {
+    try {
+      $ts = strtotime($reportDate);
+      if ($ts === false) {
+        return null;
+      }
+      $label = date('Y-m', $ts);
+      $stmt = $this->db->prepare("SELECT id FROM report_periods WHERE label = ? LIMIT 1");
+      $stmt->execute([$label]);
+      $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+      return $row ? (int) $row['id'] : null;
+    } catch (\PDOException $e) {
+      return null;
+    }
+  }
+
   /** Lista de períodos (mes a reportar) para selector */
   public function getReportPeriodsList(): array
   {
@@ -273,8 +316,14 @@ class ReportService
       $serviceOrderId = $r ? (int) $r['id'] : null;
     }
     if (!$serviceOrderId) {
-      throw new \InvalidArgumentException('Código de orden de servicio no válido.');
+      $default = $this->getDefaultServiceOrderForUser($userId);
+      $serviceOrderId = $default ? (int) $default['id'] : null;
     }
+    if (!$serviceOrderId) {
+      throw new \InvalidArgumentException('No tiene una orden de servicio (ODS) asociada en su perfil. Contacte al administrador.');
+    }
+
+    $reportDate = !empty($payload['fecha_reporte']) ? $payload['fecha_reporte'] : date('Y-m-d');
 
     $periodId = null;
     if (!empty($payload['period_id'])) {
@@ -286,10 +335,11 @@ class ReportService
       $periodId = $r ? (int) $r['id'] : null;
     }
     if (!$periodId) {
-      throw new \InvalidArgumentException('Mes a reportar no válido.');
+      $periodId = $this->getPeriodIdFromReportDate($reportDate);
     }
-
-    $reportDate = !empty($payload['fecha_reporte']) ? $payload['fecha_reporte'] : date('Y-m-d');
+    if (!$periodId) {
+      throw new \InvalidArgumentException('No existe período configurado para la fecha de reporte. Use una fecha dentro de un mes con período registrado.');
+    }
     $reportId = $this->getOrCreateReport($userId, $serviceOrderId, $periodId, $reportDate);
 
     $deliveryMediumId = null;

@@ -32,7 +32,7 @@ export default function MyTasksPage() {
           </div>
           <div>
             <h1 className="text-xl font-semibold text-slate-900">Mis reportes</h1>
-            <p className="text-slate-500 text-xs">Diligencie las líneas de reporte (orden de servicio, mes, actividades, avances)</p>
+            <p className="text-slate-500 text-xs">Diligencie las líneas de reporte (fecha, actividades, avances). El ODS y el mes se asignan automáticamente según su perfil y la fecha de reporte.</p>
           </div>
         </div>
 

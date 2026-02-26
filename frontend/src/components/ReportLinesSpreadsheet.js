@@ -8,10 +8,8 @@ import Alert from './Alert';
 import ConfirmDialog from './ConfirmDialog';
 
 const COLUMNS = [
-  { key: 'ods_code', label: 'Código orden de servicio', width: '140px', type: 'select-ods' },
-  { key: 'period_label', label: 'Mes a reportar', width: '110px', type: 'select-period' },
   { key: 'report_date', label: 'Fecha reporte', width: '115px', type: 'date' },
-  { key: 'reporter_name', label: 'Nombre del profesional (reporta)', width: '180px', type: 'text', readOnly: true },
+  { key: 'reporter_name', label: 'Nombre del profesional', width: '180px', type: 'text', readOnly: true },
   { key: 'item_general', label: 'Ítem general', width: '120px', type: 'text' },
   { key: 'item_activity', label: 'Ítem actividad', width: '120px', type: 'text' },
   { key: 'activity_description', label: 'Descripción de la actividad', width: '200px', type: 'text' },
@@ -34,8 +32,6 @@ function fmtDate(d) {
 export default function ReportLinesSpreadsheet({ userId, reporterName, onDataChange }) {
   const [lines, setLines] = useState([]);
   const [newRows, setNewRows] = useState([]);
-  const [serviceOrders, setServiceOrders] = useState([]);
-  const [periods, setPeriods] = useState([]);
   const [deliveryMedia, setDeliveryMedia] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -66,14 +62,10 @@ export default function ReportLinesSpreadsheet({ userId, reporterName, onDataCha
   async function loadCatalogsAndLines() {
     setLoading(true);
     try {
-      const [ordersRes, periodsRes, mediaRes, linesRes] = await Promise.all([
-        apiRequest('/reports/service-orders').catch(() => ({ data: [] })),
-        apiRequest('/reports/periods').catch(() => ({ data: [] })),
+      const [mediaRes, linesRes] = await Promise.all([
         apiRequest('/reports/delivery-media').catch(() => ({ data: [] })),
         apiRequest('/reports/my-lines').catch(() => ({ data: [] })),
       ]);
-      setServiceOrders(ordersRes.data || []);
-      setPeriods(periodsRes.data || []);
       setDeliveryMedia(mediaRes.data || []);
       setLines(normalizeApiRows(linesRes.data || []));
     } catch (e) {
@@ -112,8 +104,6 @@ export default function ReportLinesSpreadsheet({ userId, reporterName, onDataCha
     return {
       _tempId: Date.now(),
       _isNew: true,
-      ods_code: '',
-      period_label: periods[0]?.label ?? '',
       report_date: today,
       reporter_name: reporterName ?? '',
       item_general: '',
@@ -166,21 +156,18 @@ export default function ReportLinesSpreadsheet({ userId, reporterName, onDataCha
   async function saveNewRow(row) {
     const key = row._tempId;
     if (savingRowRef.current.has(key)) return false;
-    if (!(row.ods_code ?? '').trim()) {
-      setAlert({ type: 'warning', message: 'Código orden de servicio es obligatorio', dismissible: true });
-      return false;
-    }
-    if (!(row.period_label ?? '').trim()) {
-      setAlert({ type: 'warning', message: 'Mes a reportar es obligatorio', dismissible: true });
+    const reportDate = row.report_date || new Date().toISOString().split('T')[0];
+    if (!reportDate.trim()) {
+      setAlert({ type: 'warning', message: 'Fecha de reporte es obligatoria', dismissible: true });
       return false;
     }
     savingRowRef.current.add(key);
     setSaving(true);
     try {
+      const mesAReportar = reportDate.slice(0, 7);
       const body = {
-        codigo_orden_servicio: row.ods_code,
-        mes_a_reportar: row.period_label,
-        fecha_reporte: row.report_date || new Date().toISOString().split('T')[0],
+        fecha_reporte: reportDate,
+        mes_a_reportar: mesAReportar,
         item_general: row.item_general ?? '',
         item_activity: row.item_activity ?? '',
         activity_description: row.activity_description ?? '',
@@ -288,42 +275,6 @@ export default function ReportLinesSpreadsheet({ userId, reporterName, onDataCha
       hasChanges ? 'bg-amber-50' : isNew ? 'bg-emerald-50/30' : 'bg-white'
     } ${isEditing ? 'ring-2 ring-inset ring-green-500' : ''} hover:bg-slate-50`;
 
-    if (col.type === 'select-ods') {
-      return (
-        <td key={key} className={cellClass} style={{ width: col.width }}>
-          <select
-            value={value || ''}
-            onChange={(e) => updateCell(rowId, key, e.target.value, isNew)}
-            className="w-full bg-transparent border-0 text-xs focus:outline-none focus:ring-0 p-0 cursor-pointer truncate"
-          >
-            <option value="">Seleccionar</option>
-            {serviceOrders.map((o) => (
-              <option key={o.id} value={o.ods_code}>
-                {o.ods_code}
-              </option>
-            ))}
-          </select>
-        </td>
-      );
-    }
-    if (col.type === 'select-period') {
-      return (
-        <td key={key} className={cellClass} style={{ width: col.width }}>
-          <select
-            value={value || ''}
-            onChange={(e) => updateCell(rowId, key, e.target.value, isNew)}
-            className="w-full bg-transparent border-0 text-xs focus:outline-none focus:ring-0 p-0 cursor-pointer truncate"
-          >
-            <option value="">Seleccionar</option>
-            {periods.map((p) => (
-              <option key={p.id} value={p.label}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-        </td>
-      );
-    }
     if (col.type === 'select-delivery') {
       return (
         <td key={key} className={cellClass} style={{ width: col.width }}>
@@ -369,9 +320,10 @@ export default function ReportLinesSpreadsheet({ userId, reporterName, onDataCha
       );
     }
     if (readOnly) {
+      const displayValue = key === 'reporter_name' ? (value || reporterName || '-') : (value || '-');
       return (
         <td key={key} className={cellClass} style={{ width: col.width }}>
-          <span className="block truncate text-slate-600">{value || '-'}</span>
+          <span className="block truncate text-slate-600">{displayValue}</span>
         </td>
       );
     }
@@ -420,7 +372,7 @@ export default function ReportLinesSpreadsheet({ userId, reporterName, onDataCha
             <>
               <button
                 onClick={() => saveNewRow(row)}
-                disabled={saving || !(row.ods_code ?? '').trim()}
+                disabled={saving || !(row.report_date ?? '').trim()}
                 className="p-1 text-emerald-600 hover:bg-emerald-100 rounded-md disabled:opacity-50"
                 title="Guardar"
               >
