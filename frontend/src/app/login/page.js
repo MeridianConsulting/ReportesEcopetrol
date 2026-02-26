@@ -98,7 +98,7 @@ export default function LoginPage() {
               © {new Date().getFullYear()} Meridian Consulting. Todos los derechos reservados.
             </div>
             <div className="text-xs text-green-200/70 mt-1">
-              Desarrollado por <span className="font-medium">José Mateo López Cifuentes</span>
+              Development By <span className="font-medium">José Mateo López Cifuentes</span>
             </div>
           </div>
         </div>
@@ -231,7 +231,7 @@ export default function LoginPage() {
                 <span className="text-slate-400/50">Meridian Consulting</span>
               </span>
               <span className="block text-slate-400/50">
-                Desarrollado por <span className="text-slate-400/60 font-normal">José Mateo López Cifuentes</span>
+                Development By <span className="text-slate-400/60 font-normal">José Mateo López Cifuentes</span>
               </span>
             </p>
           </div>

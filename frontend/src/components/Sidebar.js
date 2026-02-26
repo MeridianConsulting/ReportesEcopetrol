@@ -75,10 +75,10 @@ export default function Sidebar({ user, isOpen, onToggle }) {
               <div className="flex items-center gap-2.5">
                 <img 
                   src="/logo.png?v=2" 
-                  alt="Meridian Control" 
+                  alt="Production Analytics Reports" 
                   className="w-8 h-8 object-contain"
                 />
-                <span className="font-semibold text-base tracking-tight">Meridian Control</span>
+                <span className="font-semibold text-base tracking-tight">Production Analytics Reports</span>
               </div>
               <button 
                 onClick={onToggle} 

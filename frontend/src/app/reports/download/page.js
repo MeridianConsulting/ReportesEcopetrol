@@ -277,7 +277,7 @@ export default function ReportsDownload() {
       
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.text('Meridian Control', margin, 26);
+      doc.text('Production Analytics Reports', margin, 26);
 
       doc.setFontSize(9);
       doc.text(`Periodo: ${getPeriodLabel()}`, pageWidth - margin, 18, { align: 'right' });
@@ -725,7 +725,7 @@ export default function ReportsDownload() {
       doc.setTextColor(...slateColor);
       doc.setFontSize(8);
       doc.text(`Generado por: ${user?.name || 'Usuario'}`, margin, pageHeight - 10);
-      doc.text('Meridian Control', pageWidth - margin, pageHeight - 10, { align: 'right' });
+      doc.text('Production Analytics Reports', pageWidth - margin, pageHeight - 10, { align: 'right' });
 
       // Guardar
       const dateSuffix = (dateFrom && dateTo) ? `${dateFrom}_${dateTo}` : 'todas_fechas';
@@ -805,7 +805,7 @@ export default function ReportsDownload() {
       // Subtítulo
       summarySheet.mergeCells('A2:F2');
       const subtitleCell = summarySheet.getCell('A2');
-      subtitleCell.value = `Meridian Control | Período: ${getPeriodLabel()} | Generado: ${new Date().toLocaleDateString('es-ES')}`;
+      subtitleCell.value = `Production Analytics Reports | Período: ${getPeriodLabel()} | Generado: ${new Date().toLocaleDateString('es-ES')}`;
       subtitleCell.font = { size: 10, color: { argb: slateColor } };
       subtitleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: headerGray } };
       subtitleCell.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -1415,7 +1415,7 @@ export default function ReportsDownload() {
                    `Reporte de ${data.area?.name || 'Area'}`}
                 </h1>
                 <div className="flex items-center justify-between mt-2">
-                  <p className="text-slate-600">Meridian Control</p>
+                  <p className="text-slate-600">Production Analytics Reports</p>
                   <div className="text-right">
                     <p className="text-sm text-slate-500">Periodo: <span className="font-semibold text-green-600">{getPeriodLabel()}</span></p>
                   </div>

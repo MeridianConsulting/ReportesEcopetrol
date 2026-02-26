@@ -12,8 +12,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Sistema de Gestión de Tareas",
-  description: "Sistema de gestión de tareas empresarial - Desarrollado por José Mateo López Cifuentes",
+  title: "Production Analytics Reports",
+  description: "Reportes y análisis de producción - Production Analytics Reports",
   icons: {
     icon: '/logo.ico',
   },

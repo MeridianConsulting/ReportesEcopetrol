@@ -102,7 +102,7 @@ export default function Layout({ children }) {
             <span className="mx-1.5 text-slate-300">·</span>
             <span className="text-slate-400/60">Meridian Consulting</span>
             <span className="mx-1.5 text-slate-300">·</span>
-            <span className="text-slate-400/50">Desarrollado por</span>
+            <span className="text-slate-400/50">Development By</span>
             <span className="ml-0.5 text-slate-400/60 font-normal">José Mateo López Cifuentes</span>
           </p>
         </footer>
