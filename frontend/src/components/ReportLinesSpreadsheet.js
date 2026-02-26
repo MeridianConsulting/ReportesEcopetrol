@@ -17,9 +17,9 @@ const FULL_COLUMNS = [
   { key: 'delivery_medium_id', label: 'Medio de entrega', width: '140px', type: 'select-delivery' },
   { key: 'contracted_days', label: 'Días contratados', width: '100px', type: 'number' },
   { key: 'days_month', label: 'Días reportados del mes', width: '120px', type: 'number' },
-  { key: 'progress_percent', label: '% avance del mes', width: '110px', type: 'number' },
+  { key: 'progress_percent', label: '% avance del mes', width: '130px', type: 'progress' },
   { key: 'accumulated_days', label: 'Días acumulados del servicio', width: '150px', type: 'number' },
-  { key: 'accumulated_progress', label: '% avance acumulado del servicio', width: '180px', type: 'number' },
+  { key: 'accumulated_progress', label: '% avance acumulado del servicio', width: '180px', type: 'progress' },
   { key: 'observations', label: 'Observaciones', width: '160px', type: 'text' },
 ];
 
@@ -28,7 +28,7 @@ const COMPACT_COLUMNS = [
   { key: 'item_general', label: 'Ítem general', width: '180px', type: 'text' },
   { key: 'item_activity', label: 'Ítem actividad', width: '180px', type: 'text' },
   { key: 'days_month', label: 'Días', width: '90px', type: 'number' },
-  { key: 'progress_percent', label: '% Avance', width: '110px', type: 'number' },
+  { key: 'progress_percent', label: '% Avance', width: '130px', type: 'progress' },
   { key: '__status', label: 'Estado', width: '130px', type: 'status' },
 ];
 
@@ -448,6 +448,52 @@ export default function ReportLinesSpreadsheet({
             onChange={(e) => updateCell(rowId, key, e.target.value, isNew)}
             className="w-full min-w-0 bg-transparent border-0 text-xs focus:outline-none focus:ring-0 p-0"
           />
+        </td>
+      );
+    }
+
+    if (col.type === 'progress') {
+      const num = parseDecimal(value);
+      const pct = num !== null && Number.isFinite(num) ? Math.min(100, Math.max(0, num)) : 0;
+      const displayVal = value ?? '';
+      const handleProgressChange = (newVal) => {
+        const v = parseFloat(String(newVal).replace(',', '.'));
+        if (Number.isFinite(v)) updateCell(rowId, key, Math.min(100, Math.max(0, v)), isNew);
+        else updateCell(rowId, key, newVal, isNew);
+      };
+      return (
+        <td key={key} className={cellClass} style={{ width: col.width }}>
+          <div className="flex items-center gap-2 w-full min-w-0">
+            <div className="relative flex-1 min-w-0 h-3 flex items-center">
+              <div className="absolute inset-0 h-3 bg-slate-200 rounded-full overflow-hidden shadow-inner" />
+              <div
+                className="absolute left-0 top-0 h-3 bg-gradient-to-r from-green-500 to-green-600 rounded-full transition-[width] duration-200 ease-out shadow-sm"
+                style={{ width: `${pct}%` }}
+              />
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={0.5}
+                value={pct}
+                onChange={(e) => handleProgressChange(e.target.value)}
+                className="absolute inset-0 w-full h-3 opacity-0 cursor-pointer"
+              />
+            </div>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={displayVal}
+              onChange={(e) => updateCell(rowId, key, e.target.value, isNew)}
+              onBlur={(e) => {
+                const v = parseDecimal(e.target.value);
+                if (v !== null && Number.isFinite(v)) handleProgressChange(v);
+              }}
+              placeholder="0"
+              className="w-10 shrink-0 px-1.5 py-0.5 text-xs font-medium text-slate-700 text-right border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500"
+            />
+            <span className="text-xs font-medium text-slate-500 shrink-0 w-5">%</span>
+          </div>
         </td>
       );
     }
