@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 25-02-2026 a las 21:09:36
+-- Tiempo de generación: 27-02-2026 a las 20:49:16
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -689,7 +689,8 @@ INSERT INTO `service_order_employees` (`id`, `service_order_id`, `user_id`, `lev
 (130, 26, 130, NULL, NULL, NULL, NULL, 1, '2026-02-23 20:35:49'),
 (131, 26, 131, NULL, NULL, NULL, NULL, 1, '2026-02-23 20:35:49'),
 (132, 26, 132, NULL, NULL, NULL, NULL, 1, '2026-02-23 20:35:49'),
-(133, 20, 133, NULL, NULL, NULL, NULL, 1, '2026-02-23 20:35:49');
+(133, 20, 133, NULL, NULL, NULL, NULL, 1, '2026-02-23 20:35:49'),
+(134, 1, 134, NULL, NULL, NULL, NULL, 1, '2026-02-27 19:47:21');
 
 -- --------------------------------------------------------
 
@@ -876,7 +877,8 @@ INSERT INTO `users` (`id`, `email`, `password_hash`) VALUES
 (130, 'jean.cedeno@meridianecp.com', '$2y$10$rIPPs960Vr8nfXr6AD7nNOSTce13Y/c3nMV95CeSxozKMyXPmxVBG'),
 (131, 'yuber.rodriguez@meridianecp.com', '$2y$10$gebxMG6dpFrmU.d4RnpnweVAKF.FUTp/iqrAANQeW9/9PuJD8JLcS'),
 (132, 'kelly.diez@meridianecp.com', '$2y$10$CHPnjs9P/YYBdEK.WEaHCuOlhV7zpSOGvj0W/lh9BaYOkmeWmapu.'),
-(133, 'luis.chinomes@meridianecp.com', '$2y$10$o5vewpHDC5YwoVTxZDq75.zjzoEHZfj10UeS2xhlIS5fbmHKNqW32');
+(133, 'luis.chinomes@meridianecp.com', '$2y$10$o5vewpHDC5YwoVTxZDq75.zjzoEHZfj10UeS2xhlIS5fbmHKNqW32'),
+(134, 'admin@reportes.local', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi');
 
 -- --------------------------------------------------------
 
@@ -1027,7 +1029,8 @@ INSERT INTO `user_roles` (`user_id`, `role_id`, `created_at`) VALUES
 (130, 1, '2026-02-23 20:35:50'),
 (131, 1, '2026-02-23 20:35:50'),
 (132, 1, '2026-02-23 20:35:50'),
-(133, 1, '2026-02-23 20:35:50');
+(133, 1, '2026-02-23 20:35:50'),
+(134, 5, '2026-02-27 19:47:21');
 
 --
 -- Índices para tablas volcadas
@@ -1347,7 +1350,7 @@ ALTER TABLE `service_orders`
 -- AUTO_INCREMENT de la tabla `service_order_employees`
 --
 ALTER TABLE `service_order_employees`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=134;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=135;
 
 --
 -- AUTO_INCREMENT de la tabla `support_types`
@@ -1371,7 +1374,7 @@ ALTER TABLE `task_report_links`
 -- AUTO_INCREMENT de la tabla `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=134;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=136;
 
 --
 -- Restricciones para tablas volcadas
