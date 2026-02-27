@@ -118,6 +118,7 @@ export default function ReportLinesSpreadsheet({
   const [deleting, setDeleting] = useState(false);
   const inputRef = useRef(null);
   const savingRowRef = useRef(new Set());
+  const nextTempIdRef = useRef(0);
 
   // ✅ Columnas según modo
   const COLUMNS = useMemo(() => {
@@ -193,7 +194,7 @@ export default function ReportLinesSpreadsheet({
     const date = forcedDate || today;
 
     return {
-      _tempId: Date.now(),
+      _tempId: `temp-${Date.now()}-${++nextTempIdRef.current}`,
       _isNew: true,
       report_date: date,
       reporter_name: reporterName ?? '',

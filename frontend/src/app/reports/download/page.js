@@ -26,7 +26,7 @@ export default function ReportsDownload() {
   const professionals = useMemo(() => {
     let list;
     if (user?.role === 'admin') {
-      list = (users || []).filter(u => !['admin', 'lider_area'].includes(u.role || ''));
+      list = (users || []).filter(u => (u.role || '') !== 'lider_area');
     } else {
       list = user ? [user] : [];
     }
@@ -195,13 +195,13 @@ export default function ReportsDownload() {
     const odsCode = selectedOds?.ods_code || null;
     const lines = await fetchLinesForExport({ userId: selectedUser.id, dateFrom, dateTo, serviceOrderId: odsId, odsCode });
     if (!lines.length) {
-      setExportAlert({ type: 'warning', message: 'No hay lÃƒÆ’Ã‚Â­neas de reporte en el rango seleccionado.' });
+      setExportAlert({ type: 'warning', message: 'No hay líneas de reporte en el rango seleccionado.' });
       return;
     }
 
     const tplRes = await fetch('/templates/GP-F-23_Base_Individual.xlsx');
     if (!tplRes.ok) {
-      setExportAlert({ type: 'error', message: 'No se encontrÃƒÆ’Ã‚Â³ el template GP-F-23_Base_Individual.xlsx en /public/templates.' });
+      setExportAlert({ type: 'error', message: 'No se encontró el template GP-F-23_Base_Individual.xlsx en /public/templates.' });
       return;
     }
     const tplBuffer = await tplRes.arrayBuffer();
@@ -269,7 +269,7 @@ export default function ReportsDownload() {
       if (monthLines.length > MAX_ROWS) {
         setExportAlert({
           type: 'warning',
-          message: `El mes ${sheetName} tiene ${monthLines.length} lÃƒÆ’Ã‚Â­neas. El template solo soporta ${MAX_ROWS}; se exportaron las primeras ${MAX_ROWS}.`
+          message: `El mes ${sheetName} tiene ${monthLines.length} líneas. El template solo soporta ${MAX_ROWS}; se exportaron las primeras ${MAX_ROWS}.`
         });
       }
     }
@@ -321,7 +321,7 @@ export default function ReportsDownload() {
           <p className="text-slate-500 mt-0.5 text-sm">Genera el reporte Base Individual (Avances) en Excel a partir del template corporativo</p>
         </div>
 
-        {/* Panel de configuraciÃƒÆ’Ã‚Â³n */}
+        {/* Panel de configuración */}
         <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
           <h2 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <FileText className="w-5 h-5 text-slate-600" />
