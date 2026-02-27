@@ -87,7 +87,8 @@ INSERT INTO `users` (`id`, `name`, `email`, `password_hash`, `role_id`, `area_id
 (45, 'JUAN ESTEBAN VELASQUEZ ARIAS ', 'aprendizadmin@meridian.com.co', '$2y$10$ij2x2mcOLJ69onU9XMSLFen39b3Y1zJp3c2XQElq2i3FAr.7F/I6O', 3, 2, 1, '2026-01-21 20:51:53', '2026-01-21 20:51:53'),
 (46, 'Tatiana Chaparro', 'contadorjr@meridian.com.co', '$2y$10$FBBRvrPwBkd377wfF/Xzn.ysq2G.c2hhcbQAITMIYyHu3BdmMhgwy', 3, 7, 1, '2026-02-11 21:57:16', '2026-02-11 21:57:16'),
 (47, 'Diviani Acosta', 'diviani@meridian.com.co', '$2y$10$LYv4AW4WkdEHYCPipq9kn.ouXz/HcndfylCarlJPgPHRMbm5.jOV.', 3, 7, 1, '2026-02-11 21:58:43', '2026-02-11 21:58:43'),
-(49, 'JUAN ESTEBAN LOPEZ OSORIO', 'juanesteban@meridian.com.co', '$2y$10$FPaVS59bukqaWxdHQZuNguSDOjWoIg3CZzn.SF7dw8bIdY1ZM0vBu', 3, 2, 1, '2026-02-18 12:46:22', '2026-02-18 12:46:22');
+(49, 'JUAN ESTEBAN LOPEZ OSORIO', 'juanesteban@meridian.com.co', '$2y$10$FPaVS59bukqaWxdHQZuNguSDOjWoIg3CZzn.SF7dw8bIdY1ZM0vBu', 3, 2, 1, '2026-02-18 12:46:22', '2026-02-18 12:46:22'),
+(50, 'Administrador', 'admin@reportes.local', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1, NULL, 1, NOW(), NOW());
 
 --
 -- Índices para tablas volcadas
@@ -111,7 +112,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT de la tabla `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- Restricciones para tablas volcadas
