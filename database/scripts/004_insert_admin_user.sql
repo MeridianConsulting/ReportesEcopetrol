@@ -8,7 +8,8 @@ INSERT INTO users (email, password_hash) VALUES
 INSERT INTO user_roles (user_id, role_id) VALUES
 (LAST_INSERT_ID(), 5);
 
-
--- Crea un usuario con email: admin@reportes.local
--- Contraseña: password
+-- Asociar admin con ODS 90045724 (PETROSERVICIOS, id=1)
+INSERT INTO service_order_employees (service_order_id, user_id, level_id, assignment_start, assignment_end, contracted_days, is_active, created_at)
+SELECT 1, u.id, NULL, NULL, NULL, NULL, 1, NOW()
+FROM users u WHERE u.email = 'admin@reportes.local' LIMIT 1;
 
