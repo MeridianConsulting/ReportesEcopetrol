@@ -6,17 +6,22 @@ import { useRouter } from 'next/navigation';
 import Layout from '../../../components/Layout';
 import DateRangeFilter from '../../../components/DateRangeFilter';
 import { apiRequest } from '../../../lib/api';
-import { FileDown, Loader2, FileText, FileSpreadsheet, Search, Download } from 'lucide-react';
+import { FileDown, Loader2, FileText, Search, Download, User, Layers } from 'lucide-react';
+
+const DOWNLOAD_MODE_INDIVIDUAL = 'individual';
+const DOWNLOAD_MODE_ODS = 'ods';
 
 export default function ReportsDownload() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [generatingForId, setGeneratingForId] = useState(null);
+  const [generatingOdsId, setGeneratingOdsId] = useState(null);
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [serviceOrders, setServiceOrders] = useState([]);
   const [selectedOdsId, setSelectedOdsId] = useState('');
+  const [downloadMode, setDownloadMode] = useState(DOWNLOAD_MODE_INDIVIDUAL);
   const today = new Date().toISOString().split('T')[0];
   const [dateFrom, setDateFrom] = useState(today);
   const [dateTo, setDateTo] = useState(today);
@@ -46,6 +51,18 @@ export default function ReportsDownload() {
       return name.includes(q) || email.includes(q);
     });
   }, [professionals, searchQuery]);
+
+  /** Profesionales asignados a cada ODS (para modo descarga por ODS) */
+  const professionalsByOdsId = useMemo(() => {
+    const map = new Map();
+    const baseList = user?.role === 'admin' ? (users || []).filter(u => (u.role || '') !== 'lider_area') : user ? [user] : [];
+    for (const so of serviceOrders) {
+      const sid = Number(so.id);
+      const list = baseList.filter(u => (u.service_order_ids || []).some(id => Number(id) === sid));
+      map.set(sid, list);
+    }
+    return map;
+  }, [user, users, serviceOrders]);
 
 
   useEffect(() => {
@@ -299,6 +316,125 @@ export default function ReportsDownload() {
     }
   };
 
+  /** Genera reporte consolidado por ODS (todas las líneas del ODS en el periodo) */
+  async function generateExcelForOds(ods) {
+    if (!ods) return;
+    const pros = professionalsByOdsId.get(Number(ods.id)) || [];
+    if (!pros.length) {
+      setExportAlert({ type: 'warning', message: 'No hay profesionales asignados a este ODS.' });
+      return;
+    }
+
+    setGeneratingOdsId(ods.id);
+    setExportAlert(null);
+    try {
+      const allLines = [];
+      for (const p of pros) {
+        const lines = await fetchLinesForExport({
+          userId: p.id,
+          dateFrom,
+          dateTo,
+          serviceOrderId: String(ods.id),
+          odsCode: ods.ods_code || null
+        });
+        allLines.push(...lines.map(l => ({ ...l, _reporter_id: p.id, _reporter_name: p.name || p.email || '' })));
+      }
+      if (!allLines.length) {
+        setExportAlert({ type: 'warning', message: 'No hay líneas de reporte en el periodo seleccionado para este ODS.' });
+        setGeneratingOdsId(null);
+        return;
+      }
+
+      const byMonth = groupLinesByMonth(allLines);
+      const ExcelJS = (await import('exceljs')).default;
+      const { saveAs } = await import('file-saver');
+
+      let deliveryMap = new Map();
+      try {
+        const mediaRes = await apiRequest('/reports/delivery-media');
+        (mediaRes.data || []).forEach(m => deliveryMap.set(String(m.id), m.name));
+      } catch {}
+
+      const templatePath = '/templates/Consolidado GP-F-23_ODS_XXXXX_MES.xlsx';
+      const tplRes = await fetch(templatePath);
+      const workbook = new ExcelJS.Workbook();
+      if (tplRes.ok) {
+        const tplBuffer = await tplRes.arrayBuffer();
+        await workbook.xlsx.load(tplBuffer);
+      }
+
+      const MONTH_SHEETS = [
+        'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+        'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
+      ];
+      const odsLabel = (ods.ods_code || `ODS-${ods.id}`).replace(/[^a-zA-Z0-9-_]+/g, '_').slice(0, 60);
+
+      for (const [sheetName, monthLines] of byMonth.entries()) {
+        let ws = workbook.getWorksheet(sheetName);
+        if (!ws && !tplRes.ok) {
+          ws = workbook.addWorksheet(sheetName);
+          ws.getRow(1).getCell(1).value = 'ODS';
+          ws.getRow(1).getCell(2).value = odsLabel;
+          ws.getRow(2).getCell(1).value = 'Mes';
+          ws.getRow(2).getCell(2).value = sheetName;
+          ws.getRow(3).getCell(1).value = 'Profesional';
+          ws.getRow(3).getCell(2).value = 'Item general';
+          ws.getRow(3).getCell(3).value = 'Item actividad';
+          ws.getRow(3).getCell(4).value = 'Descripción';
+          ws.getRow(3).getCell(5).value = 'Soporte';
+          ws.getRow(3).getCell(6).value = 'Medio entrega';
+          ws.getRow(3).getCell(7).value = 'Días mes';
+          ws.getRow(3).getCell(8).value = 'Días acum.';
+          startRow = 5;
+        }
+        if (!ws) continue;
+
+        if (tplRes.ok) {
+          ws.getCell('D5').value = odsLabel;
+          ws.getCell('D9').value = sheetName;
+          ws.getCell('D11').value = toDateOnly(dateTo) || new Date();
+        }
+
+        const rowStart = tplRes.ok ? 15 : 5;
+        monthLines.forEach((line, idx) => {
+          const r = rowStart + idx;
+          const deliveryName = (line.delivery_medium_name || '').trim() || deliveryMap.get(String(line.delivery_medium_id)) || 'Digital';
+          const daysMonth = line.days_month === '' || line.days_month === null ? null : Number(line.days_month);
+          const accDays = line.accumulated_days === '' || line.accumulated_days === null ? null : Number(line.accumulated_days);
+          if (tplRes.ok) {
+            ws.getRow(r).getCell(2).value = line.item_general || '';
+            ws.getRow(r).getCell(3).value = line.item_activity || '';
+            ws.getRow(r).getCell(4).value = line.activity_description || '';
+            ws.getRow(r).getCell(5).value = line.support_text || '';
+            ws.getRow(r).getCell(6).value = deliveryName;
+            ws.getRow(r).getCell(8).value = Number.isFinite(daysMonth) ? daysMonth : null;
+            ws.getRow(r).getCell(10).value = Number.isFinite(accDays) ? accDays : null;
+            if (line._reporter_name) ws.getRow(r).getCell(1).value = line._reporter_name;
+          } else {
+            ws.getRow(r).getCell(1).value = line._reporter_name || '';
+            ws.getRow(r).getCell(2).value = line.item_general || '';
+            ws.getRow(r).getCell(3).value = line.item_activity || '';
+            ws.getRow(r).getCell(4).value = line.activity_description || '';
+            ws.getRow(r).getCell(5).value = line.support_text || '';
+            ws.getRow(r).getCell(6).value = deliveryName;
+            ws.getRow(r).getCell(7).value = Number.isFinite(daysMonth) ? daysMonth : null;
+            ws.getRow(r).getCell(8).value = Number.isFinite(accDays) ? accDays : null;
+          }
+        });
+      }
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const fileName = `GP-F-23_Consolidado_ODS_${safeFilePart(ods.ods_code || ods.id)}_${dateFrom || 'NA'}_${dateTo || 'NA'}.xlsx`;
+      saveAs(blob, fileName);
+      setExportAlert({ type: 'success', message: 'Reporte consolidado por ODS generado correctamente.' });
+    } catch (error) {
+      setExportAlert({ type: 'error', message: error?.message || 'Error al generar el reporte por ODS.' });
+    } finally {
+      setGeneratingOdsId(null);
+    }
+  }
+
   if (loading && !user) {
     return (
       <Layout>
@@ -318,7 +454,37 @@ export default function ReportsDownload() {
             <FileDown className="w-7 h-7 text-green-600" strokeWidth={1.75} />
             Descarga GP-F-23
           </h1>
-          <p className="text-slate-500 mt-0.5 text-sm">Genera el reporte Base Individual (Avances) en Excel a partir del template corporativo</p>
+          <p className="text-slate-500 mt-0.5 text-sm">
+            Genera reportes en Excel: por profesional (individual) o consolidado por ODS.
+          </p>
+        </div>
+
+        {/* Selector de tipo de descarga */}
+        <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-full max-w-md mb-6">
+          <button
+            type="button"
+            onClick={() => setDownloadMode(DOWNLOAD_MODE_INDIVIDUAL)}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all ${
+              downloadMode === DOWNLOAD_MODE_INDIVIDUAL
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <User className="w-5 h-5" />
+            Reporte individual
+          </button>
+          <button
+            type="button"
+            onClick={() => setDownloadMode(DOWNLOAD_MODE_ODS)}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all ${
+              downloadMode === DOWNLOAD_MODE_ODS
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Layers className="w-5 h-5" />
+            Reporte por ODS
+          </button>
         </div>
 
         {/* Panel de configuración */}
@@ -328,7 +494,7 @@ export default function ReportsDownload() {
             Configuración
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className={`grid gap-4 mb-4 ${downloadMode === DOWNLOAD_MODE_ODS ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-3'}`}>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
                 Periodo
@@ -340,36 +506,45 @@ export default function ReportsDownload() {
                 valueTo={dateTo}
               />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
-                ODS
-              </label>
-              <select
-                value={selectedOdsId}
-                onChange={(e) => setSelectedOdsId(e.target.value)}
-                className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white"
-              >
-                <option value="">Todos los ODS</option>
-                {serviceOrders.map((so) => (
-                  <option key={so.id} value={so.id}>{so.ods_code || `ODS ${so.id}`}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
-                Buscar profesional
-              </label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Nombre o correo..."
-                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                />
-              </div>
-            </div>
+            {downloadMode === DOWNLOAD_MODE_INDIVIDUAL && (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
+                    Filtrar por ODS
+                  </label>
+                  <select
+                    value={selectedOdsId}
+                    onChange={(e) => setSelectedOdsId(e.target.value)}
+                    className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white"
+                  >
+                    <option value="">Todos los ODS</option>
+                    {serviceOrders.map((so) => (
+                      <option key={so.id} value={so.id}>{so.ods_code || `ODS ${so.id}`}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
+                    Buscar profesional
+                  </label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Nombre o correo..."
+                      className="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+            {downloadMode === DOWNLOAD_MODE_ODS && (
+              <p className="text-sm text-slate-500 flex items-center gap-1.5 md:col-span-1">
+                El periodo aplica a todos los reportes por ODS que descargue a continuación.
+              </p>
+            )}
           </div>
           {exportAlert && (
             <div
@@ -385,64 +560,129 @@ export default function ReportsDownload() {
           )}
         </div>
 
-        {/* Tabla de profesionales */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-200 bg-slate-50">
-            <h2 className="text-base font-semibold text-slate-900">Profesionales</h2>
-            <p className="text-sm text-slate-500 mt-0.5">
-              Seleccione periodo y ODS (opcional) arriba y use &quot;Descargar&quot; para generar el GP-F-23 de cada profesional.
-            </p>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-100 border-b border-slate-200">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Nombre</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Correo</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wide w-40">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {loading ? (
+        {/* Contenido según modo: Individual o Por ODS */}
+        {downloadMode === DOWNLOAD_MODE_INDIVIDUAL && (
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-200 bg-slate-50">
+              <h2 className="text-base font-semibold text-slate-900">Profesionales</h2>
+              <p className="text-sm text-slate-500 mt-0.5">
+                Descargue el GP-F-23 (Base Individual) de cada profesional. Opcionalmente filtre por ODS y use la búsqueda.
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-100 border-b border-slate-200">
                   <tr>
-                    <td colSpan={3} className="px-4 py-12 text-center text-slate-500">
-                      <Loader2 className="w-8 h-8 text-green-600 animate-spin mx-auto mb-2" />
-                      Cargando profesionales...
-                    </td>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Nombre</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Correo</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wide w-40">Acciones</th>
                   </tr>
-                ) : filteredProfessionals.length === 0 ? (
-                  <tr>
-                    <td colSpan={3} className="px-4 py-12 text-center text-slate-500">
-                      {professionals.length === 0 ? 'No hay profesionales disponibles.' : 'Ningun resultado coincide con la busqueda.'}
-                    </td>
-                  </tr>
-                ) : (
-                  filteredProfessionals.map((pro) => (
-                    <tr key={pro.id} className="hover:bg-slate-50/80">
-                      <td className="px-4 py-3 font-medium text-slate-900">{pro.name || pro.email || '-'}</td>
-                      <td className="px-4 py-3 text-slate-600">{pro.email || '-'}</td>
-                      <td className="px-4 py-3 text-right">
-                        <button
-                          type="button"
-                          onClick={() => generateExcelForProfessional(pro)}
-                          disabled={!!generatingForId}
-                          className="inline-flex items-center justify-center gap-2 px-3 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {generatingForId === pro.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Download className="w-4 h-4" />
-                          )}
-                          {generatingForId === pro.id ? 'Generando...' : 'Descargar'}
-                        </button>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={3} className="px-4 py-12 text-center text-slate-500">
+                        <Loader2 className="w-8 h-8 text-green-600 animate-spin mx-auto mb-2" />
+                        Cargando profesionales...
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : filteredProfessionals.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="px-4 py-12 text-center text-slate-500">
+                        {professionals.length === 0 ? 'No hay profesionales disponibles.' : 'Ningún resultado coincide con la búsqueda.'}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredProfessionals.map((pro) => (
+                      <tr key={pro.id} className="hover:bg-slate-50/80">
+                        <td className="px-4 py-3 font-medium text-slate-900">{pro.name || pro.email || '-'}</td>
+                        <td className="px-4 py-3 text-slate-600">{pro.email || '-'}</td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            onClick={() => generateExcelForProfessional(pro)}
+                            disabled={!!generatingForId}
+                            className="inline-flex items-center justify-center gap-2 px-3 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {generatingForId === pro.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Download className="w-4 h-4" />
+                            )}
+                            {generatingForId === pro.id ? 'Generando...' : 'Descargar'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
+
+        {downloadMode === DOWNLOAD_MODE_ODS && (
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-200 bg-slate-50">
+              <h2 className="text-base font-semibold text-slate-900">Reporte consolidado por ODS</h2>
+              <p className="text-sm text-slate-500 mt-0.5">
+                Descargue un único Excel por ODS con todas las líneas de reporte de los profesionales de ese ODS en el periodo seleccionado.
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-100 border-b border-slate-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Código ODS</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Profesionales</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wide w-40">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={3} className="px-4 py-12 text-center text-slate-500">
+                        <Loader2 className="w-8 h-8 text-green-600 animate-spin mx-auto mb-2" />
+                        Cargando ODS...
+                      </td>
+                    </tr>
+                  ) : serviceOrders.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="px-4 py-12 text-center text-slate-500">
+                        No hay ODS disponibles.
+                      </td>
+                    </tr>
+                  ) : (
+                    serviceOrders.map((so) => {
+                      const count = (professionalsByOdsId.get(Number(so.id)) || []).length;
+                      return (
+                        <tr key={so.id} className="hover:bg-slate-50/80">
+                          <td className="px-4 py-3 font-medium text-slate-900">{so.ods_code || `ODS ${so.id}`}</td>
+                          <td className="px-4 py-3 text-slate-600">{count} profesional{count !== 1 ? 'es' : ''}</td>
+                          <td className="px-4 py-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => generateExcelForOds(so)}
+                              disabled={!!generatingOdsId || count === 0}
+                              className="inline-flex items-center justify-center gap-2 px-3 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {generatingOdsId === so.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Download className="w-4 h-4" />
+                              )}
+                              {generatingOdsId === so.id ? 'Generando...' : 'Descargar'}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );
