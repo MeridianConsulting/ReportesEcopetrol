@@ -316,7 +316,30 @@ export default function ReportsDownload() {
     }
   };
 
-  /** Genera reporte consolidado por ODS (todas las líneas del ODS en el periodo) */
+  /**
+   * Clona una hoja de Excel (estructura y celdas) para usarla como hoja de otro mes.
+   * Template consolidado: cabecera 1-12, datos 13-21, totales 22-23, resto 24+.
+   */
+  function cloneConsolidadoSheet(workbook, sourceSheet, newSheetName) {
+    const newWs = workbook.addWorksheet(newSheetName, { views: sourceSheet.views });
+    const maxRow = Math.max(sourceSheet.rowCount || 80, 80);
+    for (let r = 1; r <= maxRow; r++) {
+      const srcRow = sourceSheet.getRow(r);
+      const destRow = newWs.getRow(r);
+      for (let c = 1; c <= 18; c++) {
+        const srcCell = srcRow.getCell(c);
+        const destCell = destRow.getCell(c);
+        if (srcCell.formula) {
+          destCell.value = { formula: srcCell.formula };
+        } else if (srcCell.value !== null && srcCell.value !== undefined && srcCell.value !== '') {
+          destCell.value = srcCell.value;
+        }
+      }
+    }
+    return newWs;
+  }
+
+  /** Genera reporte consolidado por ODS usando plantilla Consolidado GP-F-23_ODS_XXXXX_MES.xlsx */
   async function generateExcelForOds(ods) {
     if (!ods) return;
     const pros = professionalsByOdsId.get(Number(ods.id)) || [];
@@ -357,70 +380,75 @@ export default function ReportsDownload() {
 
       const templatePath = '/templates/Consolidado GP-F-23_ODS_XXXXX_MES.xlsx';
       const tplRes = await fetch(templatePath);
-      const workbook = new ExcelJS.Workbook();
-      if (tplRes.ok) {
-        const tplBuffer = await tplRes.arrayBuffer();
-        await workbook.xlsx.load(tplBuffer);
+      if (!tplRes.ok) {
+        setExportAlert({ type: 'error', message: 'No se encontró la plantilla Consolidado GP-F-23_ODS_XXXXX_MES.xlsx' });
+        setGeneratingOdsId(null);
+        return;
       }
 
-      const MONTH_SHEETS = [
-        'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
-        'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
-      ];
-      const odsLabel = (ods.ods_code || `ODS-${ods.id}`).replace(/[^a-zA-Z0-9-_]+/g, '_').slice(0, 60);
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(await tplRes.arrayBuffer());
+
+      const odsLabel = (ods.ods_code || `ODS-${ods.id}`).trim();
+      const reportDate = toDateOnly(dateTo) || new Date();
+
+      const monthsWithData = Array.from(byMonth.keys());
+      const sourceSheet = workbook.worksheets[0];
+      sourceSheet.name = monthsWithData[0];
+      for (let i = 1; i < monthsWithData.length; i++) {
+        cloneConsolidadoSheet(workbook, workbook.getWorksheet(monthsWithData[0]), monthsWithData[i]);
+      }
+
+      const DATA_FIRST_ROW = 13;
+      const DATA_LAST_ROW_TEMPLATE = 21;
+      const TOTAL_LABEL_ROW = 22;
+      const TOTAL_FORMULA_ROW = 23;
+      const ROWS_DATA_TEMPLATE = DATA_LAST_ROW_TEMPLATE - DATA_FIRST_ROW + 1;
 
       for (const [sheetName, monthLines] of byMonth.entries()) {
-        let ws = workbook.getWorksheet(sheetName);
-        if (!ws && !tplRes.ok) {
-          ws = workbook.addWorksheet(sheetName);
-          ws.getRow(1).getCell(1).value = 'ODS';
-          ws.getRow(1).getCell(2).value = odsLabel;
-          ws.getRow(2).getCell(1).value = 'Mes';
-          ws.getRow(2).getCell(2).value = sheetName;
-          ws.getRow(3).getCell(1).value = 'Profesional';
-          ws.getRow(3).getCell(2).value = 'Item general';
-          ws.getRow(3).getCell(3).value = 'Item actividad';
-          ws.getRow(3).getCell(4).value = 'Descripción';
-          ws.getRow(3).getCell(5).value = 'Soporte';
-          ws.getRow(3).getCell(6).value = 'Medio entrega';
-          ws.getRow(3).getCell(7).value = 'Días mes';
-          ws.getRow(3).getCell(8).value = 'Días acum.';
-          startRow = 5;
-        }
+        const ws = workbook.getWorksheet(sheetName);
         if (!ws) continue;
 
-        if (tplRes.ok) {
-          ws.getCell('D5').value = odsLabel;
-          ws.getCell('D9').value = sheetName;
-          ws.getCell('D11').value = toDateOnly(dateTo) || new Date();
+        ws.getCell('D5').value = odsLabel;
+        ws.getCell('D7').value = sheetName;
+        ws.getCell('D9').value = reportDate;
+
+        const count = monthLines.length;
+        const extraRows = Math.max(0, count - ROWS_DATA_TEMPLATE);
+
+        if (extraRows > 0) {
+          const emptyRow = new Array(18).fill(null);
+          const rowsToInsert = Array(extraRows).fill(null).map(() => [...emptyRow]);
+          ws.spliceRows(TOTAL_LABEL_ROW, 0, ...rowsToInsert);
         }
 
-        const rowStart = tplRes.ok ? 15 : 5;
+        const lastDataRow = DATA_FIRST_ROW + count - 1;
         monthLines.forEach((line, idx) => {
-          const r = rowStart + idx;
+          const r = DATA_FIRST_ROW + idx;
           const deliveryName = (line.delivery_medium_name || '').trim() || deliveryMap.get(String(line.delivery_medium_id)) || 'Digital';
+          const contracted = line.contracted_days === '' || line.contracted_days === null ? null : Number(line.contracted_days);
           const daysMonth = line.days_month === '' || line.days_month === null ? null : Number(line.days_month);
+          const progressPercent = line.progress_percent === '' || line.progress_percent === null ? null : Number(line.progress_percent);
           const accDays = line.accumulated_days === '' || line.accumulated_days === null ? null : Number(line.accumulated_days);
-          if (tplRes.ok) {
-            ws.getRow(r).getCell(2).value = line.item_general || '';
-            ws.getRow(r).getCell(3).value = line.item_activity || '';
-            ws.getRow(r).getCell(4).value = line.activity_description || '';
-            ws.getRow(r).getCell(5).value = line.support_text || '';
-            ws.getRow(r).getCell(6).value = deliveryName;
-            ws.getRow(r).getCell(8).value = Number.isFinite(daysMonth) ? daysMonth : null;
-            ws.getRow(r).getCell(10).value = Number.isFinite(accDays) ? accDays : null;
-            if (line._reporter_name) ws.getRow(r).getCell(1).value = line._reporter_name;
-          } else {
-            ws.getRow(r).getCell(1).value = line._reporter_name || '';
-            ws.getRow(r).getCell(2).value = line.item_general || '';
-            ws.getRow(r).getCell(3).value = line.item_activity || '';
-            ws.getRow(r).getCell(4).value = line.activity_description || '';
-            ws.getRow(r).getCell(5).value = line.support_text || '';
-            ws.getRow(r).getCell(6).value = deliveryName;
-            ws.getRow(r).getCell(7).value = Number.isFinite(daysMonth) ? daysMonth : null;
-            ws.getRow(r).getCell(8).value = Number.isFinite(accDays) ? accDays : null;
-          }
+
+          ws.getRow(r).getCell(2).value = line.item_general || '';
+          ws.getRow(r).getCell(3).value = line.item_activity || '';
+          ws.getRow(r).getCell(4).value = line.activity_description || '';
+          ws.getRow(r).getCell(5).value = line._reporter_name || '';
+          ws.getRow(r).getCell(6).value = '';
+          ws.getRow(r).getCell(7).value = line.support_text || '';
+          ws.getRow(r).getCell(8).value = deliveryName;
+          ws.getRow(r).getCell(9).value = Number.isFinite(contracted) ? contracted : null;
+          ws.getRow(r).getCell(10).value = Number.isFinite(daysMonth) ? daysMonth : null;
+          ws.getRow(r).getCell(11).value = Number.isFinite(progressPercent) ? progressPercent : null;
+          ws.getRow(r).getCell(12).value = Number.isFinite(accDays) ? accDays : null;
         });
+
+        const formulaRow = TOTAL_FORMULA_ROW + extraRows;
+        ws.getRow(formulaRow).getCell(9).value = { formula: `SUM(I${DATA_FIRST_ROW}:I${lastDataRow})` };
+        ws.getRow(formulaRow).getCell(10).value = { formula: `SUM(J${DATA_FIRST_ROW}:J${lastDataRow})` };
+        ws.getRow(formulaRow).getCell(11).value = { formula: `IFERROR(J${formulaRow}/I${formulaRow},0)` };
+        ws.getRow(formulaRow).getCell(12).value = { formula: `SUM(L${DATA_FIRST_ROW}:L${lastDataRow})` };
       }
 
       const buffer = await workbook.xlsx.writeBuffer();
