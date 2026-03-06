@@ -309,21 +309,47 @@ export default function ReportDistributionBoard({
           </button>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-[1180px] w-full text-sm">
+        <div className="border-t border-slate-200 bg-slate-50/80 px-4 py-3 text-xs font-medium text-slate-500 sm:px-5">
+          Desliza horizontalmente si necesitas ver todas las columnas.
+        </div>
+
+        <div className="overflow-x-auto bg-white">
+          <table className="min-w-[1360px] w-full table-fixed text-sm">
             <thead className="bg-slate-100 text-slate-700">
               <tr>
-                <th className="px-3 py-3 text-left font-semibold">Ítem general</th>
-                <th className="px-3 py-3 text-left font-semibold">Ítem actividad</th>
-                <th className="px-3 py-3 text-left font-semibold">Descripción</th>
-                <th className="px-3 py-3 text-left font-semibold">Soporte</th>
-                <th className="px-3 py-3 text-left font-semibold">Medio entrega</th>
-                <th className="px-3 py-3 text-center font-semibold">Días contratados</th>
-                <th className="px-3 py-3 text-center font-semibold">Acumulado previo</th>
-                <th className="px-3 py-3 text-center font-semibold">Días del mes</th>
-                <th className="px-3 py-3 text-center font-semibold">Acumulado</th>
-                <th className="px-3 py-3 text-center font-semibold">% avance</th>
-                <th className="px-3 py-3 text-center font-semibold">Estado</th>
+                <th className="w-[140px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  Ítem general
+                </th>
+                <th className="w-[140px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  Ítem actividad
+                </th>
+                <th className="w-[310px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  Descripción
+                </th>
+                <th className="w-[250px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  Soporte
+                </th>
+                <th className="w-[150px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  Medio entrega
+                </th>
+                <th className="w-[120px] px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  Días contratados
+                </th>
+                <th className="w-[130px] px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  Acumulado previo
+                </th>
+                <th className="w-[140px] px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  Días del mes
+                </th>
+                <th className="w-[120px] px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  Acumulado
+                </th>
+                <th className="w-[150px] px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  % avance
+                </th>
+                <th className="w-[120px] px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  Estado
+                </th>
               </tr>
             </thead>
 
@@ -352,33 +378,41 @@ export default function ReportDistributionBoard({
                   return (
                     <tr
                       key={row.taskId}
-                      className="border-t border-slate-200 hover:bg-slate-50/80"
+                      className="border-t border-slate-200 align-top odd:bg-white even:bg-slate-50/40 hover:bg-emerald-50/40"
                     >
-                      <td className="px-3 py-3 align-top text-slate-700">
-                        {row.generalItem || '—'}
+                      <td className="px-4 py-4 align-top">
+                        <div className="inline-flex rounded-xl border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700">
+                          {row.generalItem || '—'}
+                        </div>
                       </td>
-                      <td className="px-3 py-3 align-top text-slate-700">
-                        {row.activityItem || '—'}
+                      <td className="px-4 py-4 align-top">
+                        <div className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm">
+                          {row.activityItem || '—'}
+                        </div>
                       </td>
-                      <td className="px-3 py-3 align-top text-slate-900">
-                        <div className="max-w-[380px] whitespace-normal">
+                      <td className="px-4 py-4 align-top text-slate-900">
+                        <div className="max-w-[310px] whitespace-normal break-words leading-6">
                           {row.description || '—'}
                         </div>
                       </td>
-                      <td className="px-3 py-3 align-top text-slate-700">
-                        {row.support || '—'}
+                      <td className="px-4 py-4 align-top text-slate-700">
+                        <div className="max-w-[250px] whitespace-normal break-words leading-6">
+                          {row.support || '—'}
+                        </div>
                       </td>
-                      <td className="px-3 py-3 align-top text-slate-700">
-                        {row.deliveryMethod || 'Digital'}
+                      <td className="px-4 py-4 align-top">
+                        <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                          {row.deliveryMethod || 'Digital'}
+                        </span>
                       </td>
-                      <td className="px-3 py-3 text-center font-medium text-slate-900">
+                      <td className="px-4 py-4 text-center font-semibold tabular-nums text-slate-900">
                         {row.contractedDays}
                       </td>
-                      <td className="px-3 py-3 text-center text-slate-700">
+                      <td className="px-4 py-4 text-center font-medium tabular-nums text-slate-700">
                         {row.previousAccumulatedDays}
                       </td>
-                      <td className="px-3 py-3 text-center">
-                        <div className="mx-auto max-w-[120px]">
+                      <td className="px-4 py-4 text-center">
+                        <div className="mx-auto max-w-[124px]">
                           <input
                             type="number"
                             min="0"
@@ -388,20 +422,36 @@ export default function ReportDistributionBoard({
                             onChange={(e) =>
                               handleReportDaysChange(row.taskId, e.target.value)
                             }
-                            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-center font-medium text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                            className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-center font-semibold tabular-nums text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
                           />
-                          <div className="mt-1 text-[11px] text-slate-500">
+                          <div className="mt-1 text-[11px] font-medium text-slate-500">
                             Máx. {remainingDays}
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-3 text-center font-medium text-slate-900">
+                      <td className="px-4 py-4 text-center font-semibold tabular-nums text-slate-900">
                         {row.accumulatedDays}
                       </td>
-                      <td className="px-3 py-3 text-center font-medium text-slate-900">
-                        {progress.toFixed(1)}%
+                      <td className="px-4 py-4 text-center">
+                        <div className="mx-auto max-w-[110px]">
+                          <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+                            <div
+                              className={`h-full rounded-full ${
+                                row.status === 'alert'
+                                  ? 'bg-amber-500'
+                                  : row.status === 'ready'
+                                  ? 'bg-emerald-500'
+                                  : 'bg-slate-400'
+                              }`}
+                              style={{ width: `${Math.min(progress, 100)}%` }}
+                            />
+                          </div>
+                          <div className="mt-2 font-semibold tabular-nums text-slate-900">
+                            {progress.toFixed(1)}%
+                          </div>
+                        </div>
                       </td>
-                      <td className="px-3 py-3 text-center">
+                      <td className="px-4 py-4 text-center">
                         <span
                           className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getStatusBadge(
                             row.status
@@ -422,22 +472,22 @@ export default function ReportDistributionBoard({
 
             <tfoot className="bg-slate-100 font-semibold text-slate-900">
               <tr className="border-t border-slate-200">
-                <td colSpan={5} className="px-3 py-3 text-right">
+                <td colSpan={5} className="px-4 py-4 text-right text-sm uppercase tracking-wide text-slate-600">
                   Totales
                 </td>
-                <td className="px-3 py-3 text-center">{summary.contractedDays}</td>
-                <td className="px-3 py-3 text-center">
+                <td className="px-4 py-4 text-center tabular-nums">{summary.contractedDays}</td>
+                <td className="px-4 py-4 text-center tabular-nums">
                   {rows.reduce(
                     (acc, row) => acc + Number(row.previousAccumulatedDays || 0),
                     0
                   )}
                 </td>
-                <td className="px-3 py-3 text-center">{summary.distributedDays}</td>
-                <td className="px-3 py-3 text-center">{summary.accumulatedDays}</td>
-                <td className="px-3 py-3 text-center">
+                <td className="px-4 py-4 text-center tabular-nums">{summary.distributedDays}</td>
+                <td className="px-4 py-4 text-center tabular-nums">{summary.accumulatedDays}</td>
+                <td className="px-4 py-4 text-center tabular-nums">
                   {summary.progress.toFixed(1)}%
                 </td>
-                <td className="px-3 py-3 text-center">—</td>
+                <td className="px-4 py-4 text-center">—</td>
               </tr>
             </tfoot>
           </table>
