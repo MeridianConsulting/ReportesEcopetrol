@@ -279,13 +279,13 @@ function MyTasksContent() {
   }, [currentUser, filters.reportDate]);
 
   return (
-    <div className="min-h-full bg-slate-100/60">
+    <div className="min-h-full bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.08),_transparent_28%),linear-gradient(to_bottom,_#f8fafc,_#eef2f7)]">
       <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
-        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <section className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.35)] backdrop-blur">
           <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-5 py-6 text-white sm:px-8 sm:py-7">
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.9fr)] xl:items-end">
               <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-slate-100 backdrop-blur">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-slate-100 shadow-lg shadow-slate-950/10 backdrop-blur">
                   <ClipboardList className="h-4 w-4" />
                   Reporte mensual de actividades
                 </div>
@@ -304,7 +304,7 @@ function MyTasksContent() {
 
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                  <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur">
+                  <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 shadow-lg shadow-slate-950/10 backdrop-blur">
                     <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-300">
                       <CalendarDays className="h-4 w-4" />
                       Mes a reportar
@@ -314,7 +314,7 @@ function MyTasksContent() {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur">
+                  <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 shadow-lg shadow-slate-950/10 backdrop-blur">
                     <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-300">
                       <UserCircle2 className="h-4 w-4" />
                       Profesional
@@ -325,7 +325,7 @@ function MyTasksContent() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/15 p-3.5 shadow-lg shadow-emerald-950/10 backdrop-blur">
+                <div className="rounded-2xl border border-emerald-400/20 bg-gradient-to-br from-emerald-400/20 to-emerald-500/10 p-3.5 shadow-lg shadow-emerald-950/10 backdrop-blur">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between xl:flex-col xl:items-stretch">
                     <div className="space-y-1">
                       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-100/90">
@@ -340,7 +340,7 @@ function MyTasksContent() {
                       type="button"
                       onClick={handleDownloadMonthlyReport}
                       disabled={isBootstrapping || !currentUser?.id || exportingMonth}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-950/20 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto xl:w-full"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-950/20 transition hover:bg-emerald-400 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto xl:w-full"
                     >
                       {exportingMonth ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -355,7 +355,7 @@ function MyTasksContent() {
             </div>
           </div>
 
-          <div className="grid gap-4 border-t border-slate-200 p-4 sm:grid-cols-2 xl:grid-cols-4 sm:p-6">
+          <div className="grid gap-4 border-t border-slate-200/80 bg-gradient-to-b from-white to-slate-50/60 p-4 sm:grid-cols-2 xl:grid-cols-4 sm:p-6">
             <StatCard
               icon={<ClipboardList className="h-5 w-5" />}
               label="Actividades asignadas"
@@ -393,10 +393,14 @@ function MyTasksContent() {
           </Alert>
         ) : null}
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <section className="rounded-[28px] border border-slate-200/80 bg-white/95 p-4 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.28)] backdrop-blur sm:p-5">
           <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
             <div className="space-y-1">
-              <h2 className="text-base font-semibold text-slate-900">
+              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <Search className="h-3.5 w-3.5" />
+                Filtros
+              </div>
+              <h2 className="pt-1 text-base font-semibold text-slate-900">
                 Filtros del reporte
               </h2>
               <p className="text-sm text-slate-500">
@@ -405,7 +409,7 @@ function MyTasksContent() {
             </div>
 
             <div className="grid flex-1 gap-4 sm:grid-cols-2 xl:max-w-4xl xl:grid-cols-[minmax(180px,0.9fr)_minmax(180px,0.9fr)_minmax(260px,1.2fr)]">
-              <label className="space-y-2">
+              <label className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
                 <span className="text-sm font-medium text-slate-700">
                   Fecha de reporte
                 </span>
@@ -418,11 +422,11 @@ function MyTasksContent() {
                       reportDate: e.target.value,
                     }))
                   }
-                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-500 focus:bg-white focus:ring-2 focus:ring-slate-200"
+                  className="w-full rounded-2xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                 />
               </label>
 
-              <label className="space-y-2">
+              <label className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
                 <span className="text-sm font-medium text-slate-700">
                   Estado
                 </span>
@@ -434,7 +438,7 @@ function MyTasksContent() {
                       status: e.target.value,
                     }))
                   }
-                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-500 focus:bg-white focus:ring-2 focus:ring-slate-200"
+                  className="w-full rounded-2xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                 >
                   {STATUS_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -444,7 +448,7 @@ function MyTasksContent() {
                 </select>
               </label>
 
-              <label className="space-y-2">
+              <label className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
                 <span className="text-sm font-medium text-slate-700">
                   Buscar actividad
                 </span>
@@ -460,7 +464,7 @@ function MyTasksContent() {
                         search: e.target.value,
                       }))
                     }
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 py-2.5 pl-9 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 focus:bg-white focus:ring-2 focus:ring-slate-200"
+                    className="w-full rounded-2xl border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                   />
                 </div>
               </label>
@@ -468,7 +472,7 @@ function MyTasksContent() {
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <section className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.28)] backdrop-blur">
           {isBootstrapping ? (
             <div className="flex items-center justify-center py-20">
               <div className="text-sm text-slate-500">Cargando usuario...</div>
@@ -499,16 +503,16 @@ function MyTasksContent() {
 
 function StatCard({ icon, label, value, helper }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+    <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/60 transition-transform duration-200 hover:-translate-y-0.5">
       <div className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm ring-1 ring-slate-200">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-white text-emerald-700 shadow-sm ring-1 ring-emerald-100">
           {icon}
         </div>
         <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
             {label}
           </p>
-          <p className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
+          <p className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
             {value}
           </p>
           <p className="mt-1 text-xs text-slate-500">{helper}</p>
