@@ -187,12 +187,20 @@ export default function UsersPage() {
 
   return (
     <Layout>
-      <div className="p-6 lg:p-8 max-w-6xl mx-auto">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Gestión de Usuarios</h1>
-            <p className="text-slate-500 mt-0.5 text-sm">Administra los usuarios del sistema</p>
-          </div>
+      <div className="mx-auto max-w-6xl p-6 lg:p-8">
+        <section className="mb-8 overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.28)]">
+          <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-6 py-6 text-white sm:px-8">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div className="space-y-3">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-100 backdrop-blur">
+                  <Users className="h-4 w-4" />
+                  Administración
+                </div>
+                <div>
+                  <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Gestión de usuarios</h1>
+                  <p className="mt-2 text-sm text-slate-300 sm:text-base">Administra accesos, roles y ODS asociadas de los usuarios del sistema.</p>
+                </div>
+              </div>
           <button
             onClick={() => {
               if (showForm && !editingId) {
@@ -202,10 +210,10 @@ export default function UsersPage() {
                 setShowForm(true);
               }
             }}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                className={`inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-offset-2 ${
               showForm && !editingId
-                ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-400'
-                : 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500'
+                    ? 'bg-white/10 text-white hover:bg-white/15 focus:ring-white/40'
+                    : 'bg-emerald-500 text-white hover:bg-emerald-400 focus:ring-emerald-300'
             }`}
           >
             {showForm && !editingId ? (
@@ -220,17 +228,19 @@ export default function UsersPage() {
               </>
             )}
           </button>
-        </div>
+            </div>
+          </div>
+        </section>
 
         {/* Formulario de crear/editar */}
         {showForm && (
-          <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6 shadow-sm">
+          <div className="mb-6 rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.24)]">
             <h2 className="text-base font-semibold text-slate-900 mb-5">
               {editingId ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
                   <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
                     Nombre <span className="text-rose-500">*</span>
                   </label>
@@ -240,10 +250,10 @@ export default function UsersPage() {
                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                     required
                     placeholder="Nombre completo"
-                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow placeholder:text-slate-400"
+                    className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                   />
                 </div>
-                <div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
                   <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
                     Email <span className="text-rose-500">*</span>
                   </label>
@@ -253,12 +263,12 @@ export default function UsersPage() {
                     onChange={e => setFormData({ ...formData, email: e.target.value })}
                     required
                     placeholder="usuario@empresa.com"
-                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow placeholder:text-slate-400"
+                    className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
                   <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
                     Contraseña {!editingId && <span className="text-rose-500">*</span>}
                   </label>
@@ -269,7 +279,7 @@ export default function UsersPage() {
                       onChange={e => setFormData({ ...formData, password: e.target.value })}
                       required={!editingId}
                       placeholder={editingId ? 'Dejar vacío para mantener' : 'Mínimo 8 caracteres'}
-                      className="w-full px-3 py-2 pr-10 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow placeholder:text-slate-400"
+                      className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 pr-10 text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                     />
                     <button
                       type="button"
@@ -280,7 +290,7 @@ export default function UsersPage() {
                     </button>
                   </div>
                 </div>
-                <div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
                   <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
                     Rol <span className="text-rose-500">*</span>
                   </label>
@@ -288,7 +298,7 @@ export default function UsersPage() {
                     value={formData.role_id}
                     onChange={e => setFormData({ ...formData, role_id: e.target.value })}
                     required
-                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow bg-white"
+                    className="w-full rounded-2xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                   >
                     <option value="">Seleccionar rol</option>
                     {roles.map(role => (
@@ -298,12 +308,12 @@ export default function UsersPage() {
                 </div>
               </div>
 
-              <div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                 <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
                   ODS asociados al perfil
                 </label>
                 <p className="text-xs text-slate-500 mb-2">Selecciona las órdenes de servicio (ODS) con las que trabaja este usuario. Se usan para asignar automáticamente el ODS al crear reportes.</p>
-                <div className="max-h-48 overflow-y-auto border border-slate-300 rounded-lg p-2 space-y-1 bg-white">
+                <div className="max-h-48 space-y-1 overflow-y-auto rounded-2xl border border-slate-300 bg-white p-2">
                   {serviceOrders.length === 0 ? (
                     <p className="text-sm text-slate-500 py-2">No hay ODS cargados en el sistema.</p>
                   ) : (
@@ -332,7 +342,7 @@ export default function UsersPage() {
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+                    className="rounded-2xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-200"
                   >
                     Cancelar
                   </button>
@@ -340,7 +350,7 @@ export default function UsersPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
                 >
                   {saving ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -357,7 +367,7 @@ export default function UsersPage() {
         )}
 
         {/* Buscador */}
-        <div className="mb-4">
+        <div className="mb-4 rounded-[28px] border border-slate-200/80 bg-white/95 p-4 shadow-sm">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
@@ -365,13 +375,13 @@ export default function UsersPage() {
               placeholder="Buscar usuarios..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              className="w-full rounded-2xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
             />
           </div>
         </div>
 
         {/* Tabla de usuarios */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.24)]">
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead>
@@ -386,10 +396,10 @@ export default function UsersPage() {
               <tbody className="divide-y divide-slate-100">
                 {filteredUsers.length > 0 ? (
                   filteredUsers.map(u => (
-                    <tr key={u.id} className="hover:bg-slate-50 transition-colors">
+                    <tr key={u.id} className="transition-colors hover:bg-emerald-50/30">
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-xs font-medium text-white">
                             {u.name?.charAt(0).toUpperCase()}
                           </div>
                           <span className="text-sm font-medium text-slate-900">{u.name}</span>
@@ -424,14 +434,14 @@ export default function UsersPage() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleEdit(u)}
-                            className="p-1.5 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            className="rounded-xl p-1.5 text-slate-500 transition-colors hover:bg-emerald-50 hover:text-emerald-600"
                             title="Editar"
                           >
                             <Pencil className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => setShowDeleteConfirm(u.id)}
-                            className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                            className="rounded-xl p-1.5 text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
                             title="Eliminar"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -471,7 +481,7 @@ export default function UsersPage() {
       {/* Modal de confirmación de eliminación */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
+          <div className="w-full max-w-md rounded-[28px] border border-slate-200 bg-white p-6 shadow-xl">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-rose-100 rounded-full flex items-center justify-center">
                 <AlertTriangle className="w-5 h-5 text-rose-600" />

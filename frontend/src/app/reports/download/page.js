@@ -466,8 +466,10 @@ export default function ReportsDownload() {
   if (loading && !user) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-10 w-10 text-green-600 animate-spin" strokeWidth={1.75} />
+        <div className="flex h-64 items-center justify-center">
+          <div className="rounded-3xl border border-slate-200 bg-white px-8 py-6 shadow-sm">
+            <Loader2 className="h-10 w-10 animate-spin text-emerald-600" strokeWidth={1.75} />
+          </div>
         </div>
       </Layout>
     );
@@ -475,26 +477,37 @@ export default function ReportsDownload() {
 
   return (
     <Layout>
-      <div className="p-4 sm:p-6 lg:p-8 w-full max-w-7xl mx-auto">
+      <div className="mx-auto w-full max-w-7xl p-4 sm:p-6 lg:p-8">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-slate-900 flex items-center gap-3">
-            <FileDown className="w-7 h-7 text-green-600" strokeWidth={1.75} />
-            Descarga GP-F-23
-          </h1>
-          <p className="text-slate-500 mt-0.5 text-sm">
-            Genera reportes en Excel: por profesional (individual) o consolidado por ODS.
-          </p>
-        </div>
+        <section className="mb-6 overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.28)] backdrop-blur">
+          <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-6 py-6 text-white sm:px-8">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-3">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-100 backdrop-blur">
+                  <FileDown className="h-4 w-4" />
+                  Reportes GP-F-23
+                </div>
+                <div>
+                  <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                    Descarga de reportes
+                  </h1>
+                  <p className="mt-2 max-w-3xl text-sm text-slate-300 sm:text-base">
+                    Genera reportes en Excel por profesional o un consolidado por ODS con el mismo período seleccionado.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Selector de tipo de descarga */}
-        <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-full max-w-md mb-6">
+        <div className="mb-6 flex w-full max-w-md gap-2 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm">
           <button
             type="button"
             onClick={() => setDownloadMode(DOWNLOAD_MODE_INDIVIDUAL)}
             className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all ${
               downloadMode === DOWNLOAD_MODE_INDIVIDUAL
-                ? 'bg-white text-slate-900 shadow-sm'
+                ? 'bg-emerald-50 text-emerald-700 shadow-sm ring-1 ring-emerald-200'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -506,7 +519,7 @@ export default function ReportsDownload() {
             onClick={() => setDownloadMode(DOWNLOAD_MODE_ODS)}
             className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all ${
               downloadMode === DOWNLOAD_MODE_ODS
-                ? 'bg-white text-slate-900 shadow-sm'
+                ? 'bg-emerald-50 text-emerald-700 shadow-sm ring-1 ring-emerald-200'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -516,14 +529,14 @@ export default function ReportsDownload() {
         </div>
 
         {/* Panel de configuración */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+        <div className="mb-6 rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.24)]">
           <h2 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <FileText className="w-5 h-5 text-slate-600" />
             Configuración
           </h2>
           
           <div className={`grid gap-4 mb-4 ${downloadMode === DOWNLOAD_MODE_ODS ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-3'}`}>
-            <div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
               <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
                 Periodo
               </label>
@@ -536,14 +549,14 @@ export default function ReportsDownload() {
             </div>
             {downloadMode === DOWNLOAD_MODE_INDIVIDUAL && (
               <>
-                <div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
                   <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
                     Filtrar por ODS
                   </label>
                   <select
                     value={selectedOdsId}
                     onChange={(e) => setSelectedOdsId(e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white"
+                    className="w-full rounded-2xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                   >
                     <option value="">Todos los ODS</option>
                     {serviceOrders.map((so) => (
@@ -551,7 +564,7 @@ export default function ReportsDownload() {
                     ))}
                   </select>
                 </div>
-                <div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
                   <label className="block text-xs font-medium text-slate-600 mb-1.5 uppercase tracking-wide">
                     Buscar profesional
                   </label>
@@ -562,14 +575,14 @@ export default function ReportsDownload() {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Nombre o correo..."
-                      className="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      className="w-full rounded-2xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                     />
                   </div>
                 </div>
               </>
             )}
             {downloadMode === DOWNLOAD_MODE_ODS && (
-              <p className="text-sm text-slate-500 flex items-center gap-1.5 md:col-span-1">
+              <p className="flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-500 md:col-span-1">
                 El periodo aplica a todos los reportes por ODS que descargue a continuación.
               </p>
             )}
@@ -590,8 +603,8 @@ export default function ReportsDownload() {
 
         {/* Contenido según modo: Individual o Por ODS */}
         {downloadMode === DOWNLOAD_MODE_INDIVIDUAL && (
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200 bg-slate-50">
+          <div className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.24)]">
+            <div className="border-b border-slate-200 bg-gradient-to-r from-white to-slate-50 px-5 py-4">
               <h2 className="text-base font-semibold text-slate-900">Profesionales</h2>
               <p className="text-sm text-slate-500 mt-0.5">
                 Descargue el GP-F-23 (Base Individual) de cada profesional. Opcionalmente filtre por ODS y use la búsqueda.
@@ -622,7 +635,7 @@ export default function ReportsDownload() {
                     </tr>
                   ) : (
                     filteredProfessionals.map((pro) => (
-                      <tr key={pro.id} className="hover:bg-slate-50/80">
+                      <tr key={pro.id} className="hover:bg-emerald-50/30">
                         <td className="px-4 py-3 font-medium text-slate-900">{pro.name || pro.email || '-'}</td>
                         <td className="px-4 py-3 text-slate-600">{pro.email || '-'}</td>
                         <td className="px-4 py-3 text-right">
@@ -630,7 +643,7 @@ export default function ReportsDownload() {
                             type="button"
                             onClick={() => generateExcelForProfessional(pro)}
                             disabled={!!generatingForId}
-                            className="inline-flex items-center justify-center gap-2 px-3 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             {generatingForId === pro.id ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
@@ -650,8 +663,8 @@ export default function ReportsDownload() {
         )}
 
         {downloadMode === DOWNLOAD_MODE_ODS && (
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200 bg-slate-50">
+          <div className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.24)]">
+            <div className="border-b border-slate-200 bg-gradient-to-r from-white to-slate-50 px-5 py-4">
               <h2 className="text-base font-semibold text-slate-900">Reporte consolidado por ODS</h2>
               <p className="text-sm text-slate-500 mt-0.5">
                 Descargue un único Excel por ODS con todas las líneas de reporte de los profesionales de ese ODS en el periodo seleccionado.
@@ -684,7 +697,7 @@ export default function ReportsDownload() {
                     serviceOrders.map((so) => {
                       const count = (professionalsByOdsId.get(Number(so.id)) || []).length;
                       return (
-                        <tr key={so.id} className="hover:bg-slate-50/80">
+                        <tr key={so.id} className="hover:bg-emerald-50/30">
                           <td className="px-4 py-3 font-medium text-slate-900">{so.ods_code || `ODS ${so.id}`}</td>
                           <td className="px-4 py-3 text-slate-600">{count} profesional{count !== 1 ? 'es' : ''}</td>
                           <td className="px-4 py-3 text-right">
@@ -692,7 +705,7 @@ export default function ReportsDownload() {
                               type="button"
                               onClick={() => generateExcelForOds(so)}
                               disabled={!!generatingOdsId || count === 0}
-                              className="inline-flex items-center justify-center gap-2 px-3 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               {generatingOdsId === so.id ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />

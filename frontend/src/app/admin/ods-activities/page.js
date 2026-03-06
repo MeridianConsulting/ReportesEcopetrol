@@ -302,9 +302,9 @@ export default function OdsActivitiesPage() {
 
   return (
     <Layout>
-      <div className="min-h-full bg-slate-100/70">
+      <div className="min-h-full bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.08),_transparent_28%),linear-gradient(to_bottom,_#f8fafc,_#eef2f7)]">
         <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
-          <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <section className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.28)]">
             <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-6 py-6 text-white sm:px-8">
               <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                 <div className="space-y-3">
@@ -325,7 +325,7 @@ export default function OdsActivitiesPage() {
                 <button
                   type="button"
                   onClick={openCreateModal}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-medium text-slate-900 transition hover:bg-slate-100"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-medium text-white shadow-lg shadow-emerald-950/15 transition hover:bg-emerald-400"
                 >
                   <Plus className="h-4 w-4" />
                   Nueva actividad
@@ -333,7 +333,7 @@ export default function OdsActivitiesPage() {
               </div>
             </div>
 
-            <div className="grid gap-4 border-t border-slate-200 p-4 sm:grid-cols-2 xl:grid-cols-4 sm:p-6">
+            <div className="grid gap-4 border-t border-slate-200 bg-gradient-to-b from-white to-slate-50/60 p-4 sm:grid-cols-2 xl:grid-cols-4 sm:p-6">
               <StatCard
                 icon={<ClipboardList className="h-5 w-5" />}
                 label="Actividades visibles"
@@ -371,9 +371,9 @@ export default function OdsActivitiesPage() {
             </Alert>
           ) : null}
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <section className="rounded-[28px] border border-slate-200/80 bg-white/95 p-4 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.24)] sm:p-5">
             <div className="grid gap-4 lg:grid-cols-[1.1fr_1fr_1fr_1.4fr_auto]">
-              <label className="space-y-2">
+              <label className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
                 <span className="text-sm font-medium text-slate-700">ODS</span>
                 <select
                   value={filters.service_order_id}
@@ -383,7 +383,7 @@ export default function OdsActivitiesPage() {
                       service_order_id: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                  className="w-full rounded-2xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                 >
                   <option value="">Todas</option>
                   {serviceOrders.map((item) => (
@@ -394,7 +394,7 @@ export default function OdsActivitiesPage() {
                 </select>
               </label>
 
-              <label className="space-y-2">
+              <label className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
                 <span className="text-sm font-medium text-slate-700">Profesional</span>
                 <select
                   value={filters.assigned_user_id}
@@ -404,7 +404,7 @@ export default function OdsActivitiesPage() {
                       assigned_user_id: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                  className="w-full rounded-2xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                 >
                   <option value="">Todos</option>
                   {filteredUsersForSelect.map((user) => (
@@ -415,7 +415,7 @@ export default function OdsActivitiesPage() {
                 </select>
               </label>
 
-              <label className="space-y-2">
+              <label className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
                 <span className="text-sm font-medium text-slate-700">Estado</span>
                 <select
                   value={filters.status}
@@ -425,7 +425,7 @@ export default function OdsActivitiesPage() {
                       status: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                  className="w-full rounded-2xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                 >
                   {STATUS_OPTIONS.map((status) => (
                     <option key={status} value={status}>
@@ -435,7 +435,7 @@ export default function OdsActivitiesPage() {
                 </select>
               </label>
 
-              <label className="space-y-2">
+              <label className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
                 <span className="text-sm font-medium text-slate-700">Buscar</span>
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -449,7 +449,7 @@ export default function OdsActivitiesPage() {
                       }))
                     }
                     placeholder="Título, descripción, ítem, soporte..."
-                    className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                    className="w-full rounded-2xl border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                   />
                 </div>
               </label>
@@ -465,7 +465,7 @@ export default function OdsActivitiesPage() {
                       search: '',
                     })
                   }
-                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                 >
                   Limpiar
                 </button>
@@ -473,7 +473,7 @@ export default function OdsActivitiesPage() {
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <section className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.24)]">
             <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4 sm:px-5">
               <div>
                 <h2 className="text-base font-semibold text-slate-900">Actividades registradas</h2>
@@ -523,7 +523,7 @@ export default function OdsActivitiesPage() {
                     </tr>
                   ) : (
                     activities.map((activity) => (
-                      <tr key={activity.id} className="border-t border-slate-200 align-top hover:bg-slate-50/80">
+                      <tr key={activity.id} className="border-t border-slate-200 align-top hover:bg-emerald-50/30">
                         <td className="px-4 py-4">
                           <div className="space-y-1">
                             <p className="font-semibold text-slate-900">{activity.ods_code}</p>
@@ -601,7 +601,7 @@ export default function OdsActivitiesPage() {
                             <button
                               type="button"
                               onClick={() => openEditModal(activity)}
-                              className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                              className="rounded-xl p-2 text-slate-500 transition hover:bg-emerald-50 hover:text-emerald-700"
                               title="Editar actividad"
                             >
                               <Pencil className="h-4 w-4" />
@@ -662,9 +662,9 @@ export default function OdsActivitiesPage() {
 
 function StatCard({ icon, label, value, helper }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+    <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/60 transition-transform duration-200 hover:-translate-y-0.5">
       <div className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm ring-1 ring-slate-200">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-white text-emerald-700 shadow-sm ring-1 ring-emerald-100">
           {icon}
         </div>
         <div className="min-w-0">
