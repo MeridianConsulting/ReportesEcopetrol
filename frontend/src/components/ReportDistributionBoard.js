@@ -20,7 +20,7 @@ function formatMonthLabel(dateString) {
 }
 
 function normalizeNumber(value) {
-  const parsed = Number(value);
+  const parsed = Math.floor(Number(value));
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 }
 
@@ -417,7 +417,7 @@ export default function ReportDistributionBoard({
                             type="number"
                             min="0"
                             max={remainingDays}
-                            step="0.5"
+                            step="1"
                             value={row.reportDays}
                             onChange={(e) =>
                               handleReportDaysChange(row.taskId, e.target.value)
