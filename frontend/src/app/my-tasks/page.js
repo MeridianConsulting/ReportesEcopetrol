@@ -71,37 +71,24 @@ function monthSheetFromDate(dateStr) {
   return MONTH_SHEETS[date.getMonth()];
 }
 
-function normalizeReportLines(rows) {
-  return (rows || []).map((row) => ({
-    report_line_id: row.report_line_id,
-    report_date: row.report_date || '',
-    ods_code: row.ods_code || '',
-    reporter_name: row.reporter_name || '',
-    item_general: row.item_general || '',
-    item_activity: row.item_activity || '',
-    activity_description: row.activity_description || '',
-    support_text: row.support_text || '',
-    delivery_medium_id: row.delivery_medium_id || '',
-    delivery_medium_name: row.delivery_medium_name || '',
-    contracted_days: row.contracted_days ?? '',
-    days_month: row.days_month ?? '',
-    progress_percent: row.progress_percent ?? '',
-    accumulated_days: row.accumulated_days ?? '',
-    observations: row.observations || '',
-  }));
+function clearWorksheetDataRow(worksheet, rowNumber) {
+  worksheet.getRow(rowNumber).getCell(2).value = null;
+  worksheet.getRow(rowNumber).getCell(3).value = null;
+  worksheet.getRow(rowNumber).getCell(4).value = null;
+  worksheet.getRow(rowNumber).getCell(5).value = null;
+  worksheet.getRow(rowNumber).getCell(6).value = null;
+  worksheet.getRow(rowNumber).getCell(7).value = null;
+  worksheet.getRow(rowNumber).getCell(8).value = null;
+  worksheet.getRow(rowNumber).getCell(10).value = null;
 }
 
-function groupLinesByMonth(lines) {
-  const map = new Map();
-  for (const line of lines) {
-    const sheetName = monthSheetFromDate(line.report_date);
-    if (!sheetName) continue;
-    if (!map.has(sheetName)) {
-      map.set(sheetName, []);
-    }
-    map.get(sheetName).push(line);
-  }
-  return map;
+function fillIssueBlock(worksheet, config, issue) {
+  const note = String(issue?.note || '').trim();
+  const hasIssue = Boolean(issue?.hasIssue);
+
+  worksheet.getCell(config.yesCell).value = hasIssue ? 'X' : '';
+  worksheet.getCell(config.noCell).value = hasIssue ? '' : 'X';
+  worksheet.getCell(config.noteCell).value = note;
 }
 
 function getMonthRange(dateString) {
@@ -166,24 +153,13 @@ function MyTasksContent() {
       setExportAlert(null);
 
       const { dateFrom, dateTo } = getMonthRange(filters.reportDate);
-      const params = new URLSearchParams({
-        date_from: dateFrom,
-        date_to: dateTo,
-      });
+      const response = await apiRequest(
+        `/reports/my-task-distribution?userId=${currentUser.id}&reportDate=${filters.reportDate}`
+      );
+      const payload = response?.data || {};
+      const tasks = Array.isArray(payload.tasks) ? payload.tasks : [];
 
-      let rows;
-      try {
-        const response = await apiRequest(`/reports/lines?${params.toString()}`);
-        rows = normalizeReportLines(response.data || []);
-      } catch {
-        const response = await apiRequest('/reports/my-lines');
-        rows = normalizeReportLines(response.data || []).filter((row) => {
-          const reportDate = row.report_date || '';
-          return reportDate >= dateFrom && reportDate <= dateTo;
-        });
-      }
-
-      if (!rows.length) {
+      if (!tasks.length) {
         setExportAlert({
           type: 'warning',
           message: 'No hay líneas de reporte registradas para el mes seleccionado.',
@@ -205,81 +181,73 @@ function MyTasksContent() {
 
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(await templateResponse.arrayBuffer());
+      const MAX_ROWS = 19;
+      const sheetName = monthSheetFromDate(filters.reportDate);
+      const worksheet = sheetName ? workbook.getWorksheet(sheetName) : null;
 
-      let deliveryMap = new Map();
-      try {
-        const mediaResponse = await apiRequest('/reports/delivery-media');
-        (mediaResponse.data || []).forEach((item) => {
-          deliveryMap.set(String(item.id), item.name);
+      if (!worksheet) {
+        setExportAlert({
+          type: 'error',
+          message: 'No fue posible ubicar la hoja del mes seleccionado en la plantilla.',
         });
-      } catch {
-        deliveryMap = new Map();
+        return;
       }
 
-      const byMonth = groupLinesByMonth(rows);
-      const MAX_ROWS = 19;
-      const odsUnique = Array.from(
-        new Set(rows.map((line) => (line.ods_code || '').trim()).filter(Boolean))
-      );
-      const odsValue = odsUnique.length ? odsUnique.join(' / ').slice(0, 80) : '';
+      worksheet.getCell('D5').value = String(payload.serviceOrderCode || '').slice(0, 80);
+      worksheet.getCell('D7').value = currentUser.name || currentUser.email || '';
+      worksheet.getCell('D9').value = sheetName;
+      worksheet.getCell('D11').value = toDateOnly(filters.reportDate) || new Date();
+      worksheet.getCell('D37').value = String(payload.observations || '').trim();
 
-      for (const [sheetName, monthLines] of byMonth.entries()) {
-        const worksheet = workbook.getWorksheet(sheetName);
-        if (!worksheet) continue;
+      fillIssueBlock(worksheet, {
+        yesCell: 'C41',
+        noCell: 'C42',
+        noteCell: 'D41',
+      }, payload.professionalIssue);
+      fillIssueBlock(worksheet, {
+        yesCell: 'C46',
+        noCell: 'C47',
+        noteCell: 'D46',
+      }, payload.leaderIssue);
 
-        worksheet.getCell('D5').value = odsValue;
-        worksheet.getCell('D7').value = currentUser.name || currentUser.email || '';
-        worksheet.getCell('D9').value = sheetName;
-        worksheet.getCell('D11').value = toDateOnly(filters.reportDate) || new Date();
+      for (let index = 0; index < MAX_ROWS; index += 1) {
+        const rowNumber = 15 + index;
+        const task = tasks[index];
 
-        for (let index = 0; index < MAX_ROWS; index += 1) {
-          const rowNumber = 15 + index;
-          const line = monthLines[index];
-
-          if (!line) {
-            worksheet.getRow(rowNumber).getCell(2).value = null;
-            worksheet.getRow(rowNumber).getCell(3).value = null;
-            worksheet.getRow(rowNumber).getCell(4).value = null;
-            worksheet.getRow(rowNumber).getCell(5).value = null;
-            worksheet.getRow(rowNumber).getCell(6).value = null;
-            worksheet.getRow(rowNumber).getCell(7).value = null;
-            worksheet.getRow(rowNumber).getCell(8).value = null;
-            worksheet.getRow(rowNumber).getCell(10).value = null;
-            continue;
-          }
-
-          const deliveryName =
-            (line.delivery_medium_name || '').trim() ||
-            deliveryMap.get(String(line.delivery_medium_id)) ||
-            'Digital';
-          const contracted = line.contracted_days === '' || line.contracted_days === null
-            ? null
-            : Number(line.contracted_days);
-          const daysMonth = line.days_month === '' || line.days_month === null
-            ? null
-            : Number(line.days_month);
-          const accumulatedDays = line.accumulated_days === '' || line.accumulated_days === null
-            ? null
-            : Number(line.accumulated_days);
-
-          worksheet.getRow(rowNumber).getCell(2).value = line.item_general || '';
-          worksheet.getRow(rowNumber).getCell(3).value = line.item_activity || '';
-          worksheet.getRow(rowNumber).getCell(4).value = line.activity_description || '';
-          worksheet.getRow(rowNumber).getCell(5).value = line.support_text || '';
-          worksheet.getRow(rowNumber).getCell(6).value = deliveryName;
-          worksheet.getRow(rowNumber).getCell(7).value = Number.isFinite(contracted) ? contracted : null;
-          worksheet.getRow(rowNumber).getCell(8).value = Number.isFinite(daysMonth) ? daysMonth : null;
-          worksheet.getRow(rowNumber).getCell(10).value = Number.isFinite(accumulatedDays)
-            ? accumulatedDays
-            : null;
+        if (!task) {
+          clearWorksheetDataRow(worksheet, rowNumber);
+          continue;
         }
 
-        if (monthLines.length > MAX_ROWS) {
-          setExportAlert({
-            type: 'warning',
-            message: `El template soporta ${MAX_ROWS} líneas por hoja. Se exportaron las primeras ${MAX_ROWS} del mes seleccionado.`,
-          });
-        }
+        const contracted = task.contractedDays === '' || task.contractedDays === null
+          ? null
+          : Number(task.contractedDays);
+        const daysMonth = task.reportDays === '' || task.reportDays === null
+          ? null
+          : Number(task.reportDays);
+        const previousAccumulatedDays =
+          task.previousAccumulatedDays === '' || task.previousAccumulatedDays === null
+            ? 0
+            : Number(task.previousAccumulatedDays);
+        const accumulatedDaysValue = previousAccumulatedDays + (Number.isFinite(daysMonth) ? daysMonth : 0);
+
+        worksheet.getRow(rowNumber).getCell(2).value = task.generalItem || '';
+        worksheet.getRow(rowNumber).getCell(3).value = task.activityItem || '';
+        worksheet.getRow(rowNumber).getCell(4).value = task.description || '';
+        worksheet.getRow(rowNumber).getCell(5).value = task.support || '';
+        worksheet.getRow(rowNumber).getCell(6).value = task.deliveryMethod || 'Digital';
+        worksheet.getRow(rowNumber).getCell(7).value = Number.isFinite(contracted) ? contracted : null;
+        worksheet.getRow(rowNumber).getCell(8).value = Number.isFinite(daysMonth) ? daysMonth : null;
+        worksheet.getRow(rowNumber).getCell(10).value = Number.isFinite(accumulatedDaysValue)
+          ? accumulatedDaysValue
+          : null;
+      }
+
+      if (tasks.length > MAX_ROWS) {
+        setExportAlert({
+          type: 'warning',
+          message: `El template soporta ${MAX_ROWS} líneas por hoja. Se exportaron las primeras ${MAX_ROWS} del mes seleccionado.`,
+        });
       }
 
       const buffer = await workbook.xlsx.writeBuffer();
