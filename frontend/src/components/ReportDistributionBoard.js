@@ -269,7 +269,7 @@ export default function ReportDistributionBoard({
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
-      <section className="grid gap-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 rounded-3xl border border-slate-200 bg-slate-50/70 p-4 md:grid-cols-2 xl:grid-cols-4">
         <InfoBox label="Código orden de servicio" value={meta.serviceOrderCode || '—'} />
         <InfoBox label="Nombre del profesional" value={reporterName || '—'} />
         <InfoBox label="Mes a reportar" value={meta.reportMonth || '—'} />
@@ -282,9 +282,9 @@ export default function ReportDistributionBoard({
         </div>
       ) : null}
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200">
-        <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-4 sm:px-5">
-          <div>
+      <section className="overflow-hidden rounded-3xl border border-slate-200">
+        <div className="flex flex-col gap-4 border-b border-slate-200 bg-white px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-2xl">
             <h2 className="text-base font-semibold text-slate-900">
               Distribución mensual por actividad
             </h2>
@@ -298,7 +298,7 @@ export default function ReportDistributionBoard({
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           >
             {saving ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -445,7 +445,7 @@ export default function ReportDistributionBoard({
       </section>
 
       <section className="grid gap-6 xl:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+        <div className="rounded-3xl border border-slate-200 bg-white p-5">
           <div className="mb-4 flex items-center gap-2">
             <FileText className="h-5 w-5 text-slate-700" />
             <h3 className="text-base font-semibold text-slate-900">Observaciones</h3>
@@ -480,7 +480,7 @@ export default function ReportDistributionBoard({
 
 function InfoBox({ label, value }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
       <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
         {label}
       </p>
@@ -491,7 +491,7 @@ function InfoBox({ label, value }) {
 
 function IssueBlock({ title, state, setState }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="rounded-3xl border border-slate-200 bg-white p-5">
       <div className="mb-4 flex items-start gap-3">
         <div className="mt-0.5">
           {state.hasIssue ? (
