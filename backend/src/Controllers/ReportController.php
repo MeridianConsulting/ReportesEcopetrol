@@ -125,6 +125,74 @@ class ReportController
     return Response::json(['data' => $rows]);
   }
 
+  /**
+   * Plantilla de distribución mensual basada en actividades ODS asignadas al profesional.
+   */
+  public function myTaskDistribution(Request $request)
+  {
+    $userContext = $request->getAttribute('userContext');
+    $authUserId = (int)($userContext['id'] ?? 0);
+    $role = $userContext['role'] ?? '';
+
+    if (!$authUserId) {
+      return Response::json(['error' => ['code' => 'UNAUTHORIZED', 'message' => 'User not found']], 401);
+    }
+
+    $requestedUserId = $request->getQuery('userId');
+    $requestedUserId = $requestedUserId !== null && $requestedUserId !== '' ? (int)$requestedUserId : $authUserId;
+    $reportDate = $request->getQuery('reportDate');
+
+    if (!$reportDate) {
+      return Response::json(['error' => ['code' => 'VALIDATION', 'message' => 'La fecha de reporte es obligatoria.']], 400);
+    }
+
+    if ($requestedUserId !== $authUserId && $role !== 'admin') {
+      return Response::json(['error' => ['code' => 'FORBIDDEN', 'message' => 'No tienes permisos para consultar este reporte.']], 403);
+    }
+
+    try {
+      $payload = $this->reportService->getMyTaskDistribution($requestedUserId, $reportDate);
+      return Response::json(['data' => $payload]);
+    } catch (\InvalidArgumentException $e) {
+      return Response::json(['error' => ['code' => 'VALIDATION', 'message' => $e->getMessage()]], 400);
+    } catch (\Exception $e) {
+      return Response::json(['error' => ['code' => 'SERVER_ERROR', 'message' => $e->getMessage()]], 500);
+    }
+  }
+
+  /**
+   * Guardar distribución mensual del profesional sobre actividades ODS.
+   */
+  public function saveMyTaskDistribution(Request $request)
+  {
+    $userContext = $request->getAttribute('userContext');
+    $authUserId = (int)($userContext['id'] ?? 0);
+    $role = $userContext['role'] ?? '';
+
+    if (!$authUserId) {
+      return Response::json(['error' => ['code' => 'UNAUTHORIZED', 'message' => 'User not found']], 401);
+    }
+
+    $body = $request->getBody() ?? [];
+    if (!is_array($body)) {
+      return Response::json(['error' => ['code' => 'BAD_REQUEST', 'message' => 'Invalid body']], 400);
+    }
+
+    $requestedUserId = isset($body['userId']) ? (int)$body['userId'] : $authUserId;
+    if ($requestedUserId !== $authUserId && $role !== 'admin') {
+      return Response::json(['error' => ['code' => 'FORBIDDEN', 'message' => 'No tienes permisos para guardar este reporte.']], 403);
+    }
+
+    try {
+      $result = $this->reportService->saveMyTaskDistribution($requestedUserId, $body);
+      return Response::json(['data' => $result]);
+    } catch (\InvalidArgumentException $e) {
+      return Response::json(['error' => ['code' => 'VALIDATION', 'message' => $e->getMessage()]], 400);
+    } catch (\Exception $e) {
+      return Response::json(['error' => ['code' => 'SERVER_ERROR', 'message' => $e->getMessage()]], 500);
+    }
+  }
+
   /** Catálogo: órdenes de servicio (ODS) */
   public function serviceOrders(Request $request)
   {

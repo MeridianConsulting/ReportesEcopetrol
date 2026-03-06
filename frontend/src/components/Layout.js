@@ -1,11 +1,20 @@
 // components/Layout.js
 'use client';
 
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Sidebar from './Sidebar';
 import { apiRequest, bootstrapAuth, getAccessToken } from '../lib/api';
 import { Loader2 } from 'lucide-react';
+
+const LayoutContext = createContext({
+  user: null,
+  isBootstrapping: true,
+});
+
+export function useLayoutContext() {
+  return useContext(LayoutContext);
+}
 
 export default function Layout({ children }) {
   const router = useRouter();
@@ -13,6 +22,13 @@ export default function Layout({ children }) {
   const [user, setUser] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const contextValue = useMemo(
+    () => ({
+      user,
+      isBootstrapping,
+    }),
+    [user, isBootstrapping]
+  );
 
   useEffect(() => {
     if (pathname === '/login' || pathname === '/login/') {
@@ -69,44 +85,46 @@ export default function Layout({ children }) {
   }
 
   return (
-    <div className="flex h-screen bg-slate-100 overflow-hidden">
-      <Sidebar user={user} isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
-      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
-        <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 flex-shrink-0">
-          <div className="flex-1" />
+    <LayoutContext.Provider value={contextValue}>
+      <div className="flex h-screen bg-slate-100 overflow-hidden">
+        <Sidebar user={user} isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+        <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+          <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 flex-shrink-0">
+            <div className="flex-1" />
+            
+            <div className="flex items-center gap-3">
+              {user && (
+                <div className="hidden sm:flex items-center gap-2 pl-3 border-l border-slate-200">
+                  <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                    {user.name?.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-slate-900">{user.name}</p>
+                    <p className="text-xs text-slate-500 capitalize">{user.role?.replace('_', ' ')}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </header>
           
-          <div className="flex items-center gap-3">
-            {user && (
-              <div className="hidden sm:flex items-center gap-2 pl-3 border-l border-slate-200">
-                <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                  {user.name?.charAt(0).toUpperCase()}
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-slate-900">{user.name}</p>
-                  <p className="text-xs text-slate-500 capitalize">{user.role?.replace('_', ' ')}</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </header>
-        
-        {/* Contenido principal */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden">
-        {children}
-        </main>
-        
-        {/* Footer discreto */}
-        <footer className="hidden lg:flex h-7 items-center justify-center flex-shrink-0 bg-gradient-to-t from-slate-50/80 to-transparent backdrop-blur-sm border-t border-slate-100/50">
-          <p className="text-[10px] text-slate-400/70 tracking-wide">
-            <span className="text-slate-400/60">© {new Date().getFullYear()}</span>
-            <span className="mx-1.5 text-slate-300">·</span>
-            <span className="text-slate-400/60">Meridian Consulting</span>
-            <span className="mx-1.5 text-slate-300">·</span>
-            <span className="text-slate-400/50">Development By</span>
-            <span className="ml-0.5 text-slate-400/60 font-normal">José Mateo López Cifuentes</span>
-          </p>
-        </footer>
+          {/* Contenido principal */}
+          <main className="flex-1 overflow-y-auto overflow-x-hidden">
+          {children}
+          </main>
+          
+          {/* Footer discreto */}
+          <footer className="hidden lg:flex h-7 items-center justify-center flex-shrink-0 bg-gradient-to-t from-slate-50/80 to-transparent backdrop-blur-sm border-t border-slate-100/50">
+            <p className="text-[10px] text-slate-400/70 tracking-wide">
+              <span className="text-slate-400/60">© {new Date().getFullYear()}</span>
+              <span className="mx-1.5 text-slate-300">·</span>
+              <span className="text-slate-400/60">Meridian Consulting</span>
+              <span className="mx-1.5 text-slate-300">·</span>
+              <span className="text-slate-400/50">Development By</span>
+              <span className="ml-0.5 text-slate-400/60 font-normal">José Mateo López Cifuentes</span>
+            </p>
+          </footer>
+        </div>
       </div>
-    </div>
+    </LayoutContext.Provider>
   );
 }

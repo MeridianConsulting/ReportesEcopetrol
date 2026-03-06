@@ -394,6 +394,476 @@ class ReportService
   }
 
   /**
+   * Plantilla de distribución mensual para la pantalla "Mis reportes".
+   * Usa las actividades ODS asignadas al usuario y los reportes ya guardados del período.
+   */
+  public function getMyTaskDistribution(int $userId, string $reportDate): array
+  {
+    $reportDate = $this->normalizeAndValidateReportDate($reportDate);
+    $periodId = $this->getOrCreatePeriodFromReportDate($reportDate);
+    $periodStartDate = date('Y-m-01', strtotime($reportDate));
+
+    $activities = $this->getAssignedActivitiesForUser($userId);
+    if (empty($activities)) {
+      return [
+        'serviceOrderCode' => '',
+        'version' => '01',
+        'formCode' => 'GP-F-23',
+        'reportMonth' => date('Y-m', strtotime($reportDate)),
+        'observations' => '',
+        'professionalIssue' => ['hasIssue' => false, 'note' => ''],
+        'leaderIssue' => ['hasIssue' => false, 'note' => ''],
+        'tasks' => [],
+      ];
+    }
+
+    $activityIds = array_map(fn($activity) => (int)$activity['id'], $activities);
+    $serviceOrderIds = array_values(array_unique(array_map(fn($activity) => (int)$activity['service_order_id'], $activities)));
+
+    $currentLinesByActivity = $this->getCurrentDistributionLines($userId, $periodId, $activityIds);
+    $previousAccumulatedByActivity = $this->getPreviousAccumulatedDaysMap($userId, $activityIds, $periodStartDate);
+    $reportNotesByServiceOrder = $this->getCurrentReportNotesByServiceOrder($userId, $periodId, $serviceOrderIds);
+
+    $observations = '';
+    $professionalIssue = ['hasIssue' => false, 'note' => ''];
+    $leaderIssue = ['hasIssue' => false, 'note' => ''];
+
+    foreach ($reportNotesByServiceOrder as $notePayload) {
+      if (!$observations && !empty($notePayload['observations'])) {
+        $observations = (string)$notePayload['observations'];
+      }
+      if (empty($professionalIssue['note']) && (!empty($notePayload['professionalIssue']['note']) || !empty($notePayload['professionalIssue']['hasIssue']))) {
+        $professionalIssue = [
+          'hasIssue' => (bool)($notePayload['professionalIssue']['hasIssue'] ?? false),
+          'note' => (string)($notePayload['professionalIssue']['note'] ?? ''),
+        ];
+      }
+      if (empty($leaderIssue['note']) && (!empty($notePayload['leaderIssue']['note']) || !empty($notePayload['leaderIssue']['hasIssue']))) {
+        $leaderIssue = [
+          'hasIssue' => (bool)($notePayload['leaderIssue']['hasIssue'] ?? false),
+          'note' => (string)($notePayload['leaderIssue']['note'] ?? ''),
+        ];
+      }
+    }
+
+    $serviceOrderCodes = array_values(array_unique(array_map(fn($activity) => (string)$activity['ods_code'], $activities)));
+
+    $tasks = array_map(function ($activity) use ($currentLinesByActivity, $previousAccumulatedByActivity) {
+      $activityId = (int)$activity['id'];
+      $current = $currentLinesByActivity[$activityId] ?? null;
+      $previousAccumulatedDays = (float)($previousAccumulatedByActivity[$activityId] ?? 0);
+
+      return [
+        'id' => $activityId,
+        'serviceOrderId' => (int)$activity['service_order_id'],
+        'serviceOrderCode' => $activity['ods_code'],
+        'generalItem' => $activity['item_general'] ?? '',
+        'activityItem' => $activity['item_activity'] ?? '',
+        'description' => $activity['description'] ?? '',
+        'support' => $activity['support_text'] ?? '',
+        'deliveryMethod' => $activity['delivery_medium_name'] ?? 'Digital',
+        'contractedDays' => (float)($activity['contracted_days'] ?? 0),
+        'previousAccumulatedDays' => $previousAccumulatedDays,
+        'reportDays' => $current ? (float)$current['days_month'] : 0,
+      ];
+    }, $activities);
+
+    return [
+      'serviceOrderCode' => count($serviceOrderCodes) === 1 ? $serviceOrderCodes[0] : implode(', ', $serviceOrderCodes),
+      'version' => '01',
+      'formCode' => 'GP-F-23',
+      'reportMonth' => date('Y-m', strtotime($reportDate)),
+      'observations' => $observations,
+      'professionalIssue' => $professionalIssue,
+      'leaderIssue' => $leaderIssue,
+      'tasks' => $tasks,
+    ];
+  }
+
+  /**
+   * Guardar la distribución mensual de actividades asignadas al usuario.
+   */
+  public function saveMyTaskDistribution(int $userId, array $payload): array
+  {
+    $reportDate = $this->normalizeAndValidateReportDate($payload['reportDate'] ?? null);
+    $lines = $payload['lines'] ?? null;
+
+    if (!is_array($lines)) {
+      throw new \InvalidArgumentException('Las líneas del reporte son obligatorias.');
+    }
+
+    $activityIds = [];
+    $requestedDaysByActivity = [];
+
+    foreach ($lines as $line) {
+      $taskId = isset($line['taskId']) ? (int)$line['taskId'] : 0;
+      if ($taskId <= 0) {
+        throw new \InvalidArgumentException('Todas las actividades del reporte deben ser válidas.');
+      }
+
+      $reportDays = isset($line['reportDays']) ? (float)str_replace(',', '.', (string)$line['reportDays']) : 0;
+      if ($reportDays < 0) {
+        throw new \InvalidArgumentException('Los días reportados no pueden ser negativos.');
+      }
+
+      $activityIds[] = $taskId;
+      $requestedDaysByActivity[$taskId] = $reportDays;
+    }
+
+    if (empty($activityIds)) {
+      throw new \InvalidArgumentException('No hay actividades para guardar.');
+    }
+
+    $activityIds = array_values(array_unique($activityIds));
+    $activities = $this->getAssignedActivitiesForUser($userId, $activityIds);
+    if (count($activities) !== count($activityIds)) {
+      throw new \InvalidArgumentException('El reporte contiene actividades no asignadas al usuario.');
+    }
+
+    $this->ensureTaskRecords($activityIds);
+
+    $periodId = $this->getOrCreatePeriodFromReportDate($reportDate);
+    $periodStartDate = date('Y-m-01', strtotime($reportDate));
+    $previousAccumulatedByActivity = $this->getPreviousAccumulatedDaysMap($userId, $activityIds, $periodStartDate);
+    $currentLinesByActivity = $this->getCurrentDistributionLines($userId, $periodId, $activityIds);
+    $activitiesById = [];
+    $activitiesByServiceOrder = [];
+
+    foreach ($activities as $activity) {
+      $activityId = (int)$activity['id'];
+      $serviceOrderId = (int)$activity['service_order_id'];
+      $activitiesById[$activityId] = $activity;
+      if (!isset($activitiesByServiceOrder[$serviceOrderId])) {
+        $activitiesByServiceOrder[$serviceOrderId] = [];
+      }
+      $activitiesByServiceOrder[$serviceOrderId][] = $activityId;
+    }
+
+    $notesPayload = [
+      'observations' => (string)($payload['observations'] ?? ''),
+      'professionalIssue' => [
+        'hasIssue' => (bool)($payload['professionalIssue']['hasIssue'] ?? false),
+        'note' => (string)($payload['professionalIssue']['note'] ?? ''),
+      ],
+      'leaderIssue' => [
+        'hasIssue' => (bool)($payload['leaderIssue']['hasIssue'] ?? false),
+        'note' => (string)($payload['leaderIssue']['note'] ?? ''),
+      ],
+    ];
+
+    $this->db->beginTransaction();
+
+    try {
+      $reportIdsByServiceOrder = [];
+
+      foreach (array_keys($activitiesByServiceOrder) as $serviceOrderId) {
+        $reportId = $this->getOrCreateReport($userId, (int)$serviceOrderId, $periodId, $reportDate);
+        $reportIdsByServiceOrder[(int)$serviceOrderId] = $reportId;
+        $this->db->prepare("UPDATE reports SET notes = ? WHERE id = ?")->execute([
+          json_encode($notesPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+          $reportId,
+        ]);
+      }
+
+      foreach ($activityIds as $activityId) {
+        $activity = $activitiesById[$activityId];
+        $serviceOrderId = (int)$activity['service_order_id'];
+        $reportId = $reportIdsByServiceOrder[$serviceOrderId];
+        $reportDays = (float)($requestedDaysByActivity[$activityId] ?? 0);
+        $contractedDays = (float)($activity['contracted_days'] ?? 0);
+        $previousAccumulatedDays = (float)($previousAccumulatedByActivity[$activityId] ?? 0);
+        $accumulatedDays = $previousAccumulatedDays + $reportDays;
+        $progressPercent = $contractedDays > 0 ? min(($reportDays / $contractedDays) * 100, 100) : 0;
+        $accumulatedProgress = $contractedDays > 0 ? min(($accumulatedDays / $contractedDays) * 100, 100) : 0;
+
+        $currentLine = $currentLinesByActivity[$activityId] ?? null;
+        if (!$currentLine && $reportDays <= 0) {
+          continue;
+        }
+
+        if ($currentLine) {
+          $lineId = (int)$currentLine['report_line_id'];
+          $this->db->prepare("
+            UPDATE report_lines
+            SET item_general = ?,
+                item_activity = ?,
+                activity_description = ?,
+                support_text = ?,
+                delivery_medium_id = ?,
+                contracted_days = ?,
+                days_month = ?,
+                progress_percent = ?,
+                accumulated_days = ?,
+                accumulated_progress = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+          ")->execute([
+            $activity['item_general'] ?? null,
+            $activity['item_activity'] ?? null,
+            $activity['description'] ?? '',
+            $activity['support_text'] ?? null,
+            $activity['delivery_medium_id'] ?? null,
+            $contractedDays > 0 ? $contractedDays : null,
+            $reportDays,
+            $progressPercent,
+            $accumulatedDays,
+            $accumulatedProgress,
+            $lineId,
+          ]);
+          continue;
+        }
+
+        $this->db->prepare("
+          INSERT INTO report_lines (
+            report_id,
+            item_general,
+            item_activity,
+            activity_description,
+            support_text,
+            delivery_medium_id,
+            contracted_days,
+            days_month,
+            progress_percent,
+            accumulated_days,
+            accumulated_progress,
+            sort_order
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+        ")->execute([
+          $reportId,
+          $activity['item_general'] ?? null,
+          $activity['item_activity'] ?? null,
+          $activity['description'] ?? '',
+          $activity['support_text'] ?? null,
+          $activity['delivery_medium_id'] ?? null,
+          $contractedDays > 0 ? $contractedDays : null,
+          $reportDays,
+          $progressPercent,
+          $accumulatedDays,
+          $accumulatedProgress,
+        ]);
+
+        $lineId = (int)$this->db->lastInsertId();
+        $this->db->prepare("
+          INSERT INTO task_report_links (task_id, report_line_id, linked_by)
+          VALUES (?, ?, ?)
+        ")->execute([$activityId, $lineId, $userId]);
+      }
+
+      $this->db->commit();
+      return ['saved' => true];
+    } catch (\Throwable $e) {
+      $this->db->rollBack();
+      throw $e;
+    }
+  }
+
+  private function normalizeAndValidateReportDate(?string $reportDate): string
+  {
+    if (!$reportDate || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $reportDate)) {
+      throw new \InvalidArgumentException('La fecha de reporte debe estar en formato YYYY-MM-DD.');
+    }
+
+    return $reportDate;
+  }
+
+  private function getAssignedActivitiesForUser(int $userId, array $activityIds = []): array
+  {
+    $params = [':user_id' => $userId];
+    $idsCondition = '';
+
+    if (!empty($activityIds)) {
+      $placeholders = [];
+      foreach (array_values($activityIds) as $index => $activityId) {
+        $key = ":activity_id_{$index}";
+        $placeholders[] = $key;
+        $params[$key] = (int)$activityId;
+      }
+      $idsCondition = ' AND a.id IN (' . implode(',', $placeholders) . ')';
+    }
+
+    $sql = "
+      SELECT
+        a.id,
+        a.service_order_id,
+        so.ods_code,
+        a.item_general,
+        a.item_activity,
+        a.description,
+        a.support_text,
+        a.delivery_medium_id,
+        dm.name AS delivery_medium_name,
+        COALESCE(a.contracted_days, soe.contracted_days, 0) AS contracted_days
+      FROM ods_activity_assignments aa
+      INNER JOIN ods_activities a
+        ON a.id = aa.activity_id
+       AND a.deleted_at IS NULL
+      INNER JOIN service_orders so
+        ON so.id = a.service_order_id
+      LEFT JOIN delivery_media dm
+        ON dm.id = a.delivery_medium_id
+      LEFT JOIN service_order_employees soe
+        ON soe.service_order_id = a.service_order_id
+       AND soe.user_id = aa.user_id
+       AND soe.is_active = 1
+      WHERE aa.user_id = :user_id
+        AND aa.is_active = 1
+        {$idsCondition}
+      ORDER BY so.ods_code, COALESCE(a.item_general, ''), COALESCE(a.item_activity, ''), a.title
+    ";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($params);
+
+    return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+  }
+
+  private function getCurrentDistributionLines(int $userId, int $periodId, array $activityIds): array
+  {
+    if (empty($activityIds)) {
+      return [];
+    }
+
+    $placeholders = implode(',', array_fill(0, count($activityIds), '?'));
+    $sql = "
+      SELECT
+        trl.task_id AS activity_id,
+        rl.id AS report_line_id,
+        rl.days_month,
+        rl.accumulated_days
+      FROM task_report_links trl
+      INNER JOIN report_lines rl ON rl.id = trl.report_line_id
+      INNER JOIN reports r ON r.id = rl.report_id
+      WHERE trl.task_id IN ($placeholders)
+        AND r.reported_by = ?
+        AND r.period_id = ?
+        AND r.deleted_at IS NULL
+        AND r.is_active = 1
+    ";
+
+    $params = array_merge(array_map('intval', $activityIds), [$userId, $periodId]);
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($params);
+
+    $map = [];
+    while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+      $map[(int)$row['activity_id']] = $row;
+    }
+
+    return $map;
+  }
+
+  private function getPreviousAccumulatedDaysMap(int $userId, array $activityIds, string $periodStartDate): array
+  {
+    if (empty($activityIds)) {
+      return [];
+    }
+
+    $placeholders = implode(',', array_fill(0, count($activityIds), '?'));
+    $sql = "
+      SELECT
+        trl.task_id AS activity_id,
+        COALESCE(SUM(rl.days_month), 0) AS previous_days
+      FROM task_report_links trl
+      INNER JOIN report_lines rl ON rl.id = trl.report_line_id
+      INNER JOIN reports r ON r.id = rl.report_id
+      INNER JOIN report_periods rp ON rp.id = r.period_id
+      WHERE trl.task_id IN ($placeholders)
+        AND r.reported_by = ?
+        AND rp.start_date < ?
+        AND r.deleted_at IS NULL
+        AND r.is_active = 1
+      GROUP BY trl.task_id
+    ";
+
+    $params = array_merge(array_map('intval', $activityIds), [$userId, $periodStartDate]);
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($params);
+
+    $map = [];
+    while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+      $map[(int)$row['activity_id']] = (float)$row['previous_days'];
+    }
+
+    return $map;
+  }
+
+  private function getCurrentReportNotesByServiceOrder(int $userId, int $periodId, array $serviceOrderIds): array
+  {
+    if (empty($serviceOrderIds)) {
+      return [];
+    }
+
+    $placeholders = implode(',', array_fill(0, count($serviceOrderIds), '?'));
+    $sql = "
+      SELECT service_order_id, notes
+      FROM reports
+      WHERE reported_by = ?
+        AND period_id = ?
+        AND service_order_id IN ($placeholders)
+        AND deleted_at IS NULL
+        AND is_active = 1
+    ";
+
+    $params = array_merge([$userId, $periodId], array_map('intval', $serviceOrderIds));
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($params);
+
+    $result = [];
+    while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+      $result[(int)$row['service_order_id']] = $this->decodeDistributionNotes($row['notes'] ?? null);
+    }
+
+    return $result;
+  }
+
+  private function decodeDistributionNotes(?string $notes): array
+  {
+    if (!$notes) {
+      return [
+        'observations' => '',
+        'professionalIssue' => ['hasIssue' => false, 'note' => ''],
+        'leaderIssue' => ['hasIssue' => false, 'note' => ''],
+      ];
+    }
+
+    $decoded = json_decode($notes, true);
+    if (!is_array($decoded)) {
+      return [
+        'observations' => (string)$notes,
+        'professionalIssue' => ['hasIssue' => false, 'note' => ''],
+        'leaderIssue' => ['hasIssue' => false, 'note' => ''],
+      ];
+    }
+
+    return [
+      'observations' => (string)($decoded['observations'] ?? ''),
+      'professionalIssue' => [
+        'hasIssue' => (bool)($decoded['professionalIssue']['hasIssue'] ?? false),
+        'note' => (string)($decoded['professionalIssue']['note'] ?? ''),
+      ],
+      'leaderIssue' => [
+        'hasIssue' => (bool)($decoded['leaderIssue']['hasIssue'] ?? false),
+        'note' => (string)($decoded['leaderIssue']['note'] ?? ''),
+      ],
+    ];
+  }
+
+  private function ensureTaskRecords(array $taskIds): void
+  {
+    $taskIds = array_values(array_unique(array_map('intval', $taskIds)));
+    if (empty($taskIds)) {
+      return;
+    }
+
+    $chunks = array_chunk($taskIds, 200);
+    foreach ($chunks as $chunk) {
+      $values = implode(',', array_fill(0, count($chunk), '(?)'));
+      $stmt = $this->db->prepare("INSERT IGNORE INTO tasks (id) VALUES {$values}");
+      $stmt->execute($chunk);
+    }
+  }
+
+  /**
    * Obtener o crear reporte (reports) para service_order + period + user.
    * Devuelve report id.
    */
