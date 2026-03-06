@@ -4,6 +4,7 @@ use App\Controllers\AuthController;
 use App\Controllers\TaskController;
 use App\Controllers\UserController;
 use App\Controllers\AreaController;
+use App\Controllers\OdsActivityController;
 use App\Controllers\ReportController;
 use App\Controllers\TaskAssignmentController;
 use App\Middleware\CorsMiddleware;
@@ -55,6 +56,13 @@ return [
       ['POST', '/api/v1/users', [UserController::class, 'store'], [RoleMiddleware::class => ['admin']]],
       ['PUT', '/api/v1/users/{id}', [UserController::class, 'update'], [RoleMiddleware::class => ['admin']]],
       ['DELETE', '/api/v1/users/{id}', [UserController::class, 'destroy'], [RoleMiddleware::class => ['admin']]],
+
+      // Admin - ODS Activities
+      ['GET', '/api/v1/admin/ods-activities', [OdsActivityController::class, 'index'], [RoleMiddleware::class => ['admin']]],
+      ['POST', '/api/v1/admin/ods-activities', [OdsActivityController::class, 'store'], [RoleMiddleware::class => ['admin']]],
+      ['GET', '/api/v1/admin/ods-activities/{id}', [OdsActivityController::class, 'show'], [RoleMiddleware::class => ['admin']]],
+      ['PUT', '/api/v1/admin/ods-activities/{id}', [OdsActivityController::class, 'update'], [RoleMiddleware::class => ['admin']]],
+      ['DELETE', '/api/v1/admin/ods-activities/{id}', [OdsActivityController::class, 'destroy'], [RoleMiddleware::class => ['admin']]],
 
       // Roles (para formularios)
       ['GET', '/api/v1/roles', [UserController::class, 'roles']],

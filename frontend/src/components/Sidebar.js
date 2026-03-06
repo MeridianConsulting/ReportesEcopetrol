@@ -11,7 +11,8 @@ import {
   ChevronRight, 
   LogOut,
   Table2,
-  FileDown
+  FileDown,
+  ClipboardList
 } from 'lucide-react';
 
 export default function Sidebar({ user, isOpen, onToggle }) {
@@ -37,6 +38,11 @@ export default function Sidebar({ user, isOpen, onToggle }) {
   }
 
   if (user?.role === 'admin') {
+    menuItems.push({
+      href: '/admin/ods-activities/',
+      label: 'Actividades ODS',
+      icon: ClipboardList
+    });
     menuItems.push({ 
       href: '/admin/users/', 
       label: 'Usuarios', 

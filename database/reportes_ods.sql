@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 27-02-2026 a las 20:49:16
+-- Tiempo de generación: 06-03-2026 a las 16:18:40
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -249,6 +249,48 @@ CREATE TABLE `import_errors` (
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `ods_activities`
+--
+
+CREATE TABLE `ods_activities` (
+  `id` bigint(20) NOT NULL,
+  `service_order_id` bigint(20) NOT NULL,
+  `title` varchar(180) NOT NULL,
+  `item_general` varchar(20) DEFAULT NULL,
+  `item_activity` varchar(20) DEFAULT NULL,
+  `description` text NOT NULL,
+  `support_text` text DEFAULT NULL,
+  `delivery_medium_id` int(11) DEFAULT NULL,
+  `contracted_days` decimal(10,2) DEFAULT NULL,
+  `planned_start_date` date DEFAULT NULL,
+  `planned_end_date` date DEFAULT NULL,
+  `status` enum('Borrador','Activa','En pausa','Finalizada','Cancelada') NOT NULL DEFAULT 'Borrador',
+  `notes` text DEFAULT NULL,
+  `created_by` int(11) NOT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `deleted_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `ods_activity_assignments`
+--
+
+CREATE TABLE `ods_activity_assignments` (
+  `id` bigint(20) NOT NULL,
+  `activity_id` bigint(20) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `assigned_by` int(11) NOT NULL,
+  `assigned_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `is_active` tinyint(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `permissions`
 --
 
@@ -292,6 +334,14 @@ CREATE TABLE `reports` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `reports`
+--
+
+INSERT INTO `reports` (`id`, `service_order_id`, `period_id`, `reported_by`, `report_date`, `service_classification_id`, `status`, `month_contracted_days`, `notes`, `deleted_at`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 134, '2026-02-27', NULL, 'Borrador', NULL, NULL, NULL, 1, '2026-02-27 17:27:17', '2026-02-27 17:27:17'),
+(2, 1, 2, 134, '2026-03-04', NULL, 'Borrador', NULL, NULL, NULL, 1, '2026-03-04 21:43:35', '2026-03-04 21:43:35');
 
 -- --------------------------------------------------------
 
@@ -399,6 +449,16 @@ CREATE TABLE `report_lines` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `report_lines`
+--
+
+INSERT INTO `report_lines` (`id`, `report_id`, `item_catalog_id`, `item_general`, `item_activity`, `activity_description`, `support_text`, `support_type_id`, `delivery_medium_id`, `contracted_days`, `days_month`, `progress_percent`, `accumulated_days`, `accumulated_progress`, `observations`, `sort_order`, `created_at`, `updated_at`) VALUES
+(1, 1, NULL, 'test', 'test', '', '', NULL, NULL, NULL, 1.00, 99.9999, 0.00, 0.0000, '', 0, '2026-02-27 17:27:17', '2026-02-27 17:27:17'),
+(2, 2, NULL, 'test', 'test', '', '', NULL, NULL, NULL, 1.00, 99.9999, 0.00, 0.0000, '', 0, '2026-03-04 21:43:35', '2026-03-04 21:43:35'),
+(3, 2, NULL, 'test', 'test', '', '', NULL, NULL, NULL, 10.00, 99.9999, 0.00, 0.0000, '', 0, '2026-03-06 14:16:34', '2026-03-06 14:16:34'),
+(4, 2, NULL, 'test', 'est', '', '', NULL, NULL, NULL, 10.00, 99.9999, 0.00, 0.0000, '', 0, '2026-03-06 14:18:05', '2026-03-06 14:18:05');
+
 -- --------------------------------------------------------
 
 --
@@ -413,6 +473,14 @@ CREATE TABLE `report_periods` (
   `start_date` date NOT NULL,
   `end_date` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `report_periods`
+--
+
+INSERT INTO `report_periods` (`id`, `year`, `month`, `label`, `start_date`, `end_date`) VALUES
+(1, 2026, 2, '2026-02', '2026-02-01', '2026-02-28'),
+(2, 2026, 3, '2026-03', '2026-03-01', '2026-03-31');
 
 -- --------------------------------------------------------
 
@@ -690,7 +758,7 @@ INSERT INTO `service_order_employees` (`id`, `service_order_id`, `user_id`, `lev
 (131, 26, 131, NULL, NULL, NULL, NULL, 1, '2026-02-23 20:35:49'),
 (132, 26, 132, NULL, NULL, NULL, NULL, 1, '2026-02-23 20:35:49'),
 (133, 20, 133, NULL, NULL, NULL, NULL, 1, '2026-02-23 20:35:49'),
-(134, 1, 134, NULL, NULL, NULL, NULL, 1, '2026-02-27 19:47:21');
+(135, 1, 134, NULL, NULL, NULL, NULL, 1, '2026-02-27 17:12:01');
 
 -- --------------------------------------------------------
 
@@ -1030,7 +1098,7 @@ INSERT INTO `user_roles` (`user_id`, `role_id`, `created_at`) VALUES
 (131, 1, '2026-02-23 20:35:50'),
 (132, 1, '2026-02-23 20:35:50'),
 (133, 1, '2026-02-23 20:35:50'),
-(134, 5, '2026-02-27 19:47:21');
+(134, 5, '2026-02-27 14:25:29');
 
 --
 -- Índices para tablas volcadas
@@ -1077,6 +1145,28 @@ ALTER TABLE `import_batches`
 ALTER TABLE `import_errors`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_import_errors_batch` (`batch_id`);
+
+--
+-- Indices de la tabla `ods_activities`
+--
+ALTER TABLE `ods_activities`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ods_activities_service_order` (`service_order_id`),
+  ADD KEY `idx_ods_activities_status` (`status`),
+  ADD KEY `idx_ods_activities_delivery_medium` (`delivery_medium_id`),
+  ADD KEY `idx_ods_activities_created_by` (`created_by`),
+  ADD KEY `idx_ods_activities_deleted` (`deleted_at`),
+  ADD KEY `fk_ods_activities_updated_by` (`updated_by`);
+
+--
+-- Indices de la tabla `ods_activity_assignments`
+--
+ALTER TABLE `ods_activity_assignments`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_ods_activity_assignment_active` (`activity_id`,`user_id`,`is_active`),
+  ADD KEY `idx_ods_activity_assignments_user` (`user_id`),
+  ADD KEY `idx_ods_activity_assignments_active` (`is_active`),
+  ADD KEY `fk_ods_activity_assignments_assigned_by` (`assigned_by`);
 
 --
 -- Indices de la tabla `permissions`
@@ -1275,6 +1365,18 @@ ALTER TABLE `import_errors`
   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT de la tabla `ods_activities`
+--
+ALTER TABLE `ods_activities`
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `ods_activity_assignments`
+--
+ALTER TABLE `ods_activity_assignments`
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `permissions`
 --
 ALTER TABLE `permissions`
@@ -1284,7 +1386,7 @@ ALTER TABLE `permissions`
 -- AUTO_INCREMENT de la tabla `reports`
 --
 ALTER TABLE `reports`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `report_approvals`
@@ -1320,13 +1422,13 @@ ALTER TABLE `report_item_catalog`
 -- AUTO_INCREMENT de la tabla `report_lines`
 --
 ALTER TABLE `report_lines`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `report_periods`
 --
 ALTER TABLE `report_periods`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`
@@ -1350,7 +1452,7 @@ ALTER TABLE `service_orders`
 -- AUTO_INCREMENT de la tabla `service_order_employees`
 --
 ALTER TABLE `service_order_employees`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=135;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=136;
 
 --
 -- AUTO_INCREMENT de la tabla `support_types`
@@ -1374,7 +1476,7 @@ ALTER TABLE `task_report_links`
 -- AUTO_INCREMENT de la tabla `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=136;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=135;
 
 --
 -- Restricciones para tablas volcadas
@@ -1397,6 +1499,23 @@ ALTER TABLE `import_batches`
 --
 ALTER TABLE `import_errors`
   ADD CONSTRAINT `fk_import_errors_batch` FOREIGN KEY (`batch_id`) REFERENCES `import_batches` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `ods_activities`
+--
+ALTER TABLE `ods_activities`
+  ADD CONSTRAINT `fk_ods_activities_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `fk_ods_activities_delivery_medium` FOREIGN KEY (`delivery_medium_id`) REFERENCES `delivery_media` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_ods_activities_service_order` FOREIGN KEY (`service_order_id`) REFERENCES `service_orders` (`id`),
+  ADD CONSTRAINT `fk_ods_activities_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Filtros para la tabla `ods_activity_assignments`
+--
+ALTER TABLE `ods_activity_assignments`
+  ADD CONSTRAINT `fk_ods_activity_assignments_activity` FOREIGN KEY (`activity_id`) REFERENCES `ods_activities` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_ods_activity_assignments_assigned_by` FOREIGN KEY (`assigned_by`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `fk_ods_activity_assignments_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 
 --
 -- Filtros para la tabla `reports`

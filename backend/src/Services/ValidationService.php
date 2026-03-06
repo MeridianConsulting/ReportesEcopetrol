@@ -333,5 +333,115 @@ class ValidationService
 
     return $errors;
   }
+
+  /**
+   * Validar datos de actividad ODS para CRUD administrativo.
+   */
+  public static function validateOdsActivityData(array $data, bool $isUpdate = false): array
+  {
+    $errors = [];
+    $allowedStatuses = ['Borrador', 'Activa', 'En pausa', 'Finalizada', 'Cancelada'];
+
+    if (!$isUpdate || array_key_exists('service_order_id', $data)) {
+      if (!isset($data['service_order_id']) || !self::validatePositiveInteger($data['service_order_id'])) {
+        $errors['service_order_id'] = 'La ODS es obligatoria y debe ser válida';
+      }
+    }
+
+    if (!$isUpdate || array_key_exists('title', $data)) {
+      if (!isset($data['title']) || !self::validateRequired($data['title'])) {
+        $errors['title'] = 'El título es obligatorio';
+      } elseif (!self::validateLength(trim((string)$data['title']), 3, 180)) {
+        $errors['title'] = 'El título debe tener entre 3 y 180 caracteres';
+      }
+    }
+
+    if (!$isUpdate || array_key_exists('description', $data)) {
+      if (!isset($data['description']) || !self::validateRequired($data['description'])) {
+        $errors['description'] = 'La descripción es obligatoria';
+      } elseif (!self::validateLength(trim((string)$data['description']), 10, 5000)) {
+        $errors['description'] = 'La descripción debe tener entre 10 y 5000 caracteres';
+      }
+    }
+
+    if (!$isUpdate || array_key_exists('status', $data)) {
+      if (!isset($data['status']) || !self::validateIn($data['status'], $allowedStatuses)) {
+        $errors['status'] = 'El estado debe ser uno de: ' . implode(', ', $allowedStatuses);
+      }
+    }
+
+    if (isset($data['item_general']) && $data['item_general'] !== null && $data['item_general'] !== '') {
+      if (!self::validateLength(trim((string)$data['item_general']), 1, 20)) {
+        $errors['item_general'] = 'El ítem general no puede exceder 20 caracteres';
+      }
+    }
+
+    if (isset($data['item_activity']) && $data['item_activity'] !== null && $data['item_activity'] !== '') {
+      if (!self::validateLength(trim((string)$data['item_activity']), 1, 20)) {
+        $errors['item_activity'] = 'El ítem de actividad no puede exceder 20 caracteres';
+      }
+    }
+
+    if (isset($data['support_text']) && $data['support_text'] !== null && $data['support_text'] !== '') {
+      if (!self::validateLength(trim((string)$data['support_text']), 1, 5000)) {
+        $errors['support_text'] = 'El soporte no puede exceder 5000 caracteres';
+      }
+    }
+
+    if (isset($data['notes']) && $data['notes'] !== null && $data['notes'] !== '') {
+      if (!self::validateLength(trim((string)$data['notes']), 1, 5000)) {
+        $errors['notes'] = 'Las notas no pueden exceder 5000 caracteres';
+      }
+    }
+
+    if (isset($data['delivery_medium_id']) && $data['delivery_medium_id'] !== null && $data['delivery_medium_id'] !== '') {
+      if (!self::validatePositiveInteger($data['delivery_medium_id'])) {
+        $errors['delivery_medium_id'] = 'El medio de entrega debe ser válido';
+      }
+    }
+
+    if (isset($data['contracted_days']) && $data['contracted_days'] !== null && $data['contracted_days'] !== '') {
+      if (!self::validateRange($data['contracted_days'], 0, 999999.99)) {
+        $errors['contracted_days'] = 'Los días contratados deben estar entre 0 y 999999.99';
+      }
+    }
+
+    if (isset($data['planned_start_date']) && $data['planned_start_date'] !== null && $data['planned_start_date'] !== '') {
+      if (!self::validateDate($data['planned_start_date'])) {
+        $errors['planned_start_date'] = 'La fecha inicial debe estar en formato YYYY-MM-DD';
+      }
+    }
+
+    if (isset($data['planned_end_date']) && $data['planned_end_date'] !== null && $data['planned_end_date'] !== '') {
+      if (!self::validateDate($data['planned_end_date'])) {
+        $errors['planned_end_date'] = 'La fecha final debe estar en formato YYYY-MM-DD';
+      }
+    }
+
+    if (
+      !isset($errors['planned_start_date']) &&
+      !isset($errors['planned_end_date']) &&
+      !empty($data['planned_start_date']) &&
+      !empty($data['planned_end_date']) &&
+      !self::validateDateAfter($data['planned_end_date'], $data['planned_start_date'])
+    ) {
+      $errors['planned_end_date'] = 'La fecha final debe ser igual o posterior a la fecha inicial';
+    }
+
+    if (!$isUpdate || array_key_exists('assigned_user_ids', $data)) {
+      if (!isset($data['assigned_user_ids']) || !is_array($data['assigned_user_ids']) || empty($data['assigned_user_ids'])) {
+        $errors['assigned_user_ids'] = 'Debes asignar al menos un profesional';
+      } else {
+        foreach ($data['assigned_user_ids'] as $userId) {
+          if (!self::validatePositiveInteger($userId)) {
+            $errors['assigned_user_ids'] = 'Todos los profesionales asignados deben ser válidos';
+            break;
+          }
+        }
+      }
+    }
+
+    return $errors;
+  }
 }
 
