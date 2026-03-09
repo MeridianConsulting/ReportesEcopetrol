@@ -734,11 +734,6 @@ export default function ReportDistributionBoard({
             setState={setProfessionalIssue}
           />
 
-          <IssueBlock
-            title="Novedades reportadas por interventor o líder"
-            state={leaderIssue}
-            setState={setLeaderIssue}
-          />
         </div>
       </section>
     </div>
