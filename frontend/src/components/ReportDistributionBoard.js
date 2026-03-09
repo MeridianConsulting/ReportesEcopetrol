@@ -41,6 +41,117 @@ function getStatusBadge(status) {
   }
 }
 
+function RowCell({ children, className = '' }) {
+  return (
+    <div className={`flex h-[104px] w-full items-center ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+function TextPill({ children, muted = false }) {
+  return (
+    <div
+      className={`flex h-14 w-full items-center overflow-hidden rounded-2xl border px-4 text-xs font-semibold ${
+        muted
+          ? 'border-slate-200 bg-slate-100 text-slate-700'
+          : 'border-slate-200 bg-white text-slate-700 shadow-sm'
+      }`}
+    >
+      <span className="truncate">{children}</span>
+    </div>
+  );
+}
+
+function TextCard({ children }) {
+  return (
+    <div className="flex h-[72px] w-full items-center overflow-hidden rounded-2xl border border-slate-200 bg-white px-4 shadow-sm">
+      <p className="line-clamp-2 leading-5 text-slate-800">{children}</p>
+    </div>
+  );
+}
+
+function InputField({ value, onChange, placeholder, list }) {
+  return (
+    <input
+      type="text"
+      list={list}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className="h-14 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+    />
+  );
+}
+
+function MetricBox({ value, muted = false }) {
+  return (
+    <div
+      className={`flex h-14 w-[112px] items-center justify-center rounded-2xl border px-4 text-center text-lg font-semibold tabular-nums shadow-sm ${
+        muted
+          ? 'border-slate-200 bg-slate-50 text-slate-700'
+          : 'border-slate-200 bg-white text-slate-900'
+      }`}
+    >
+      {value}
+    </div>
+  );
+}
+
+function DaysMonthBox({ value, max, onChange }) {
+  return (
+    <div className="flex h-14 w-[124px] items-center justify-center">
+      <input
+        type="number"
+        min="0"
+        max={max}
+        step="1"
+        value={value}
+        onChange={onChange}
+        className="h-14 w-full rounded-2xl border border-slate-300 bg-slate-50 px-3 text-center text-lg font-semibold tabular-nums text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+      />
+    </div>
+  );
+}
+
+function ProgressBox({ progress, status }) {
+  return (
+    <div className="flex h-[76px] w-[132px] flex-col items-center justify-center gap-2">
+      <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
+        <div
+          className={`h-full rounded-full transition-all ${
+            status === 'alert'
+              ? 'bg-amber-500'
+              : status === 'ready'
+              ? 'bg-emerald-500'
+              : 'bg-slate-400'
+          }`}
+          style={{ width: `${Math.min(progress, 100)}%` }}
+        />
+      </div>
+      <span className="text-base font-semibold tabular-nums text-slate-900">
+        {progress.toFixed(1)}%
+      </span>
+    </div>
+  );
+}
+
+function StatusBadge({ status }) {
+  return (
+    <span
+      className={`flex h-12 w-[132px] items-center justify-center rounded-full px-4 text-xs font-semibold ${getStatusBadge(
+        status
+      )}`}
+    >
+      {status === 'ready'
+        ? 'Distribuido'
+        : status === 'alert'
+        ? 'Alerta'
+        : 'Pendiente'}
+    </span>
+  );
+}
+
 export default function ReportDistributionBoard({
   userId,
   reporterName,
@@ -366,206 +477,217 @@ export default function ReportDistributionBoard({
         </div>
 
         <div className="overflow-x-auto bg-white">
-          <table className="min-w-[1360px] w-full table-fixed text-sm">
-            <thead className="bg-slate-100 text-slate-700">
-              <tr>
-                <th className="w-[140px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                  Ítem general
-                </th>
-                <th className="w-[140px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                  Ítem actividad
-                </th>
-                <th className="w-[310px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                  Descripción
-                </th>
-                <th className="w-[250px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                  Soporte
-                </th>
-                <th className="w-[150px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                  Medio entrega
-                </th>
-                <th className="w-[120px] px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
-                  Días contratados
-                </th>
-                <th className="w-[130px] px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
-                  Acumulado previo
-                </th>
-                <th className="w-[140px] px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
-                  Días del mes
-                </th>
-                <th className="w-[120px] px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
-                  Acumulado
-                </th>
-                <th className="w-[150px] px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
-                  % avance
-                </th>
-                <th className="w-[120px] px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
-                  Estado
-                </th>
-              </tr>
-            </thead>
+          <div className="min-w-[1880px]">
+            <table className="w-full table-fixed border-separate border-spacing-0 text-sm">
+              <colgroup>
+                <col className="w-[140px]" />
+                <col className="w-[140px]" />
+                <col className="w-[310px]" />
+                <col className="w-[260px]" />
+                <col className="w-[180px]" />
+                <col className="w-[130px]" />
+                <col className="w-[140px]" />
+                <col className="w-[150px]" />
+                <col className="w-[130px]" />
+                <col className="w-[150px]" />
+                <col className="w-[150px]" />
+              </colgroup>
 
-            <tbody className="bg-white">
-              {filteredRows.length === 0 ? (
+              <thead className="bg-slate-100 text-slate-700">
                 <tr>
-                  <td
-                    colSpan={11}
-                    className="px-4 py-10 text-center text-sm text-slate-500"
-                  >
-                    No hay actividades para mostrar con los filtros actuales.
-                  </td>
+                  <th className="h-[72px] px-4 py-0 text-left align-middle text-xs font-semibold uppercase tracking-wide text-slate-600">
+                    Ítem general
+                  </th>
+                  <th className="h-[72px] px-4 py-0 text-left align-middle text-xs font-semibold uppercase tracking-wide text-slate-600">
+                    Ítem actividad
+                  </th>
+                  <th className="h-[72px] px-4 py-0 text-left align-middle text-xs font-semibold uppercase tracking-wide text-slate-600">
+                    Descripción
+                  </th>
+                  <th className="h-[72px] px-4 py-0 text-left align-middle text-xs font-semibold uppercase tracking-wide text-slate-600">
+                    Soporte
+                  </th>
+                  <th className="h-[72px] px-4 py-0 text-left align-middle text-xs font-semibold uppercase tracking-wide text-slate-600">
+                    Medio entrega
+                  </th>
+                  <th className="h-[72px] px-4 py-0 text-center align-middle text-xs font-semibold uppercase tracking-wide text-slate-600">
+                    Días contratados
+                  </th>
+                  <th className="h-[72px] px-4 py-0 text-center align-middle text-xs font-semibold uppercase tracking-wide text-slate-600">
+                    Acumulado previo
+                  </th>
+                  <th className="h-[72px] px-4 py-0 text-center align-middle text-xs font-semibold uppercase tracking-wide text-slate-600">
+                    Días del mes
+                  </th>
+                  <th className="h-[72px] px-4 py-0 text-center align-middle text-xs font-semibold uppercase tracking-wide text-slate-600">
+                    Acumulado
+                  </th>
+                  <th className="h-[72px] px-4 py-0 text-center align-middle text-xs font-semibold uppercase tracking-wide text-slate-600">
+                    % avance
+                  </th>
+                  <th className="h-[72px] px-4 py-0 text-center align-middle text-xs font-semibold uppercase tracking-wide text-slate-600">
+                    Estado
+                  </th>
                 </tr>
-              ) : (
-                filteredRows.map((row) => {
-                  const progress =
-                    row.contractedDays > 0
-                      ? (row.accumulatedDays / row.contractedDays) * 100
-                      : 0;
+              </thead>
 
-                  const remainingDays = Math.max(
-                    row.contractedDays - row.previousAccumulatedDays,
-                    0
-                  );
-
-                  return (
-                    <tr
-                      key={row.taskId}
-                      className="border-t border-slate-200 align-top odd:bg-white even:bg-slate-50/40 hover:bg-emerald-50/40"
+              <tbody className="bg-white">
+                {filteredRows.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={11}
+                      className="px-4 py-12 text-center text-sm text-slate-500"
                     >
-                      <td className="px-4 py-4 align-top">
-                        <div className="inline-flex rounded-xl border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700">
-                          {row.generalItem || '—'}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 align-top">
-                        <div className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm">
-                          {row.activityItem || '—'}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 align-top text-slate-900">
-                        <div className="max-w-[310px] whitespace-normal break-words leading-6">
-                          {row.description || '—'}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 align-top text-slate-700">
-                        <div className="mx-auto max-w-[250px]">
-                          <input
-                            type="text"
-                            value={row.support}
-                            onChange={(e) =>
-                              handleSupportChange(row.taskId, e.target.value)
-                            }
-                            placeholder="Registrar soporte"
-                            className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
-                          />
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 align-top">
-                        <input
-                          type="text"
-                          list="delivery-media-list"
-                          value={row.deliveryMethod ?? 'Digital'}
-                          onChange={(e) =>
-                            handleDeliveryMethodChange(row.taskId, e.target.value)
-                          }
-                          placeholder="Digital (por defecto) o escribir otro"
-                          className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
-                        />
-                        <datalist id="delivery-media-list">
-                          {!deliveryMediaOptions.some((o) => String(o.name).trim().toLowerCase() === 'digital') && (
-                            <option value="Digital" />
-                          )}
-                          {deliveryMediaOptions.map((option) => (
-                            <option key={option.id} value={option.name} />
-                          ))}
-                        </datalist>
-                      </td>
-                      <td className="px-4 py-4 text-center font-semibold tabular-nums text-slate-900">
-                        {row.contractedDays}
-                      </td>
-                      <td className="px-4 py-4 text-center font-medium tabular-nums text-slate-700">
-                        {row.previousAccumulatedDays}
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="mx-auto max-w-[124px]">
-                          <input
-                            type="number"
-                            min="0"
-                            max={remainingDays}
-                            step="1"
-                            value={row.reportDays}
-                            onChange={(e) =>
-                              handleReportDaysChange(row.taskId, e.target.value)
-                            }
-                            className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-center font-semibold tabular-nums text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
-                          />
-                          <div className="mt-1 text-[11px] font-medium text-slate-500">
-                            Máx. {remainingDays}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 text-center font-semibold tabular-nums text-slate-900">
-                        {row.accumulatedDays}
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="mx-auto max-w-[110px]">
-                          <div className="h-2 overflow-hidden rounded-full bg-slate-200">
-                            <div
-                              className={`h-full rounded-full ${
-                                row.status === 'alert'
-                                  ? 'bg-amber-500'
-                                  : row.status === 'ready'
-                                  ? 'bg-emerald-500'
-                                  : 'bg-slate-400'
-                              }`}
-                              style={{ width: `${Math.min(progress, 100)}%` }}
-                            />
-                          </div>
-                          <div className="mt-2 font-semibold tabular-nums text-slate-900">
-                            {progress.toFixed(1)}%
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getStatusBadge(
-                            row.status
-                          )}`}
-                        >
-                          {row.status === 'ready'
-                            ? 'Distribuido'
-                            : row.status === 'alert'
-                            ? 'Alerta'
-                            : 'Pendiente'}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
+                      No hay actividades para mostrar con los filtros actuales.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredRows.map((row) => {
+                    const progress =
+                      row.contractedDays > 0
+                        ? (row.accumulatedDays / row.contractedDays) * 100
+                        : 0;
 
-            <tfoot className="bg-slate-100 font-semibold text-slate-900">
-              <tr className="border-t border-slate-200">
-                <td colSpan={5} className="px-4 py-4 text-right text-sm uppercase tracking-wide text-slate-600">
-                  Totales
-                </td>
-                <td className="px-4 py-4 text-center tabular-nums">{summary.contractedDays}</td>
-                <td className="px-4 py-4 text-center tabular-nums">
-                  {rows.reduce(
-                    (acc, row) => acc + Number(row.previousAccumulatedDays || 0),
-                    0
-                  )}
-                </td>
-                <td className="px-4 py-4 text-center tabular-nums">{summary.distributedDays}</td>
-                <td className="px-4 py-4 text-center tabular-nums">{summary.accumulatedDays}</td>
-                <td className="px-4 py-4 text-center tabular-nums">
-                  {summary.progress.toFixed(1)}%
-                </td>
-                <td className="px-4 py-4 text-center">—</td>
-              </tr>
-            </tfoot>
-          </table>
+                    const remainingDays = Math.max(
+                      row.contractedDays - row.previousAccumulatedDays,
+                      0
+                    );
+
+                    return (
+                      <tr
+                        key={row.taskId}
+                        className="border-t border-slate-200 odd:bg-white even:bg-slate-50/40 hover:bg-emerald-50/40"
+                      >
+                        <td className="px-3 py-0 align-middle">
+                          <RowCell className="justify-start">
+                            <TextPill muted>{row.generalItem || '—'}</TextPill>
+                          </RowCell>
+                        </td>
+
+                        <td className="px-3 py-0 align-middle">
+                          <RowCell className="justify-start">
+                            <TextPill>{row.activityItem || '—'}</TextPill>
+                          </RowCell>
+                        </td>
+
+                        <td className="px-3 py-0 align-middle">
+                          <RowCell className="justify-start">
+                            <TextCard>{row.description || '—'}</TextCard>
+                          </RowCell>
+                        </td>
+
+                        <td className="px-3 py-0 align-middle">
+                          <RowCell className="justify-center">
+                            <InputField
+                              value={row.support}
+                              onChange={(e) =>
+                                handleSupportChange(row.taskId, e.target.value)
+                              }
+                              placeholder="Registrar soporte"
+                            />
+                          </RowCell>
+                        </td>
+
+                        <td className="px-3 py-0 align-middle">
+                          <RowCell className="justify-center">
+                            <InputField
+                              list="delivery-media-list"
+                              value={row.deliveryMethod ?? 'Digital'}
+                              onChange={(e) =>
+                                handleDeliveryMethodChange(row.taskId, e.target.value)
+                              }
+                              placeholder="Digital o escribir otro"
+                            />
+                          </RowCell>
+                        </td>
+
+                        <td className="px-3 py-0 align-middle">
+                          <RowCell className="justify-center">
+                            <MetricBox value={row.contractedDays} />
+                          </RowCell>
+                        </td>
+
+                        <td className="px-3 py-0 align-middle">
+                          <RowCell className="justify-center">
+                            <MetricBox value={row.previousAccumulatedDays} muted />
+                          </RowCell>
+                        </td>
+
+                        <td className="px-3 py-0 align-middle">
+                          <RowCell className="justify-center">
+                            <DaysMonthBox
+                              value={row.reportDays}
+                              max={remainingDays}
+                              onChange={(e) =>
+                                handleReportDaysChange(row.taskId, e.target.value)
+                              }
+                            />
+                          </RowCell>
+                        </td>
+
+                        <td className="px-3 py-0 align-middle">
+                          <RowCell className="justify-center">
+                            <MetricBox value={row.accumulatedDays} />
+                          </RowCell>
+                        </td>
+
+                        <td className="px-3 py-0 align-middle">
+                          <RowCell className="justify-center">
+                            <ProgressBox progress={progress} status={row.status} />
+                          </RowCell>
+                        </td>
+
+                        <td className="px-3 py-0 align-middle">
+                          <RowCell className="justify-center">
+                            <StatusBadge status={row.status} />
+                          </RowCell>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+
+              <tfoot className="bg-slate-100 font-semibold text-slate-900">
+                <tr className="border-t border-slate-200">
+                  <td
+                    colSpan={5}
+                    className="px-4 py-4 text-right text-sm uppercase tracking-wide text-slate-600"
+                  >
+                    Totales
+                  </td>
+                  <td className="px-4 py-4 text-center tabular-nums">
+                    {summary.contractedDays}
+                  </td>
+                  <td className="px-4 py-4 text-center tabular-nums">
+                    {rows.reduce(
+                      (acc, row) => acc + Number(row.previousAccumulatedDays || 0),
+                      0
+                    )}
+                  </td>
+                  <td className="px-4 py-4 text-center tabular-nums">
+                    {summary.distributedDays}
+                  </td>
+                  <td className="px-4 py-4 text-center tabular-nums">
+                    {summary.accumulatedDays}
+                  </td>
+                  <td className="px-4 py-4 text-center tabular-nums">
+                    {summary.progress.toFixed(1)}%
+                  </td>
+                  <td className="px-4 py-4 text-center">—</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <datalist id="delivery-media-list">
+            {!deliveryMediaOptions.some(
+              (o) => String(o.name).trim().toLowerCase() === 'digital'
+            ) && <option value="Digital" />}
+            {deliveryMediaOptions.map((option) => (
+              <option key={option.id} value={option.name} />
+            ))}
+          </datalist>
         </div>
       </section>
 
