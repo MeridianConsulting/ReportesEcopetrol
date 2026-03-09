@@ -41,7 +41,7 @@ if ($isLocalhost) {
     define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
     define('DB_NAME', $_ENV['DB_NAME'] ?? 'reportes_ods');
     define('DB_USER', $_ENV['DB_USER'] ?? 'reportes_ods');
-    define('DB_PASS', $_ENV['DB_PASS'] ?? '#b[.T^Ik%Rk(');
+    define('DB_PASS', $_ENV['DB_PASS'] ?? 'aDm2$hw(hf[$');
 }
 
 // Configuración JWT
