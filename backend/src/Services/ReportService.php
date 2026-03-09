@@ -458,9 +458,17 @@ class ReportService
       $deliveryMediumId = $current && isset($current['delivery_medium_id']) && $current['delivery_medium_id'] !== null
         ? (int)$current['delivery_medium_id']
         : $activityDeliveryMediumId;
-      $deliveryMethod = $current && !empty($current['delivery_medium_name'])
-        ? (string)$current['delivery_medium_name']
-        : ($activity['delivery_medium_name'] ?? 'Digital');
+      $deliveryMethod = 'Digital';
+      if ($current) {
+        $customText = isset($current['delivery_medium_custom_text']) ? trim((string)$current['delivery_medium_custom_text']) : '';
+        if ($customText !== '') {
+          $deliveryMethod = $customText;
+        } elseif (!empty($current['delivery_medium_name'])) {
+          $deliveryMethod = (string)$current['delivery_medium_name'];
+        }
+      } else {
+        $deliveryMethod = $activity['delivery_medium_name'] ?? 'Digital';
+      }
       $support = $current && array_key_exists('support_text', $current)
         ? (string)($current['support_text'] ?? '')
         : (string)($activity['support_text'] ?? '');
@@ -509,6 +517,7 @@ class ReportService
     $requestedDaysByActivity = [];
     $requestedSupportByActivity = [];
     $requestedDeliveryMediumByActivity = [];
+    $requestedDeliveryCustomByActivity = [];
 
     foreach ($lines as $line) {
       $taskId = isset($line['taskId']) ? (int)$line['taskId'] : 0;
@@ -526,7 +535,14 @@ class ReportService
         : null;
 
       $deliveryMediumId = null;
-      if (array_key_exists('deliveryMediumId', $line) && $line['deliveryMediumId'] !== null && $line['deliveryMediumId'] !== '') {
+      $deliveryCustom = null;
+      $customRaw = isset($line['deliveryMethodCustom']) ? trim((string)$line['deliveryMethodCustom']) : '';
+      if ($customRaw !== '') {
+        $deliveryCustom = $this->normalizeNullableText($customRaw);
+        if ($deliveryCustom !== null && strlen($deliveryCustom) > 255) {
+          $deliveryCustom = substr($deliveryCustom, 0, 255);
+        }
+      } elseif (array_key_exists('deliveryMediumId', $line) && $line['deliveryMediumId'] !== null && $line['deliveryMediumId'] !== '') {
         $deliveryMediumId = (int)$line['deliveryMediumId'];
         if ($deliveryMediumId <= 0) {
           throw new \InvalidArgumentException('El medio de entrega seleccionado no es válido.');
@@ -537,6 +553,7 @@ class ReportService
       $requestedDaysByActivity[$taskId] = $reportDays;
       $requestedSupportByActivity[$taskId] = $support;
       $requestedDeliveryMediumByActivity[$taskId] = $deliveryMediumId;
+      $requestedDeliveryCustomByActivity[$taskId] = $deliveryCustom;
     }
 
     if (empty($activityIds)) {
@@ -611,7 +628,8 @@ class ReportService
         $reportId = $reportIdsByServiceOrder[$serviceOrderId];
         $reportDays = (float)($requestedDaysByActivity[$activityId] ?? 0);
         $support = $requestedSupportByActivity[$activityId] ?? null;
-        $deliveryMediumId = $requestedDeliveryMediumByActivity[$activityId] ?? null;
+        $deliveryCustom = $requestedDeliveryCustomByActivity[$activityId] ?? null;
+        $deliveryMediumId = $deliveryCustom === null ? ($requestedDeliveryMediumByActivity[$activityId] ?? null) : null;
         $contractedDays = (float)($activity['contracted_days'] ?? 0);
         $previousAccumulatedDays = (float)($previousAccumulatedByActivity[$activityId] ?? 0);
         $accumulatedDays = $previousAccumulatedDays + $reportDays;
@@ -621,14 +639,20 @@ class ReportService
         $baseDeliveryMediumId = isset($activity['delivery_medium_id']) && $activity['delivery_medium_id'] !== null
           ? (int)$activity['delivery_medium_id']
           : null;
+        $currentLine = $currentLinesByActivity[$activityId] ?? null;
+        $baseDeliveryCustom = $currentLine && isset($currentLine['delivery_medium_custom_text'])
+          ? $this->normalizeNullableText($currentLine['delivery_medium_custom_text'])
+          : null;
         $requiresLine = $reportDays > 0
           || $support !== $baseSupport
-          || $deliveryMediumId !== $baseDeliveryMediumId;
-
-        $currentLine = $currentLinesByActivity[$activityId] ?? null;
+          || $deliveryMediumId !== $baseDeliveryMediumId
+          || $deliveryCustom !== $baseDeliveryCustom;
         if (!$currentLine && !$requiresLine) {
           continue;
         }
+
+        $deliveryMediumIdForDb = $deliveryMediumId;
+        $deliveryCustomForDb = $deliveryCustom;
 
         if ($currentLine) {
           $lineId = (int)$currentLine['report_line_id'];
@@ -639,6 +663,7 @@ class ReportService
                 activity_description = ?,
                 support_text = ?,
                 delivery_medium_id = ?,
+                delivery_medium_custom_text = ?,
                 contracted_days = ?,
                 days_month = ?,
                 progress_percent = ?,
@@ -651,7 +676,8 @@ class ReportService
             $activity['item_activity'] ?? null,
             $activity['description'] ?? '',
             $support,
-            $deliveryMediumId,
+            $deliveryMediumIdForDb,
+            $deliveryCustomForDb,
             $contractedDays > 0 ? $contractedDays : null,
             $reportDays,
             $progressPercent,
@@ -670,20 +696,22 @@ class ReportService
             activity_description,
             support_text,
             delivery_medium_id,
+            delivery_medium_custom_text,
             contracted_days,
             days_month,
             progress_percent,
             accumulated_days,
             accumulated_progress,
             sort_order
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
         ")->execute([
           $reportId,
           $activity['item_general'] ?? null,
           $activity['item_activity'] ?? null,
           $activity['description'] ?? '',
           $support,
-          $deliveryMediumId,
+          $deliveryMediumIdForDb,
+          $deliveryCustomForDb,
           $contractedDays > 0 ? $contractedDays : null,
           $reportDays,
           $progressPercent,
@@ -779,6 +807,7 @@ class ReportService
         rl.id AS report_line_id,
         rl.support_text,
         rl.delivery_medium_id,
+        rl.delivery_medium_custom_text,
         dm.name AS delivery_medium_name,
         rl.days_month,
         rl.accumulated_days

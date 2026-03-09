@@ -247,9 +247,10 @@ export default function ReportDistributionBoard({
     );
   }
 
-  function handleDeliveryMethodChange(taskId, selectedValue) {
-    const selectedOption = deliveryMediaOptions.find(
-      (option) => String(option.id) === String(selectedValue)
+  function handleDeliveryMethodChange(taskId, value) {
+    const trimmed = String(value ?? '').trim();
+    const option = deliveryMediaOptions.find(
+      (o) => String(o.name).trim().toLowerCase() === trimmed.toLowerCase()
     );
 
     setRows((currentRows) =>
@@ -257,8 +258,8 @@ export default function ReportDistributionBoard({
         row.taskId === taskId
           ? {
               ...row,
-              deliveryMediumId: selectedOption ? selectedOption.id : '',
-              deliveryMethod: selectedOption ? selectedOption.name : '',
+              deliveryMethod: value ?? '',
+              deliveryMediumId: option ? option.id : '',
             }
           : row
       )
@@ -276,12 +277,19 @@ export default function ReportDistributionBoard({
         observations,
         professionalIssue,
         leaderIssue,
-        lines: rows.map((row) => ({
-          taskId: row.taskId,
-          support: row.support,
-          deliveryMediumId: row.deliveryMediumId || null,
-          reportDays: row.reportDays,
-        })),
+        lines: rows.map((row) => {
+          const raw = String(row.deliveryMethod ?? '').trim() || 'Digital';
+          const option = deliveryMediaOptions.find(
+            (o) => String(o.name).trim().toLowerCase() === raw.toLowerCase()
+          );
+          return {
+            taskId: row.taskId,
+            support: row.support,
+            deliveryMediumId: option ? option.id : null,
+            deliveryMethodCustom: option ? null : raw,
+            reportDays: row.reportDays,
+          };
+        }),
       };
 
       await apiRequest('/reports/my-task-distribution/save', {
@@ -453,32 +461,24 @@ export default function ReportDistributionBoard({
                         </div>
                       </td>
                       <td className="px-4 py-4 align-top">
-                        <select
-                          value={String(row.deliveryMediumId ?? '')}
+                        <input
+                          type="text"
+                          list="delivery-media-list"
+                          value={row.deliveryMethod ?? 'Digital'}
                           onChange={(e) =>
                             handleDeliveryMethodChange(row.taskId, e.target.value)
                           }
-                          className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
-                        >
-                          {!row.deliveryMediumId ? (
-                            <option value="">
-                              {row.deliveryMethod || 'Seleccionar medio'}
-                            </option>
-                          ) : null}
-                          {row.deliveryMediumId &&
-                          !deliveryMediaOptions.some(
-                            (option) => String(option.id) === String(row.deliveryMediumId)
-                          ) ? (
-                            <option value={String(row.deliveryMediumId)}>
-                              {row.deliveryMethod || 'Medio actual'}
-                            </option>
-                          ) : null}
+                          placeholder="Digital (por defecto) o escribir otro"
+                          className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+                        />
+                        <datalist id="delivery-media-list">
+                          {!deliveryMediaOptions.some((o) => String(o.name).trim().toLowerCase() === 'digital') && (
+                            <option value="Digital" />
+                          )}
                           {deliveryMediaOptions.map((option) => (
-                            <option key={option.id} value={String(option.id)}>
-                              {option.name}
-                            </option>
+                            <option key={option.id} value={option.name} />
                           ))}
-                        </select>
+                        </datalist>
                       </td>
                       <td className="px-4 py-4 text-center font-semibold tabular-nums text-slate-900">
                         {row.contractedDays}
