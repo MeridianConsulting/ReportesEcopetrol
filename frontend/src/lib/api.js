@@ -17,9 +17,9 @@ function getApiUrl() {
       return 'http://localhost/ReportesEcopetrol/backend/public/api/v1';
     }
     
-    // Si estamos en producción (control.meridianltda.com), usar la URL de producción
-    if (hostname === 'control.meridianltda.com' || hostname.includes('meridianltda.com')) {
-      return 'https://control.meridianltda.com/api/v1';
+    // Si estamos en producción (reportes.meridianltda.com), usar la URL de producción
+    if (hostname.includes('meridianltda.com')) {
+      return 'https://reportes.meridianltda.com/api/v1';
     }
   }
   
@@ -34,7 +34,7 @@ function getApiUrl() {
   }
   
   // Prioridad 4: Fallback (producción por defecto)
-  return 'https://control.meridianltda.com/api/v1';
+  return 'https://reportes.meridianltda.com/api/v1';
 }
 
 const API_URL = getApiUrl();
