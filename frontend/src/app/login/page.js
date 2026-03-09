@@ -70,10 +70,10 @@ export default function LoginPage() {
                 Acceso seguro
               </div>
               <h1 className="text-4xl font-bold text-white leading-tight xl:text-5xl">
-                Mantén tu reporte al día
+                Reportes mensuales de entregables
               </h1>
               <p className="mt-4 max-w-md text-lg leading-8 text-emerald-100/85">
-                Carga tu información diaria de forma sencilla y consulta tu progreso cuando lo necesites.
+                Registra y consolida tus entregables del mes de forma sencilla y consulta tu avance cuando lo necesites.
               </p>
             </div>
             
@@ -83,7 +83,7 @@ export default function LoginPage() {
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10">
                   <FileText className="w-5 h-5 text-emerald-300" />
                 </div>
-                <p className="font-medium text-white">Reporte diario</p>
+                <p className="font-medium text-white">Reporte mensual</p>
               </div>
               <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur">
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10">
