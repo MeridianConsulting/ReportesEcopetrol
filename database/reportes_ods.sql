@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 06-03-2026 a las 16:18:40
+-- Tiempo de generación: 09-03-2026 a las 18:00:57
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -273,6 +273,13 @@ CREATE TABLE `ods_activities` (
   `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `ods_activities`
+--
+
+INSERT INTO `ods_activities` (`id`, `service_order_id`, `title`, `item_general`, `item_activity`, `description`, `support_text`, `delivery_medium_id`, `contracted_days`, `planned_start_date`, `planned_end_date`, `status`, `notes`, `created_by`, `updated_by`, `created_at`, `updated_at`, `deleted_at`) VALUES
+(1, 1, 'testesttest', '10101010', '10101010101', 'testesttesttestesttesttestesttesttestesttesttestesttesttestesttesttestesttest', 'testtestestsetsetestsetsetsetsetsetsetse', NULL, 10.00, '2026-03-06', '2026-03-06', 'Activa', 'testesttesttestesttesttestesttesttestesttesttestesttest', 134, 134, '2026-03-06 19:38:39', '2026-03-06 19:38:39', NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -287,6 +294,13 @@ CREATE TABLE `ods_activity_assignments` (
   `assigned_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `is_active` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `ods_activity_assignments`
+--
+
+INSERT INTO `ods_activity_assignments` (`id`, `activity_id`, `user_id`, `assigned_by`, `assigned_at`, `is_active`) VALUES
+(1, 1, 134, 134, '2026-03-06 19:38:39', 1);
 
 -- --------------------------------------------------------
 
@@ -340,8 +354,7 @@ CREATE TABLE `reports` (
 --
 
 INSERT INTO `reports` (`id`, `service_order_id`, `period_id`, `reported_by`, `report_date`, `service_classification_id`, `status`, `month_contracted_days`, `notes`, `deleted_at`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, 134, '2026-02-27', NULL, 'Borrador', NULL, NULL, NULL, 1, '2026-02-27 17:27:17', '2026-02-27 17:27:17'),
-(2, 1, 2, 134, '2026-03-04', NULL, 'Borrador', NULL, NULL, NULL, 1, '2026-03-04 21:43:35', '2026-03-04 21:43:35');
+(1, 1, 1, 134, '2026-03-06', NULL, 'Borrador', NULL, '{\"observations\":\"\",\"professionalIssue\":{\"hasIssue\":false,\"note\":\"\"},\"leaderIssue\":{\"hasIssue\":false,\"note\":\"\"}}', NULL, 1, '2026-03-06 19:39:34', '2026-03-06 19:39:34');
 
 -- --------------------------------------------------------
 
@@ -438,6 +451,7 @@ CREATE TABLE `report_lines` (
   `support_text` text DEFAULT NULL,
   `support_type_id` int(11) DEFAULT NULL,
   `delivery_medium_id` int(11) DEFAULT NULL,
+  `delivery_medium_custom_text` varchar(255) DEFAULT NULL,
   `contracted_days` int(11) DEFAULT NULL,
   `days_month` decimal(10,2) NOT NULL DEFAULT 0.00,
   `progress_percent` decimal(6,4) NOT NULL DEFAULT 0.0000,
@@ -453,11 +467,8 @@ CREATE TABLE `report_lines` (
 -- Volcado de datos para la tabla `report_lines`
 --
 
-INSERT INTO `report_lines` (`id`, `report_id`, `item_catalog_id`, `item_general`, `item_activity`, `activity_description`, `support_text`, `support_type_id`, `delivery_medium_id`, `contracted_days`, `days_month`, `progress_percent`, `accumulated_days`, `accumulated_progress`, `observations`, `sort_order`, `created_at`, `updated_at`) VALUES
-(1, 1, NULL, 'test', 'test', '', '', NULL, NULL, NULL, 1.00, 99.9999, 0.00, 0.0000, '', 0, '2026-02-27 17:27:17', '2026-02-27 17:27:17'),
-(2, 2, NULL, 'test', 'test', '', '', NULL, NULL, NULL, 1.00, 99.9999, 0.00, 0.0000, '', 0, '2026-03-04 21:43:35', '2026-03-04 21:43:35'),
-(3, 2, NULL, 'test', 'test', '', '', NULL, NULL, NULL, 10.00, 99.9999, 0.00, 0.0000, '', 0, '2026-03-06 14:16:34', '2026-03-06 14:16:34'),
-(4, 2, NULL, 'test', 'est', '', '', NULL, NULL, NULL, 10.00, 99.9999, 0.00, 0.0000, '', 0, '2026-03-06 14:18:05', '2026-03-06 14:18:05');
+INSERT INTO `report_lines` (`id`, `report_id`, `item_catalog_id`, `item_general`, `item_activity`, `activity_description`, `support_text`, `support_type_id`, `delivery_medium_id`, `delivery_medium_custom_text`, `contracted_days`, `days_month`, `progress_percent`, `accumulated_days`, `accumulated_progress`, `observations`, `sort_order`, `created_at`, `updated_at`) VALUES
+(1, 1, NULL, '10101010', '10101010101', 'testesttesttestesttesttestesttesttestesttesttestesttesttestesttesttestesttest', 'testtestestsetsetestsetsetsetsetsetsetse', NULL, NULL, NULL, 10, 10.00, 99.9999, 10.00, 99.9999, NULL, 0, '2026-03-06 19:39:34', '2026-03-06 19:39:52');
 
 -- --------------------------------------------------------
 
@@ -479,8 +490,7 @@ CREATE TABLE `report_periods` (
 --
 
 INSERT INTO `report_periods` (`id`, `year`, `month`, `label`, `start_date`, `end_date`) VALUES
-(1, 2026, 2, '2026-02', '2026-02-01', '2026-02-28'),
-(2, 2026, 3, '2026-03', '2026-03-01', '2026-03-31');
+(1, 2026, 3, '2026-03', '2026-03-01', '2026-03-31');
 
 -- --------------------------------------------------------
 
@@ -758,7 +768,7 @@ INSERT INTO `service_order_employees` (`id`, `service_order_id`, `user_id`, `lev
 (131, 26, 131, NULL, NULL, NULL, NULL, 1, '2026-02-23 20:35:49'),
 (132, 26, 132, NULL, NULL, NULL, NULL, 1, '2026-02-23 20:35:49'),
 (133, 20, 133, NULL, NULL, NULL, NULL, 1, '2026-02-23 20:35:49'),
-(135, 1, 134, NULL, NULL, NULL, NULL, 1, '2026-02-27 17:12:01');
+(134, 1, 134, NULL, NULL, NULL, NULL, 1, '2026-02-27 19:47:21');
 
 -- --------------------------------------------------------
 
@@ -782,6 +792,13 @@ CREATE TABLE `tasks` (
   `id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `tasks`
+--
+
+INSERT INTO `tasks` (`id`) VALUES
+(1);
+
 -- --------------------------------------------------------
 
 --
@@ -795,6 +812,13 @@ CREATE TABLE `task_report_links` (
   `linked_by` int(11) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `task_report_links`
+--
+
+INSERT INTO `task_report_links` (`id`, `task_id`, `report_line_id`, `linked_by`, `created_at`) VALUES
+(1, 1, 1, 134, '2026-03-06 19:39:34');
 
 -- --------------------------------------------------------
 
@@ -1098,7 +1122,7 @@ INSERT INTO `user_roles` (`user_id`, `role_id`, `created_at`) VALUES
 (131, 1, '2026-02-23 20:35:50'),
 (132, 1, '2026-02-23 20:35:50'),
 (133, 1, '2026-02-23 20:35:50'),
-(134, 5, '2026-02-27 14:25:29');
+(134, 5, '2026-02-27 19:47:21');
 
 --
 -- Índices para tablas volcadas
@@ -1368,13 +1392,13 @@ ALTER TABLE `import_errors`
 -- AUTO_INCREMENT de la tabla `ods_activities`
 --
 ALTER TABLE `ods_activities`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `ods_activity_assignments`
 --
 ALTER TABLE `ods_activity_assignments`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `permissions`
@@ -1386,7 +1410,7 @@ ALTER TABLE `permissions`
 -- AUTO_INCREMENT de la tabla `reports`
 --
 ALTER TABLE `reports`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `report_approvals`
@@ -1422,13 +1446,13 @@ ALTER TABLE `report_item_catalog`
 -- AUTO_INCREMENT de la tabla `report_lines`
 --
 ALTER TABLE `report_lines`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `report_periods`
 --
 ALTER TABLE `report_periods`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`
@@ -1464,19 +1488,19 @@ ALTER TABLE `support_types`
 -- AUTO_INCREMENT de la tabla `tasks`
 --
 ALTER TABLE `tasks`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `task_report_links`
 --
 ALTER TABLE `task_report_links`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=135;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=136;
 
 --
 -- Restricciones para tablas volcadas
