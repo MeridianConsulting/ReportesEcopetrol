@@ -1,6 +1,7 @@
 // app/my-tasks/page.js
 'use client';
 
+import Image from 'next/image';
 import { useCallback, useMemo, useState } from 'react';
 import Layout, { useLayoutContext } from '../../components/Layout';
 import Alert from '../../components/Alert';
@@ -283,6 +284,17 @@ function MyTasksContent() {
       <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
         <section className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.35)] backdrop-blur">
           <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-5 py-6 text-white sm:px-8 sm:py-7">
+            <div className="mb-6 flex items-center">
+              <Image
+                src="/logo_meridian_blanco.png"
+                alt="Meridian Consulting"
+                width={260}
+                height={76}
+                priority
+                className="h-14 w-auto object-contain"
+              />
+            </div>
+
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.9fr)] xl:items-end">
               <div className="space-y-4">
                 <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-slate-100 shadow-lg shadow-slate-950/10 backdrop-blur">
