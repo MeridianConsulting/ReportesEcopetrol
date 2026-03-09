@@ -31,9 +31,14 @@ class Router
       if ($result instanceof \App\Core\Response) {
         return $result;
       }
-      // Si el middleware no devolvió respuesta, devolver respuesta CORS básica
+      // Determinar origen permitido dinámicamente
+      $requestOrigin = $request->getHeader('Origin');
+      $allowedOrigins = defined('CORS_ALLOWED_ORIGINS') ? CORS_ALLOWED_ORIGINS : [CORS_ORIGIN];
+      $corsOrigin = ($requestOrigin && in_array($requestOrigin, $allowedOrigins))
+        ? $requestOrigin
+        : CORS_ORIGIN;
       return Response::json([], 204)
-        ->header('Access-Control-Allow-Origin', CORS_ORIGIN)
+        ->header('Access-Control-Allow-Origin', $corsOrigin)
         ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH')
         ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token, Accept')
         ->header('Access-Control-Allow-Credentials', 'true')

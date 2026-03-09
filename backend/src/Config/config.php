@@ -57,7 +57,11 @@ if ($isLocalhost) {
     $corsOrigin = $_ENV['CORS_ORIGIN'] ?? 'http://localhost:3000';
 }
 
-define('CORS_ORIGIN', $corsOrigin);
+// Soporte para múltiples orígenes separados por coma (ej: https://app.com,https://admin.app.com)
+$corsAllowedOrigins = array_map('trim', explode(',', $corsOrigin));
+
+define('CORS_ORIGIN', $corsAllowedOrigins[0]); // Origen principal (para compatibilidad)
+define('CORS_ALLOWED_ORIGINS', $corsAllowedOrigins); // Lista completa de orígenes permitidos
 
 // Timezone
 date_default_timezone_set('America/Bogota');

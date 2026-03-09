@@ -7,27 +7,29 @@ ini_set('log_errors', '1');
 
 // Función para establecer headers CORS
 function setCorsHeaders() {
-    // Intentar obtener CORS_ORIGIN de la configuración si ya está cargada
-    $allowedOrigin = defined('CORS_ORIGIN') ? CORS_ORIGIN : null;
-    
-    // Si no está definido, usar el origin de la petición o localhost por defecto
     $requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? null;
-    
-    // Lista de orígenes permitidos (desarrollo)
+
+    // Lista de orígenes permitidos en desarrollo
     $devOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000'];
-    
-    // Determinar el origen a usar
-    if ($allowedOrigin) {
-        // En producción, usar el CORS_ORIGIN configurado
-        $origin = $allowedOrigin;
-    } elseif ($requestOrigin && in_array($requestOrigin, $devOrigins)) {
-        // En desarrollo, permitir localhost si coincide
-        $origin = $requestOrigin;
+
+    // Determinar el origen a responder
+    if ($requestOrigin) {
+        if (defined('CORS_ALLOWED_ORIGINS') && in_array($requestOrigin, CORS_ALLOWED_ORIGINS)) {
+            // Origen está en la lista blanca configurada
+            $origin = $requestOrigin;
+        } elseif (defined('CORS_ORIGIN')) {
+            // Config cargada pero origen no está en la lista: usar el principal
+            $origin = CORS_ORIGIN;
+        } elseif (in_array($requestOrigin, $devOrigins)) {
+            // Config aún no cargada: permitir localhost en desarrollo
+            $origin = $requestOrigin;
+        } else {
+            $origin = null;
+        }
     } else {
-        // Por defecto, usar el origin de la petición si está disponible
-        $origin = $requestOrigin;
+        $origin = defined('CORS_ORIGIN') ? CORS_ORIGIN : null;
     }
-    
+
     if ($origin) {
         header("Access-Control-Allow-Origin: $origin");
     }
@@ -124,9 +126,14 @@ try {
     }
     require $configPath;
 
-    // Establecer headers CORS nuevamente después de cargar config (por si cambió)
+    // Re-establecer CORS con la config ya cargada (responde el origen exacto si está permitido)
     if (defined('CORS_ORIGIN')) {
-        header("Access-Control-Allow-Origin: " . CORS_ORIGIN);
+        $requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? null;
+        $allowedOrigins = defined('CORS_ALLOWED_ORIGINS') ? CORS_ALLOWED_ORIGINS : [CORS_ORIGIN];
+        $corsToSend = ($requestOrigin && in_array($requestOrigin, $allowedOrigins))
+            ? $requestOrigin
+            : CORS_ORIGIN;
+        header("Access-Control-Allow-Origin: $corsToSend");
     }
 
     // Registrar manejador de excepciones
