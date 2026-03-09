@@ -452,6 +452,18 @@ class ReportService
       $activityId = (int)$activity['id'];
       $current = $currentLinesByActivity[$activityId] ?? null;
       $previousAccumulatedDays = (float)($previousAccumulatedByActivity[$activityId] ?? 0);
+      $activityDeliveryMediumId = isset($activity['delivery_medium_id']) && $activity['delivery_medium_id'] !== null
+        ? (int)$activity['delivery_medium_id']
+        : null;
+      $deliveryMediumId = $current && isset($current['delivery_medium_id']) && $current['delivery_medium_id'] !== null
+        ? (int)$current['delivery_medium_id']
+        : $activityDeliveryMediumId;
+      $deliveryMethod = $current && !empty($current['delivery_medium_name'])
+        ? (string)$current['delivery_medium_name']
+        : ($activity['delivery_medium_name'] ?? 'Digital');
+      $support = $current && array_key_exists('support_text', $current)
+        ? (string)($current['support_text'] ?? '')
+        : (string)($activity['support_text'] ?? '');
 
       return [
         'id' => $activityId,
@@ -460,8 +472,9 @@ class ReportService
         'generalItem' => $activity['item_general'] ?? '',
         'activityItem' => $activity['item_activity'] ?? '',
         'description' => $activity['description'] ?? '',
-        'support' => $activity['support_text'] ?? '',
-        'deliveryMethod' => $activity['delivery_medium_name'] ?? 'Digital',
+        'support' => $support,
+        'deliveryMediumId' => $deliveryMediumId,
+        'deliveryMethod' => $deliveryMethod,
         'contractedDays' => (float)($activity['contracted_days'] ?? 0),
         'previousAccumulatedDays' => $previousAccumulatedDays,
         'reportDays' => $current ? (float)$current['days_month'] : 0,
@@ -494,6 +507,8 @@ class ReportService
 
     $activityIds = [];
     $requestedDaysByActivity = [];
+    $requestedSupportByActivity = [];
+    $requestedDeliveryMediumByActivity = [];
 
     foreach ($lines as $line) {
       $taskId = isset($line['taskId']) ? (int)$line['taskId'] : 0;
@@ -506,8 +521,22 @@ class ReportService
         throw new \InvalidArgumentException('Los días reportados no pueden ser negativos.');
       }
 
+      $support = array_key_exists('support', $line)
+        ? $this->normalizeNullableText($line['support'])
+        : null;
+
+      $deliveryMediumId = null;
+      if (array_key_exists('deliveryMediumId', $line) && $line['deliveryMediumId'] !== null && $line['deliveryMediumId'] !== '') {
+        $deliveryMediumId = (int)$line['deliveryMediumId'];
+        if ($deliveryMediumId <= 0) {
+          throw new \InvalidArgumentException('El medio de entrega seleccionado no es válido.');
+        }
+      }
+
       $activityIds[] = $taskId;
       $requestedDaysByActivity[$taskId] = $reportDays;
+      $requestedSupportByActivity[$taskId] = $support;
+      $requestedDeliveryMediumByActivity[$taskId] = $deliveryMediumId;
     }
 
     if (empty($activityIds)) {
@@ -518,6 +547,17 @@ class ReportService
     $activities = $this->getAssignedActivitiesForUser($userId, $activityIds);
     if (count($activities) !== count($activityIds)) {
       throw new \InvalidArgumentException('El reporte contiene actividades no asignadas al usuario.');
+    }
+
+    $deliveryMediumIds = array_values(array_unique(array_filter(
+      $requestedDeliveryMediumByActivity,
+      static fn($value) => $value !== null
+    )));
+    $validDeliveryMediumIds = $this->getActiveDeliveryMediaIdsMap($deliveryMediumIds);
+    foreach ($deliveryMediumIds as $deliveryMediumId) {
+      if (!isset($validDeliveryMediumIds[$deliveryMediumId])) {
+        throw new \InvalidArgumentException('El medio de entrega seleccionado no es válido.');
+      }
     }
 
     $this->ensureTaskRecords($activityIds);
@@ -570,14 +610,23 @@ class ReportService
         $serviceOrderId = (int)$activity['service_order_id'];
         $reportId = $reportIdsByServiceOrder[$serviceOrderId];
         $reportDays = (float)($requestedDaysByActivity[$activityId] ?? 0);
+        $support = $requestedSupportByActivity[$activityId] ?? null;
+        $deliveryMediumId = $requestedDeliveryMediumByActivity[$activityId] ?? null;
         $contractedDays = (float)($activity['contracted_days'] ?? 0);
         $previousAccumulatedDays = (float)($previousAccumulatedByActivity[$activityId] ?? 0);
         $accumulatedDays = $previousAccumulatedDays + $reportDays;
         $progressPercent = $contractedDays > 0 ? min(($reportDays / $contractedDays) * 100, 100) : 0;
         $accumulatedProgress = $contractedDays > 0 ? min(($accumulatedDays / $contractedDays) * 100, 100) : 0;
+        $baseSupport = $this->normalizeNullableText($activity['support_text'] ?? null);
+        $baseDeliveryMediumId = isset($activity['delivery_medium_id']) && $activity['delivery_medium_id'] !== null
+          ? (int)$activity['delivery_medium_id']
+          : null;
+        $requiresLine = $reportDays > 0
+          || $support !== $baseSupport
+          || $deliveryMediumId !== $baseDeliveryMediumId;
 
         $currentLine = $currentLinesByActivity[$activityId] ?? null;
-        if (!$currentLine && $reportDays <= 0) {
+        if (!$currentLine && !$requiresLine) {
           continue;
         }
 
@@ -601,8 +650,8 @@ class ReportService
             $activity['item_general'] ?? null,
             $activity['item_activity'] ?? null,
             $activity['description'] ?? '',
-            $activity['support_text'] ?? null,
-            $activity['delivery_medium_id'] ?? null,
+            $support,
+            $deliveryMediumId,
             $contractedDays > 0 ? $contractedDays : null,
             $reportDays,
             $progressPercent,
@@ -633,8 +682,8 @@ class ReportService
           $activity['item_general'] ?? null,
           $activity['item_activity'] ?? null,
           $activity['description'] ?? '',
-          $activity['support_text'] ?? null,
-          $activity['delivery_medium_id'] ?? null,
+          $support,
+          $deliveryMediumId,
           $contractedDays > 0 ? $contractedDays : null,
           $reportDays,
           $progressPercent,
@@ -728,11 +777,15 @@ class ReportService
       SELECT
         trl.task_id AS activity_id,
         rl.id AS report_line_id,
+        rl.support_text,
+        rl.delivery_medium_id,
+        dm.name AS delivery_medium_name,
         rl.days_month,
         rl.accumulated_days
       FROM task_report_links trl
       INNER JOIN report_lines rl ON rl.id = trl.report_line_id
       INNER JOIN reports r ON r.id = rl.report_id
+      LEFT JOIN delivery_media dm ON dm.id = rl.delivery_medium_id
       WHERE trl.task_id IN ($placeholders)
         AND r.reported_by = ?
         AND r.period_id = ?
@@ -747,6 +800,39 @@ class ReportService
     $map = [];
     while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
       $map[(int)$row['activity_id']] = $row;
+    }
+
+    return $map;
+  }
+
+  private function normalizeNullableText($value): ?string
+  {
+    if ($value === null) {
+      return null;
+    }
+
+    $text = trim((string)$value);
+    return $text !== '' ? $text : null;
+  }
+
+  private function getActiveDeliveryMediaIdsMap(array $ids): array
+  {
+    if (empty($ids)) {
+      return [];
+    }
+
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $stmt = $this->db->prepare("
+      SELECT id
+      FROM delivery_media
+      WHERE is_active = 1
+        AND id IN ($placeholders)
+    ");
+    $stmt->execute(array_map('intval', $ids));
+
+    $map = [];
+    while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+      $map[(int)$row['id']] = true;
     }
 
     return $map;

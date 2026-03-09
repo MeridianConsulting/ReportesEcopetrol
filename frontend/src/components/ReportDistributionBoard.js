@@ -51,6 +51,7 @@ export default function ReportDistributionBoard({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [deliveryMediaOptions, setDeliveryMediaOptions] = useState([]);
 
   const [meta, setMeta] = useState({
     serviceOrderCode: '',
@@ -80,11 +81,15 @@ export default function ReportDistributionBoard({
         setLoading(true);
         setError('');
 
-        const response = await apiRequest(
-          `/reports/my-task-distribution?userId=${userId}&reportDate=${reportDate}`
-        );
+        const [response, mediaResponse] = await Promise.all([
+          apiRequest(
+            `/reports/my-task-distribution?userId=${userId}&reportDate=${reportDate}`
+          ),
+          apiRequest('/reports/delivery-media').catch(() => ({ data: [] })),
+        ]);
 
         const payload = response?.data || {};
+        const mediaOptions = Array.isArray(mediaResponse?.data) ? mediaResponse.data : [];
 
         const tasks = Array.isArray(payload.tasks) ? payload.tasks : [];
 
@@ -100,6 +105,7 @@ export default function ReportDistributionBoard({
             activityItem: task.activityItem || '',
             description: task.description || '',
             support: task.support || '',
+            deliveryMediumId: task.deliveryMediumId ?? '',
             deliveryMethod: task.deliveryMethod || 'Digital',
             contractedDays,
             previousAccumulatedDays,
@@ -121,6 +127,7 @@ export default function ReportDistributionBoard({
             reportMonth: payload.reportMonth || formatMonthLabel(reportDate),
           });
 
+          setDeliveryMediaOptions(mediaOptions);
           setRows(mappedRows);
           setObservations(payload.observations || '');
           setProfessionalIssue({
@@ -227,6 +234,37 @@ export default function ReportDistributionBoard({
     );
   }
 
+  function handleSupportChange(taskId, support) {
+    setRows((currentRows) =>
+      currentRows.map((row) =>
+        row.taskId === taskId
+          ? {
+              ...row,
+              support,
+            }
+          : row
+      )
+    );
+  }
+
+  function handleDeliveryMethodChange(taskId, selectedValue) {
+    const selectedOption = deliveryMediaOptions.find(
+      (option) => String(option.id) === String(selectedValue)
+    );
+
+    setRows((currentRows) =>
+      currentRows.map((row) =>
+        row.taskId === taskId
+          ? {
+              ...row,
+              deliveryMediumId: selectedOption ? selectedOption.id : '',
+              deliveryMethod: selectedOption ? selectedOption.name : '',
+            }
+          : row
+      )
+    );
+  }
+
   async function handleSave() {
     try {
       setSaving(true);
@@ -240,6 +278,8 @@ export default function ReportDistributionBoard({
         leaderIssue,
         lines: rows.map((row) => ({
           taskId: row.taskId,
+          support: row.support,
+          deliveryMediumId: row.deliveryMediumId || null,
           reportDays: row.reportDays,
         })),
       };
@@ -293,8 +333,8 @@ export default function ReportDistributionBoard({
               Distribución mensual por actividad
             </h2>
             <p className="mt-1 text-sm text-slate-500">
-              Las actividades provienen de la base de datos. Solo se puede editar
-              la columna de días del mes.
+              Las actividades provienen de la base de datos. Aquí puedes diligenciar
+              soporte, medio de entrega y los días ejecutados del mes.
             </p>
           </div>
 
@@ -400,14 +440,45 @@ export default function ReportDistributionBoard({
                         </div>
                       </td>
                       <td className="px-4 py-4 align-top text-slate-700">
-                        <div className="max-w-[250px] whitespace-normal break-words leading-6">
-                          {row.support || '—'}
+                        <div className="mx-auto max-w-[250px]">
+                          <input
+                            type="text"
+                            value={row.support}
+                            onChange={(e) =>
+                              handleSupportChange(row.taskId, e.target.value)
+                            }
+                            placeholder="Registrar soporte"
+                            className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+                          />
                         </div>
                       </td>
                       <td className="px-4 py-4 align-top">
-                        <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-                          {row.deliveryMethod || 'Digital'}
-                        </span>
+                        <select
+                          value={String(row.deliveryMediumId ?? '')}
+                          onChange={(e) =>
+                            handleDeliveryMethodChange(row.taskId, e.target.value)
+                          }
+                          className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+                        >
+                          {!row.deliveryMediumId ? (
+                            <option value="">
+                              {row.deliveryMethod || 'Seleccionar medio'}
+                            </option>
+                          ) : null}
+                          {row.deliveryMediumId &&
+                          !deliveryMediaOptions.some(
+                            (option) => String(option.id) === String(row.deliveryMediumId)
+                          ) ? (
+                            <option value={String(row.deliveryMediumId)}>
+                              {row.deliveryMethod || 'Medio actual'}
+                            </option>
+                          ) : null}
+                          {deliveryMediaOptions.map((option) => (
+                            <option key={option.id} value={String(option.id)}>
+                              {option.name}
+                            </option>
+                          ))}
+                        </select>
                       </td>
                       <td className="px-4 py-4 text-center font-semibold tabular-nums text-slate-900">
                         {row.contractedDays}
