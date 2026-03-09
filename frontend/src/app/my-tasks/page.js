@@ -283,20 +283,20 @@ function MyTasksContent() {
     <div className="min-h-full bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.08),_transparent_28%),linear-gradient(to_bottom,_#f8fafc,_#eef2f7)]">
       <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
         <section className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_18px_50px_-30px_rgba(15,23,42,0.35)] backdrop-blur">
-          <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-5 py-6 text-white sm:px-8 sm:py-7">
-            <div className="mb-6 flex items-center">
-              <Image
-                src="/logo_meridian_blanco.png"
-                alt="Meridian Consulting"
-                width={260}
-                height={76}
-                priority
-                className="h-14 w-auto object-contain"
-              />
-            </div>
-
+          <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-5 py-6 text-white sm:px-8 sm:py-6">
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.9fr)] xl:items-end">
-              <div className="space-y-4">
+              <div className="space-y-5">
+                <div className="relative h-[72px] w-full max-w-[360px] sm:h-20 sm:max-w-[420px] lg:max-w-[460px]">
+                  <Image
+                    src="/logo_meridian_blanco.png"
+                    alt="Meridian Consulting"
+                    fill
+                    priority
+                    sizes="(min-width: 1280px) 460px, (min-width: 1024px) 420px, (min-width: 640px) 360px, 260px"
+                    className="object-contain object-left"
+                  />
+                </div>
+
                 <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-slate-100 shadow-lg shadow-slate-950/10 backdrop-blur">
                   <ClipboardList className="h-4 w-4" />
                   Reporte mensual de actividades
