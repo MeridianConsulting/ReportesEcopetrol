@@ -41,6 +41,16 @@ function getStatusBadge(status) {
   }
 }
 
+// ── Estilo compartido: solo lectura ─────────────────────────────────────────
+// Fondo neutro, borde gris tenue, texto apagado → señal visual "dato fijo"
+const READ_ONLY = 'border-slate-200 bg-slate-50 text-slate-600';
+
+// ── Estilo compartido: editable ──────────────────────────────────────────────
+// Fondo blanco, borde emerald → señal visual "puedes editar esto"
+const EDITABLE_BASE =
+  'border-emerald-300 bg-white text-slate-900 placeholder:text-slate-400 ' +
+  'outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100';
+
 function RowCell({ children, className = '' }) {
   return (
     <div className={`flex h-[104px] w-full items-center ${className}`}>
@@ -49,93 +59,65 @@ function RowCell({ children, className = '' }) {
   );
 }
 
-function TextPill({ children, muted = false }) {
+// Solo lectura: chip de una línea (ítem general / ítem actividad)
+function TextPill({ children }) {
   return (
     <div
-      className={`flex h-14 w-full items-center overflow-hidden rounded-2xl border px-4 text-xs font-semibold ${
-        muted
-          ? 'border-slate-200 bg-slate-100 text-slate-700'
-          : 'border-slate-200 bg-white text-slate-700 shadow-sm'
-      }`}
+      className={`flex h-14 w-full items-center overflow-hidden rounded-2xl border px-4 text-xs font-semibold ${READ_ONLY}`}
     >
       <span className="truncate">{children}</span>
     </div>
   );
 }
 
+// Solo lectura: tarjeta multilinea (descripción)
 function TextCard({ children }) {
   return (
-    <div className="flex h-[72px] w-full items-center overflow-hidden rounded-2xl border border-slate-200 bg-white px-4 shadow-sm">
-      <p className="line-clamp-2 leading-5 text-slate-800">{children}</p>
+    <div
+      className={`flex h-[72px] w-full items-center overflow-hidden rounded-2xl border px-4 text-sm ${READ_ONLY}`}
+    >
+      <p className="line-clamp-2 leading-5">{children}</p>
     </div>
   );
 }
 
-function InputField({ value, onChange, placeholder, list }) {
-  return (
-    <input
-      type="text"
-      list={list}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      className="h-14 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
-    />
-  );
-}
-
-function MetricBox({ value, muted = false }) {
+// Solo lectura: caja numérica (días contratados, acumulado previo, acumulado)
+function MetricBox({ value }) {
   return (
     <div
-      className={`flex h-14 w-[112px] items-center justify-center rounded-2xl border px-4 text-center text-lg font-semibold tabular-nums shadow-sm ${
-        muted
-          ? 'border-slate-200 bg-slate-50 text-slate-700'
-          : 'border-slate-200 bg-white text-slate-900'
-      }`}
+      className={`flex h-14 w-[112px] items-center justify-center rounded-2xl border px-4 text-center text-lg font-semibold tabular-nums ${READ_ONLY}`}
     >
       {value}
     </div>
   );
 }
 
-function DaysMonthBox({ value, max, onChange }) {
-  return (
-    <div className="flex h-14 w-[124px] items-center justify-center">
-      <input
-        type="number"
-        min="0"
-        max={max}
-        step="1"
-        value={value}
-        onChange={onChange}
-        className="h-14 w-full rounded-2xl border border-slate-300 bg-slate-50 px-3 text-center text-lg font-semibold tabular-nums text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
-      />
-    </div>
-  );
-}
-
+// Solo lectura: barra de progreso + porcentaje
 function ProgressBox({ progress, status }) {
   return (
-    <div className="flex h-[76px] w-[132px] flex-col items-center justify-center gap-2">
-      <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
+    <div
+      className={`flex h-14 w-[132px] flex-col items-center justify-center gap-2 rounded-2xl border px-3 ${READ_ONLY}`}
+    >
+      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
         <div
           className={`h-full rounded-full transition-all ${
             status === 'alert'
-              ? 'bg-amber-500'
+              ? 'bg-amber-400'
               : status === 'ready'
               ? 'bg-emerald-500'
-              : 'bg-slate-400'
+              : 'bg-slate-300'
           }`}
           style={{ width: `${Math.min(progress, 100)}%` }}
         />
       </div>
-      <span className="text-base font-semibold tabular-nums text-slate-900">
+      <span className="text-sm font-semibold tabular-nums text-slate-700">
         {progress.toFixed(1)}%
       </span>
     </div>
   );
 }
 
+// Solo lectura: badge de estado (mantiene colores semánticos sobre base neutra)
 function StatusBadge({ status }) {
   return (
     <span
@@ -149,6 +131,37 @@ function StatusBadge({ status }) {
         ? 'Alerta'
         : 'Pendiente'}
     </span>
+  );
+}
+
+// Editable: input de texto (soporte / medio de entrega)
+function InputField({ value, onChange, placeholder, list }) {
+  return (
+    <input
+      type="text"
+      list={list}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className={`h-14 w-full rounded-2xl border px-4 text-sm ${EDITABLE_BASE}`}
+    />
+  );
+}
+
+// Editable: input numérico (días del mes)
+function DaysMonthBox({ value, max, onChange }) {
+  return (
+    <div className="flex h-14 w-[124px] items-center justify-center">
+      <input
+        type="number"
+        min="0"
+        max={max}
+        step="1"
+        value={value}
+        onChange={onChange}
+        className={`h-14 w-full rounded-2xl border px-3 text-center text-lg font-semibold tabular-nums ${EDITABLE_BASE}`}
+      />
+    </div>
   );
 }
 
@@ -609,7 +622,7 @@ export default function ReportDistributionBoard({
 
                         <td className="px-3 py-0 align-middle">
                           <RowCell className="justify-center">
-                            <MetricBox value={row.previousAccumulatedDays} muted />
+                            <MetricBox value={row.previousAccumulatedDays} />
                           </RowCell>
                         </td>
 
